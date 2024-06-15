@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 import pandas as pd
 from flask import current_app
+from .models import Expense, Event, Shift
+from . import logger
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
@@ -39,14 +41,7 @@ def createTimeReportCH(shifts):
 
     return report_html
 
-def createExpenseReportCH(worker_id=None, account_manager_id=None):
-    if worker_id:
-        expenses = Expense.query.filter_by(worker_id=worker_id).order_by(Expense.date).all()
-    elif account_manager_id:
-        expenses = Expense.query.join(Event).filter(Event.accountManager == account_manager_id).order_by(Expense.date).all()
-    else:
-        expenses = Expense.query.order_by(Expense.date).all()
-    
+def createExpenseReportCH(expenses):
     receiptNumber = []
     date = []
     show = []

@@ -1,49 +1,100 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    {% block head %}{% endblock %}
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url_for('index') }}">Flask App</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav mr-auto">
+{% extends "bootstrap/base.html" %}
+{% from "bootstrap/wtf.html" import form_field %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
+    <style>
+        body.light-mode {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        body.dark-mode {
+            background-color: #333333;
+            color: #ffffff;
+        }
+        .navbar-inverse.light-mode {
+            background-color: #f8f9fa;
+            color: #000000;
+        }
+        .navbar-inverse.dark-mode {
+            background-color: #333333;
+            color: #ffffff;
+        }
+    </style>
+{% endblock %}
+
+{% block navbar %}
+<div class="navbar navbar-inverse" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">NSS</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
                 {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('update_worker', worker_id=current_user.id) }}">Profile</a>
-                </li>
+                    <li><a href="/">Home</a></li>
+                    <li><a href='/create_event'>Create Event</a></li>
+                    <li><a href='/timesheet'>Timesheet</a></li>
+                    <li><a href='/expenses'>Expenses</a></li>
+                {% endif %}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('update_worker', worker_id=current_user.id) }}">Update Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-                </li>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('register') }}">Register</a></li>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    <li>
+                        <a href="#" id="toggle-theme">Toggle Theme</a>
+                    </li>
                 {% endif %}
             </ul>
         </div>
-    </nav>
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} mt-3" role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        {% block content %}
-        {% endblock %}
     </div>
-    {% block scripts %}
-    {% endblock %}
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% block page_content %}{% endblock %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            document.body.classList.add(currentTheme + '-mode');
+            document.querySelector('.navbar-inverse').classList.add(currentTheme + '-mode');
+
+            document.getElementById('toggle-theme').addEventListener('click', function() {
+                const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+                document.body.classList.toggle('light-mode');
+                document.body.classList.toggle('dark-mode');
+                document.querySelector('.navbar-inverse').classList.toggle('light-mode');
+                document.querySelector('.navbar-inverse').classList.toggle('dark-mode');
+                localStorage.setItem('theme', newTheme);
+
+                fetch("{{ url_for('save_theme') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ theme: newTheme })
+                });
+            });
+        });
+    </script>
+{% endblock %}

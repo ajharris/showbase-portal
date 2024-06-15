@@ -4,10 +4,12 @@ from wtforms.validators import DataRequired, InputRequired, Optional, Email, Equ
 from flask_wtf.file import FileAllowed
 
 class UpdateWorkerForm(FlaskForm):
-    first_name = StringField('First Name', validators=[InputRequired(), DataRequired()])
-    last_name = StringField('Last Name', validators=[InputRequired(), DataRequired()])
-    email = StringField('Email', validators=[InputRequired(), DataRequired(), Email()])
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     phone_number = StringField('Phone Number', validators=[Optional()])
+    is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
+    is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
     submit = SubmitField('Update')
 
 class AdminUpdateWorkerForm(UpdateWorkerForm):
@@ -60,7 +62,16 @@ class RegistrationForm(FlaskForm):
     first_name = StringField('First Name', validators=[InputRequired(), DataRequired()])
     last_name = StringField('Last Name', validators=[InputRequired(), DataRequired()])
     email = StringField('Email', validators=[InputRequired(), DataRequired(), Email()])
-    phone_number = StringField('Phone Number', validators=[Optional()])  # Optional phone number field
+    phone_number = StringField('Phone Number', validators=[Optional()])
     password = PasswordField('Password', validators=[InputRequired(), DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[InputRequired(), DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
+
+class RequestResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Reset Password')
