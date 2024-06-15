@@ -1,59 +1,39 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
-{% block content %}
-<div class="row mt-3">
-    <div class="col-md-6">
-        <h2>Event Details</h2>
-        <p><strong>Show Name:</strong> {{ event.showName }}</p>
-        <p><strong>Show Number:</strong> {{ event.showNumber }}</p>
-        <p><strong>Account Manager:</strong> {{ event.accountManager }}</p>
-        <p><strong>Location:</strong> {{ event.location }}</p>
-        <p><strong>Status:</strong> {{ 'Active' if event.active else 'Inactive' }}</p>
-        <p><strong>SharePoint Link:</strong> <a href="{{ event.sharepoint_link }}" target="_blank">{{ event.sharepoint_link }}</a></p>
-        <h3>Notes</h3>
-        <form method="POST">
-            {{ note_form.hidden_tag() }}
-            <div class="form-group">
-                {{ note_form.notes(class="form-control") }}
-            </div>
-            <div class="form-group">
-                {{ note_form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
-        <h3>Upload Document</h3>
-        <form method="POST" enctype="multipart/form-data">
-            {{ document_form.hidden_tag() }}
-            <div class="form-group">
-                {{ document_form.document(class="form-control") }}
-            </div>
-            <div class="form-group">
-                {{ document_form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
-        <h3>Add SharePoint Link</h3>
-        <form method="POST">
-            {{ sharepoint_form.hidden_tag() }}
-            <div class="form-group">
-                {{ sharepoint_form.sharepoint_link(class="form-control") }}
-            </div>
-            <div class="form-group">
-                {{ sharepoint_form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
-    </div>
-    <div class="col-md-6">
-        <h2>Shifts</h2>
-        <ul>
-            {% for shift in shifts %}
-            <li>{{ shift.start }} - {{ shift.end }}: {{ shift.worker.first_name }} {{ shift.worker.last_name }}</li>
-            {% endfor %}
-        </ul>
-        <h2>Expenses</h2>
-        <ul>
-            {% for expense in expenses %}
-            <li>{{ expense.date }}: {{ expense.details }} - {{ expense.net }} + {{ expense.hst }}</li>
-            {% endfor %}
-        </ul>
-    </div>
+{% block title %}View Event{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <h1>Event Details</h1>
+    <p><strong>Show Name:</strong> {{ event.showName }}</p>
+    <p><strong>Show Number:</strong> {{ event.showNumber }}</p>
+    <p><strong>Account Manager:</strong> {{ event.accountManager }}</p>
+    <p><strong>Location:</strong> {{ event.location }}</p>
+    <p><strong>Notes:</strong> {{ event.notes }}</p>
+    <p><strong>SharePoint Link:</strong> <a href="{{ event.sharepoint_link }}">{{ event.sharepoint_link }}</a></p>
+
+    <h2>Shifts</h2>
+    <ul>
+        {% for shift in shifts %}
+            <li>{{ shift.start }} to {{ shift.end }} - {{ shift.worker.first_name }} {{ shift.worker.last_name }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Expenses</h2>
+    <ul>
+        {% for expense in expenses %}
+            <li>{{ expense.date }} - {{ expense.details }} - {{ expense.net }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add Notes</h2>
+    {{ wtf.quick_form(note_form) }}
+
+    <h2>Upload Document</h2>
+    {{ wtf.quick_form(document_form) }}
+
+    <h2>Add SharePoint Link</h2>
+    {{ wtf.quick_form(sharepoint_form) }}
 </div>
 {% endblock %}
