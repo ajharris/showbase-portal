@@ -15,6 +15,8 @@ import pandas as pd
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.utils import secure_filename
 
+load_dotenv()
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
