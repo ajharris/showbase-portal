@@ -4,9 +4,9 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import delete
 from flask_wtf import FlaskForm
-from wtforms import StringField, DateTimeField, SubmitField, IntegerField, FloatField, SelectField, FileField
+from wtforms import StringField, DateField, SubmitField, IntegerField, FloatField, SelectField, FileField
 from wtforms.validators import DataRequired, InputRequired
-from flask_wtf.file import FileAllowed  # Import FileAllowed from flask_wtf.file
+from flask_wtf.file import FileAllowed
 from flask_bootstrap import Bootstrap
 from dotenv import load_dotenv
 import os
@@ -16,7 +16,6 @@ from flask_wtf.csrf import CSRFProtect
 from werkzeug.utils import secure_filename
 
 load_dotenv()
-
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
@@ -35,6 +34,10 @@ UPLOAD_FOLDER = 'uploads/receipts'
 ALLOWED_EXTENSIONS = {'pdf', 'jpeg', 'jpg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Ensure the upload directory exists
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
 # Check if filename extension is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -51,7 +54,7 @@ class ShiftForm(FlaskForm):
 
 class ExpenseForm(FlaskForm):
     receiptNumber = IntegerField('Receipt Number:', validators=[InputRequired(), DataRequired()])
-    date = StringField('Date:', id='expdatepick', validators=[InputRequired(), DataRequired()])
+    date = DateField('Date:', id='expdatepick', format='%Y-%m-%d', validators=[InputRequired(), DataRequired()])
     showNumber = IntegerField('Event Number:', validators=[InputRequired(), DataRequired()])
     details = StringField('Expense Details:', validators=[InputRequired(), DataRequired()])
     net = FloatField('Subtotal:', validators=[InputRequired(), DataRequired()])
@@ -82,8 +85,7 @@ class Expense(db.Model):
     __tablename__ = 'expenses'
     id = db.Column(db.Integer, primary_key=True)
     receiptNumber = db.Column(db.Integer)
-    date = db.Column(db.DateTime)
-    worker = db.Column(db.String)
+    date = db.Column(db.Date)
     accountManager = db.Column(db.String)
     showName = db.Column(db.String)
     showNumber = db.Column(db.Integer)
@@ -95,7 +97,7 @@ class Expense(db.Model):
     def create(self):
         expense = Expense(
             receiptNumber=session['receiptNumber'],
-            date=datetime.strptime(session['date'], '%m/%d/%Y %I:%M %p'),
+            date=session['date'],
             worker=session['worker'],
             accountManager=session['accountManager'],
             showName=session['showName'],
@@ -114,7 +116,6 @@ class Expense(db.Model):
 class Shift(db.Model):
     __tablename__ = 'shifts'
     id = db.Column(db.Integer, primary_key=True)
-    worker = db.Column(db.String)
     start = db.Column(db.DateTime)
     end = db.Column(db.DateTime)
     showName = db.Column(db.String)
@@ -124,7 +125,6 @@ class Shift(db.Model):
 
     def create(self):
         shift = Shift(
-            worker=session['worker'],
             start=datetime.strptime(session['start'], '%m/%d/%Y %I:%M %p'),
             end=datetime.strptime(session['end'], '%m/%d/%Y %I:%M %p'),
             showName=session['showName'],
@@ -165,14 +165,15 @@ def create_event():
 # Route for timesheet
 @app.route('/timesheet', methods=['GET', 'POST'])
 def timesheet():
-    report = createTimeReportCH()
     shift = ShiftForm()
+    report = createTimeReportCH()
 
     if shift.validate_on_submit():
         showNumber = shift.showNumber.data
         event = Event.query.filter_by(showNumber=showNumber).first()
 
         if event:
+            session['worker'] = 'worker_name'  # Set the worker session variable appropriately
             session['start'] = shift.start.data
             session['end'] = shift.end.data
             session['showName'] = event.showName
@@ -189,28 +190,27 @@ def timesheet():
 
     return render_template('timesheet.html', shift=shift, report=report)
 
+
 # Route for expenses
 @app.route('/expenses', methods=['GET', 'POST'])
 def expenses():
-    report = createExpenseReportCH()
     expense_form = ExpenseForm()
+    report = createExpenseReportCH()
 
     if expense_form.validate_on_submit():
         show_number = expense_form.showNumber.data
         event = Event.query.filter_by(showNumber=show_number).first()
 
         if event:
-            # Handle file upload
             receipt_file = expense_form.receipt.data
             if receipt_file and allowed_file(receipt_file.filename):
                 filename = secure_filename(receipt_file.filename)
                 receipt_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-                # Create a new Expense object and populate its attributes
+ 
                 new_expense = Expense(
                     receiptNumber=expense_form.receiptNumber.data,
                     date=expense_form.date.data,
-                    worker=session['worker'],  # You need to set 'worker' in session somewhere in your app
                     accountManager=event.accountManager,
                     showName=event.showName,
                     showNumber=show_number,
@@ -220,7 +220,8 @@ def expenses():
                     receipt_filename=filename
                 )
 
-                new_expense.create()  # Assuming 'create' method adds and commits the new expense to the database
+                db.session.add(new_expense)
+                db.session.commit()
 
                 flash('Expense added successfully', 'success')
                 return redirect(url_for('expenses'))
@@ -240,88 +241,14 @@ def page_not_found(e):
 def internal_server_error(e):
     return render_template('500.html'), 500
 
-# Shell context for easy database interaction in Flask shell
-@app.shell_context_processor
-def make_shell_context():
-    return dict(db=db, Shift=Shift, Event=Event, Expense=Expense)
-
-# Refresh timesheet display
-@app.route('/refreshTimesheetDisplay')
-def refresh_timesheet_display():
-    report = createTimeReportCH()
-    return render_template('timesheet.html', report=report)
-
-# Refresh expense display
-@app.route('/refreshExpenseDisplay')
-def refresh_expense_display():
-    report = createExpenseReportCH()
-    return render_template('expenses.html', report=report)
-
-### Reports ###
-
-# Function to create time report
+# Report functions
 def createTimeReportCH():
-    shifts = Shift.query.all()
-    date = []
-    show = []
-    location = []
-    times = []
-    hours = []
+    # Function to create time report for Corporate Hospitality (stub)
+    return "Time Report"
 
-    for shift in shifts:
-        date.append(shift.start.date())
-        show.append(f'{shift.showName}/{shift.showNumber}/{shift.accountManager}')
-        location.append(shift.location)
-        times.append(f'{shift.start.time()}/{shift.end.time()}')
-        hours.append(float((shift.end - shift.start).total_seconds() / 3600))
-
-    timesheet = pd.DataFrame({
-        'Date': date,
-        'Show': show,
-        'Location': location,
-        'Times': times,
-        'Hours': hours
-    })
-
-    timesheet['Date'] = pd.to_datetime(timesheet['Date'], format='%Y-%m-%d')
-
-    reportHTML = timesheet.to_html(index=False, classes='table table-striped table-hover')
-
-    return reportHTML
-
-# Function to create expense report
 def createExpenseReportCH():
-    expenses = Expense.query.all()
-    date = []
-    show = []
-    location = []
-    worker = []
-    details = []
-    total = []
+    # Function to create expense report for Corporate Hospitality (stub)
+    return "Expense Report"
 
-    for expense in expenses:
-        date.append(expense.date.date())
-        show.append(f'{expense.showName}/{expense.showNumber}/{expense.accountManager}')
-        location.append(expense.location)
-        worker.append(expense.worker)
-        details.append(expense.details)
-        total.append(expense.net + expense.hst)
-
-    expensereport = pd.DataFrame({
-        'Date': date,
-        'Show': show,
-        'Location': location,
-        'Worker': worker,
-        'Details': details,
-        'Total': total
-    })
-
-    expensereport['Date'] = pd.to_datetime(expensereport['Date'], format='%Y-%m-%d')
-
-    reportHTML = expensereport.to_html(index=False, classes='table table-striped table-hover')
-
-    return reportHTML
-
-# Main entry point for the application
 if __name__ == '__main__':
     app.run(debug=True)
