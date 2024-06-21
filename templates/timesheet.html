@@ -12,10 +12,12 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
   <script type="text/javascript">
     $(function () {
-      $('#startpick').datetimepicker();
-    });
-    $(function () {
-      $('#endpick').datetimepicker();
+      $('#startpick').datetimepicker({
+        format: 'MM/DD/YYYY hh:mm A'
+      });
+      $('#endpick').datetimepicker({
+        format: 'MM/DD/YYYY hh:mm A'
+      });
     });
 
     function refreshTimesheetDisplay() {
