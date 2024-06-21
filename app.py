@@ -4,9 +4,9 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import delete
 from flask_wtf import FlaskForm
-from wtforms import StringField, DateTimeField, SubmitField, IntegerField, FloatField, SelectField, FileField
+from wtforms import StringField, SubmitField, IntegerField, FloatField, SelectField, FileField
 from wtforms.validators import DataRequired, InputRequired
-from flask_wtf.file import FileAllowed  # Import FileAllowed from flask_wtf.file
+from flask_wtf.file import FileAllowed
 from flask_bootstrap import Bootstrap
 from dotenv import load_dotenv
 import os
@@ -15,8 +15,13 @@ import pandas as pd
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.utils import secure_filename
 
-load_dotenv()
+import logging
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
@@ -83,7 +88,6 @@ class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     receiptNumber = db.Column(db.Integer)
     date = db.Column(db.DateTime)
-    worker = db.Column(db.String)
     accountManager = db.Column(db.String)
     showName = db.Column(db.String)
     showNumber = db.Column(db.Integer)
@@ -95,8 +99,7 @@ class Expense(db.Model):
     def create(self):
         expense = Expense(
             receiptNumber=session['receiptNumber'],
-            date=datetime.strptime(session['date'], '%m/%d/%Y %I:%M %p'),
-            worker=session['worker'],
+            date=datetime.strptime(session['date'], '%m/%d/%Y'),
             accountManager=session['accountManager'],
             showName=session['showName'],
             showNumber=session['showNumber'],
@@ -109,12 +112,11 @@ class Expense(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'<Expense {self.showNumber} - {self.showName} - {self.worker}>'
+        return f'<Expense {self.showNumber} - {self.showName} >'
 
 class Shift(db.Model):
     __tablename__ = 'shifts'
     id = db.Column(db.Integer, primary_key=True)
-    worker = db.Column(db.String)
     start = db.Column(db.DateTime)
     end = db.Column(db.DateTime)
     showName = db.Column(db.String)
@@ -124,7 +126,6 @@ class Shift(db.Model):
 
     def create(self):
         shift = Shift(
-            worker=session['worker'],
             start=datetime.strptime(session['start'], '%m/%d/%Y %I:%M %p'),
             end=datetime.strptime(session['end'], '%m/%d/%Y %I:%M %p'),
             showName=session['showName'],
@@ -136,7 +137,7 @@ class Shift(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'<Shift {self.showNumber} - {self.showName} - {self.worker}>'
+        return f'<Shift {self.showNumber} - {self.showName} >'
 
 # Route for index page
 @app.route('/')
@@ -206,11 +207,19 @@ def expenses():
                 filename = secure_filename(receipt_file.filename)
                 receipt_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
+                # Convert the date string to a datetime object
+                date_str = expense_form.date.data
+                logger.debug(f"Received date string: {date_str}")
+                try:
+                    date = datetime.strptime(date_str, '%Y-%m-%d')
+                except ValueError:
+                    flash('Invalid date format. Please use YYYY-MM-DD.', 'danger')
+                    return render_template('expenses.html', expense_form=expense_form, report=report)
+
                 # Create a new Expense object and populate its attributes
                 new_expense = Expense(
                     receiptNumber=expense_form.receiptNumber.data,
-                    date=expense_form.date.data,
-                    worker=session['worker'],  # You need to set 'worker' in session somewhere in your app
+                    date=date,
                     accountManager=event.accountManager,
                     showName=event.showName,
                     showNumber=show_number,
@@ -220,7 +229,8 @@ def expenses():
                     receipt_filename=filename
                 )
 
-                new_expense.create()  # Assuming 'create' method adds and commits the new expense to the database
+                db.session.add(new_expense)
+                db.session.commit()
 
                 flash('Expense added successfully', 'success')
                 return redirect(url_for('expenses'))
@@ -231,6 +241,7 @@ def expenses():
 
     return render_template('expenses.html', expense_form=expense_form, report=report)
 
+# Error handlers
 # Error handlers
 @app.errorhandler(404)
 def page_not_found(e):
@@ -295,15 +306,24 @@ def createExpenseReportCH():
     date = []
     show = []
     location = []
-    worker = []
     details = []
     total = []
 
     for expense in expenses:
-        date.append(expense.date.date())
+        logger.debug(f"Processing expense: {expense}")
+        if isinstance(expense.date, datetime):
+            date_str = expense.date.strftime('%Y-%m-%d')
+            date.append(date_str)
+            logger.debug(f"Formatted date (datetime): {date_str}")
+        elif isinstance(expense.date, str):
+            date.append(expense.date)
+            logger.debug(f"Date is already a string: {expense.date}")
+        else:
+            logger.error(f"Unexpected date format: {expense.date}")
+            date.append('Invalid date')
+
         show.append(f'{expense.showName}/{expense.showNumber}/{expense.accountManager}')
         location.append(expense.location)
-        worker.append(expense.worker)
         details.append(expense.details)
         total.append(expense.net + expense.hst)
 
@@ -311,12 +331,16 @@ def createExpenseReportCH():
         'Date': date,
         'Show': show,
         'Location': location,
-        'Worker': worker,
         'Details': details,
         'Total': total
     })
 
-    expensereport['Date'] = pd.to_datetime(expensereport['Date'], format='%Y-%m-%d')
+    logger.debug(f"Expense report DataFrame: {expensereport}")
+
+    try:
+        expensereport['Date'] = pd.to_datetime(expensereport['Date'], format='%Y-%m-%d')
+    except Exception as e:
+        logger.error(f"Error converting dates: {e}")
 
     reportHTML = expensereport.to_html(index=False, classes='table table-striped table-hover')
 
@@ -325,3 +349,5 @@ def createExpenseReportCH():
 # Main entry point for the application
 if __name__ == '__main__':
     app.run(debug=True)
+
+
