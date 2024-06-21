@@ -22,8 +22,8 @@
             $('#expdatepick').on('change.datetimepicker', function (e) {
                 var selectedDate = $('#expdatepick').datetimepicker('viewDate');
                 var formattedDate = moment(selectedDate).format('YYYY-MM-DD');
-                $('#expdatepick').val(formattedDate);  // Update the visible input field
-                $('#expdatepick').trigger('input');  // Trigger input event for Flask-WTF to recognize the change
+                $('#expdatepick input').val(formattedDate);  // Update the visible input field
+                $('#expdatepick input').trigger('input');  // Trigger input event for Flask-WTF to recognize the change
             });
         });
 
