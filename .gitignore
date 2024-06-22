@@ -101,3 +101,4 @@ tests/example_app/exampledb_test
 tests/example_app/example/exampledb
 
 /migrations/
+/uploads/

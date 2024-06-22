@@ -37,7 +37,7 @@ csrf = CSRFProtect(app)
 
 # Configure file upload settings
 UPLOAD_FOLDER = 'uploads/receipts'
-ALLOWED_EXTENSIONS = {'pdf', 'jpeg', 'jpg'}
+ALLOWED_EXTENSIONS = {'pdf', 'jpeg', 'jpg', 'png'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Check if filename extension is allowed
@@ -304,14 +304,18 @@ def createTimeReportCH():
 # Function to create expense report
 def createExpenseReportCH():
     expenses = Expense.query.order_by(Expense.date).all()
+    receiptNumber = []
     date = []
     show = []
     location = []
     details = []
+    net = []
+    hst = []
     total = []
 
     for expense in expenses:
         logger.debug(f"Processing expense: {expense}")
+        receiptNumber.append(expense.receiptNumber)
         if isinstance(expense.date, datetime):
             date_str = expense.date.strftime('%Y-%m-%d')
             date.append(date_str)
@@ -333,13 +337,18 @@ def createExpenseReportCH():
             location.append("Unknown location")
         
         details.append(expense.details)
+        net.append(expense.net)
+        hst.append(expense.hst)
         total.append(expense.net + expense.hst)
 
     expensereport = pd.DataFrame({
+        'Receipt Number': receiptNumber,
         'Date': date,
         'Show': show,
         'Location': location,
         'Details': details,
+        'Net': net,
+        'HST': hst,
         'Total': total
     })
 
