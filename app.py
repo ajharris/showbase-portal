@@ -74,13 +74,12 @@ class EventForm(FlaskForm):
 # Define database models
 class Event(db.Model):
     __tablename__ = 'events'
-    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     showName = db.Column(db.String, nullable=False)
     showNumber = db.Column(db.Integer, unique=True, nullable=False)
     accountManager = db.Column(db.String)
     location = db.Column(db.String)
-    expenses = db.relationship('Expense', back_populates='event')
+    expenses = db.relationship('Expense', back_populates='event', primaryjoin="Event.showNumber == Expense.showNumber", foreign_keys="[Expense.showNumber]")
 
     def __repr__(self):
         return f'<Event {self.showName} - {self.showNumber} - {self.accountManager}>'
@@ -92,17 +91,16 @@ class Expense(db.Model):
     date = db.Column(db.DateTime)
     accountManager = db.Column(db.String)
     showName = db.Column(db.String)
-    showNumber = db.Column(db.Integer)
+    showNumber = db.Column(db.Integer, db.ForeignKey('events.showNumber'))
     details = db.Column(db.String)
     net = db.Column(db.Float)
     hst = db.Column(db.Float)
     receipt_filename = db.Column(db.String)
-    event_id = db.Column(db.Integer, db.ForeignKey('events.id', name='fk_event_id'))
-    event = db.relationship('Event', back_populates='expenses')
+    event = db.relationship('Event', back_populates='expenses', primaryjoin="Expense.showNumber == Event.showNumber")
 
     def __repr__(self):
         return f'<Expense {self.showNumber} - {self.showName} >'
-
+    
 class Shift(db.Model):
     __tablename__ = 'shifts'
     id = db.Column(db.Integer, primary_key=True)
@@ -216,8 +214,7 @@ def expenses():
                     details=expense_form.details.data,
                     net=expense_form.net.data,
                     hst=expense_form.hst.data,
-                    receipt_filename=filename,
-                    event_id=event.id  # Ensure event_id is set correctly
+                    receipt_filename=filename
                 )
 
                 db.session.add(new_expense)
@@ -313,12 +310,14 @@ def createExpenseReportCH():
             date.append('Invalid date')
 
         show.append(f'{expense.showName}/{expense.showNumber}/{expense.accountManager}')
+        
         if expense.event:
-            logger.debug(f"Expense event location: {expense.event.location}")
+            logger.debug(f"Found event for expense: {expense.event}")
             location.append(expense.event.location)
         else:
             logger.debug(f"No event found for expense: {expense}")
             location.append("Unknown location")
+        
         details.append(expense.details)
         total.append(expense.net + expense.hst)
 
