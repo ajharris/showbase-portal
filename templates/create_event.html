@@ -34,7 +34,10 @@
         <div style="position: relative">
             {{ wtf.quick_form(form) }}
         </div>
-
-        
+        <hr>
+        <h2>Event List</h2>
+        <div id="event-report">
+            {{ event_report|safe }}
+        </div>
     </div>
 {% endblock %}
