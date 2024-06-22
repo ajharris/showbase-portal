@@ -327,7 +327,7 @@ def createExpenseReportCH():
             logger.error(f"Unexpected date format: {expense.date}")
             date.append('Invalid date')
 
-        show.append(f'{expense.showName}/{expense.showNumber}/{expense.accountManager}')
+        show.append(f'{expense.accountManager}, {expense.showName}/{expense.showNumber}, {expense.details}')
         
         if expense.event:
             logger.debug(f"Found event for expense: {expense.event}")
@@ -336,7 +336,6 @@ def createExpenseReportCH():
             logger.debug(f"No event found for expense: {expense}")
             location.append("Unknown location")
         
-        details.append(expense.details)
         net.append(expense.net)
         hst.append(expense.hst)
         total.append(expense.net + expense.hst)
@@ -345,8 +344,6 @@ def createExpenseReportCH():
         'Receipt Number': receiptNumber,
         'Date': date,
         'Show': show,
-        'Location': location,
-        'Details': details,
         'Net': net,
         'HST': hst,
         'Total': total
