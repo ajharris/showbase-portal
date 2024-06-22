@@ -80,6 +80,7 @@ class Event(db.Model):
     accountManager = db.Column(db.String)
     location = db.Column(db.String)
     expenses = db.relationship('Expense', back_populates='event', primaryjoin="Event.showNumber == Expense.showNumber", foreign_keys="[Expense.showNumber]")
+    shifts = db.relationship('Shift', back_populates='event', primaryjoin="Event.showNumber == Shift.showNumber", foreign_keys="[Shift.showNumber]")
 
     def __repr__(self):
         return f'<Event {self.showName} - {self.showNumber} - {self.accountManager}>'
@@ -100,16 +101,17 @@ class Expense(db.Model):
 
     def __repr__(self):
         return f'<Expense {self.showNumber} - {self.showName} >'
-    
+
 class Shift(db.Model):
     __tablename__ = 'shifts'
     id = db.Column(db.Integer, primary_key=True)
     start = db.Column(db.DateTime)
     end = db.Column(db.DateTime)
     showName = db.Column(db.String)
-    showNumber = db.Column(db.Integer)
+    showNumber = db.Column(db.Integer, db.ForeignKey('events.showNumber'))
     accountManager = db.Column(db.String)
     location = db.Column(db.String)
+    event = db.relationship('Event', back_populates='shifts', primaryjoin="Shift.showNumber == Event.showNumber")
 
     def create(self):
         shift = Shift(
@@ -122,7 +124,6 @@ class Shift(db.Model):
         )
         db.session.add(shift)
         db.session.commit()
-
 
     def __repr__(self):
         return f'<Shift {self.showNumber} - {self.showName} >'
@@ -137,19 +138,26 @@ def index():
 def create_event():
     form = EventForm()
     form.accountManager.choices = [(manager, manager) for manager in accountManagersList]
+    event_report = createEventReport()
 
     if form.validate_on_submit():
-        event = Event(
-            showName=form.showName.data,
-            showNumber=form.showNumber.data,
-            accountManager=form.accountManager.data,
-            location=form.location.data
-        )
-        db.session.add(event)
-        db.session.commit()
-        flash('Event created successfully!', 'success')
-        return redirect(url_for('create_event'))
-    return render_template('create_event.html', form=form)
+        # Check for duplicate showNumber
+        existing_event = Event.query.filter_by(showNumber=form.showNumber.data).first()
+        if existing_event:
+            flash('An event with this Show Number already exists.', 'danger')
+        else:
+            event = Event(
+                showName=form.showName.data,
+                showNumber=form.showNumber.data,
+                accountManager=form.accountManager.data,
+                location=form.location.data
+            )
+            db.session.add(event)
+            db.session.commit()
+            flash('Event created successfully!', 'success')
+            return redirect(url_for('create_event'))
+
+    return render_template('create_event.html', form=form, event_report=event_report)
 
 # Route for timesheet
 @app.route('/timesheet', methods=['GET', 'POST'])
@@ -255,11 +263,17 @@ def refresh_expense_display():
     report = createExpenseReportCH()
     return render_template('expenses.html', report=report)
 
+@app.route('/refreshEventDisplay')
+def refresh_event_display():
+    event_report = createEventReport()
+    return event_report
+
+
 ### Reports ###
 
 # Function to create time report
 def createTimeReportCH():
-    shifts = Shift.query.all()
+    shifts = Shift.query.order_by(Shift.start).all()
     date = []
     show = []
     location = []
@@ -283,13 +297,13 @@ def createTimeReportCH():
 
     timesheet['Date'] = pd.to_datetime(timesheet['Date'], format='%Y-%m-%d')
 
-    reportHTML = timesheet.to_html(index=False, classes='table table-striped table-hover')
+    report_html = timesheet.to_html(index=False, classes='table table-striped table-hover')
 
-    return reportHTML
+    return report_html
 
 # Function to create expense report
 def createExpenseReportCH():
-    expenses = Expense.query.all()
+    expenses = Expense.query.order_by(Expense.date).all()
     date = []
     show = []
     location = []
@@ -336,9 +350,34 @@ def createExpenseReportCH():
     except Exception as e:
         logger.error(f"Error converting dates: {e}")
 
-    reportHTML = expensereport.to_html(index=False, classes='table table-striped table-hover')
+    report_html = expensereport.to_html(index=False, classes='table table-striped table-hover')
 
-    return reportHTML
+    return report_html
+
+def createEventReport():
+    events = Event.query.order_by(Event.showNumber).all()
+    show_names = []
+    show_numbers = []
+    account_managers = []
+    locations = []
+
+    for event in events:
+        show_names.append(event.showName)
+        show_numbers.append(event.showNumber)
+        account_managers.append(event.accountManager)
+        locations.append(event.location)
+
+    event_report = pd.DataFrame({
+        'Show Name': show_names,
+        'Show Number': show_numbers,
+        'Account Manager': account_managers,
+        'Location': locations
+    })
+
+    report_html = event_report.to_html(index=False, classes='table table-striped table-hover')
+
+    return report_html
+
 
 # Main entry point for the application
 if __name__ == '__main__':
