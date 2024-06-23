@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['SECRET_KEY'] = '987087412167751b8dd29e01872b1115889cabc8546afccb64c1862c9925abed'
 bootstrap = Bootstrap(app)
 
 # Configure database
@@ -71,7 +71,25 @@ class EventForm(FlaskForm):
     location = StringField('Location:', validators=[InputRequired(), DataRequired()])
     submit = SubmitField('Submit')
 
+class NoteForm(FlaskForm):
+    notes = StringField('Notes', validators=[DataRequired()])
+    submit = SubmitField('Add Notes')
+
+class DocumentForm(FlaskForm):
+    document = FileField('Upload Document', validators=[FileAllowed(['pdf', 'jpeg', 'jpg', 'png', 'docx', 'xlsx'], 'Documents only!')])
+    submit = SubmitField('Upload Document')
+
+class SharePointForm(FlaskForm):
+    sharepoint_link = StringField('SharePoint Link', validators=[DataRequired()])
+    submit = SubmitField('Add Link')
+
+
 # Define database models
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String, nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+
 class Event(db.Model):
     __tablename__ = 'events'
     id = db.Column(db.Integer, primary_key=True)
@@ -79,11 +97,12 @@ class Event(db.Model):
     showNumber = db.Column(db.Integer, unique=True, nullable=False)
     accountManager = db.Column(db.String)
     location = db.Column(db.String)
+    active = db.Column(db.Boolean)
+    notes = db.Column(db.Text)
+    sharepoint_link = db.Column(db.String)
+    documents = db.relationship('Document', backref='event', lazy=True)
     expenses = db.relationship('Expense', back_populates='event', primaryjoin="Event.showNumber == Expense.showNumber", foreign_keys="[Expense.showNumber]")
     shifts = db.relationship('Shift', back_populates='event', primaryjoin="Event.showNumber == Shift.showNumber", foreign_keys="[Shift.showNumber]")
-
-    def __repr__(self):
-        return f'<Event {self.showName} - {self.showNumber} - {self.accountManager}>'
 
 class Expense(db.Model):
     __tablename__ = 'expenses'
@@ -251,6 +270,33 @@ def internal_server_error(e):
 def make_shell_context():
     return dict(db=db, Shift=Shift, Event=Event, Expense=Expense)
 
+@app.route('/delete_event/<int:event_id>', methods=['POST'])
+def delete_event(event_id):
+    event = Event.query.get(event_id)
+    if not event:
+        flash('Event not found', 'danger')
+        return redirect(url_for('create_event'))
+    
+    # Delete associated shifts and expenses
+    Shift.query.filter_by(showNumber=event.showNumber).delete()
+    Expense.query.filter_by(showNumber=event.showNumber).delete()
+    
+    # Delete associated documents
+    for document in event.documents:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], document.filename))
+        except Exception as e:
+            logger.error(f"Error deleting file {document.filename}: {e}")
+        db.session.delete(document)
+
+    # Delete the event itself
+    db.session.delete(event)
+    db.session.commit()
+    
+    flash('Event and all associated entries deleted successfully', 'success')
+    return redirect(url_for('create_event'))
+
+
 # Refresh timesheet display
 @app.route('/refreshTimesheetDisplay')
 def refresh_timesheet_display():
@@ -265,8 +311,58 @@ def refresh_expense_display():
 
 @app.route('/refreshEventDisplay')
 def refresh_event_display():
-    event_report = createEventReport()
+    filter_option = request.args.get('filter', 'all')
+    event_report = createEventReport(filter_option)
     return event_report
+
+
+@app.route('/set_event_status/<int:event_id>/<status>', methods=['POST'])
+def set_event_status(event_id, status):
+    event = Event.query.get(event_id)
+    if event:
+        event.active = (status == 'active')
+        db.session.commit()
+        return 'Success', 200
+    return 'Event not found', 404
+
+@app.route('/event/<int:event_id>', methods=['GET', 'POST'])
+def view_event(event_id):
+    event = Event.query.get(event_id)
+    if not event:
+        flash('Event not found', 'danger')
+        return redirect(url_for('create_event'))
+    
+    shifts = Shift.query.filter_by(showNumber=event.showNumber).all()
+    expenses = Expense.query.filter_by(showNumber=event.showNumber).all()
+
+    note_form = NoteForm()
+    document_form = DocumentForm()
+    sharepoint_form = SharePointForm()
+
+    if note_form.validate_on_submit() and note_form.submit.data:
+        event.notes = note_form.notes.data
+        db.session.commit()
+        flash('Notes added successfully', 'success')
+        return redirect(url_for('view_event', event_id=event.id))
+
+    if document_form.validate_on_submit() and document_form.submit.data:
+        if document_form.document.data:
+            filename = secure_filename(document_form.document.data.filename)
+            document_form.document.data.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            new_document = Document(filename=filename, event_id=event.id)
+            db.session.add(new_document)
+            db.session.commit()
+            flash('Document uploaded successfully', 'success')
+            return redirect(url_for('view_event', event_id=event.id))
+
+    if sharepoint_form.validate_on_submit() and sharepoint_form.submit.data:
+        event.sharepoint_link = sharepoint_form.sharepoint_link.data
+        db.session.commit()
+        flash('SharePoint link added successfully', 'success')
+        return redirect(url_for('view_event', event_id=event.id))
+
+    return render_template('view_event.html', event=event, shifts=shifts, expenses=expenses, note_form=note_form, document_form=document_form, sharepoint_form=sharepoint_form)
+
 
 
 ### Reports ###
@@ -360,29 +456,53 @@ def createExpenseReportCH():
 
     return report_html
 
-def createEventReport():
-    events = Event.query.order_by(Event.showNumber).all()
+def createEventReport(filter_option='all'):
+    if filter_option == 'active':
+        events = Event.query.filter_by(active=True).order_by(Event.showNumber).all()
+    else:
+        events = Event.query.order_by(Event.showNumber).all()
+    
     show_names = []
     show_numbers = []
     account_managers = []
     locations = []
+    statuses = []
+    buttons = []
 
     for event in events:
         show_names.append(event.showName)
         show_numbers.append(event.showNumber)
         account_managers.append(event.accountManager)
         locations.append(event.location)
+        statuses.append('Active' if event.active else 'Inactive')
+
+        if event.active:
+            button_html = (
+                f'<button class="btn btn-danger" onclick="setEventStatus({event.id}, \'inactive\')">Set Inactive</button>'
+            )
+        else:
+            button_html = (
+                f'<button class="btn btn-success" onclick="setEventStatus({event.id}, \'active\')">Set Active</button>'
+            )
+
+        view_button = f'<a href="{url_for("view_event", event_id=event.id)}" class="btn btn-info">View Details</a>'
+
+        buttons.append(button_html + view_button)
 
     event_report = pd.DataFrame({
         'Show Name': show_names,
         'Show Number': show_numbers,
         'Account Manager': account_managers,
-        'Location': locations
+        'Location': locations,
+        'Status': statuses,
+        'Actions': buttons
     })
 
-    report_html = event_report.to_html(index=False, classes='table table-striped table-hover')
+    report_html = event_report.to_html(index=False, classes='table table-striped table-hover', escape=False)
 
     return report_html
+
+
 
 
 # Main entry point for the application
