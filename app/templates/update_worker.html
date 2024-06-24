@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mt-3">
+    <div class="col-md-6 offset-md-3">
+        <h2>Update Profile</h2>
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.first_name.label(class="form-control-label") }}
+                {{ form.first_name(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.last_name.label(class="form-control-label") }}
+                {{ form.last_name(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.email.label(class="form-control-label") }}
+                {{ form.email(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.phone_number.label(class="form-control-label") }}
+                {{ form.phone_number(class="form-control") }}
+            </div>
+            {% if current_user.is_admin %}
+            <div class="form-group">
+                {{ form.is_admin.label(class="form-control-label") }}
+                {{ form.is_admin(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.is_account_manager.label(class="form-control-label") }}
+                {{ form.is_account_manager(class="form-control") }}
+            </div>
+            {% endif %}
+            <div class="form-group">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
