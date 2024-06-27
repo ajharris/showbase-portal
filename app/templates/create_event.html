@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Create Event{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <h1>Create Event</h1>
+    <div style="position: relative">
+        {{ wtf.quick_form(form) }}
+    </div>
+    <hr>
+    <h2>Event List</h2>
+    <div id="event-report">
+        {{ event_report|safe }}
+    </div>
+</div>
+{% endblock %}

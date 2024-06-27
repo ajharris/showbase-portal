@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Expenses{% endblock %}
+
+{% block page_content %}
+<h1>Expenses</h1>
+<div style="position: relative">
+    {{ wtf.quick_form(expense_form, id="expense-form") }}
+</div>
+
+<h2>Report</h2>
+<div id="expense-report">
+    {{ report | safe }}
+</div>
+{% endblock %}
