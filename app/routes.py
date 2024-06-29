@@ -5,27 +5,86 @@ from datetime import datetime
 import os
 from . import db, login_manager, logger, mail
 from .models import Worker, Shift, Event, Expense, Document
-from .forms import LoginForm, UpdateWorkerForm, RequestResetForm, ResetPasswordForm, EventForm, ExpenseForm, ShiftForm, NoteForm, DocumentForm, SharePointForm
+from .forms import LoginForm, UpdateWorkerForm, UpdatePasswordForm, RequestResetForm, ResetPasswordForm, EventForm, ExpenseForm, ShiftForm, NoteForm, DocumentForm, SharePointForm, RegistrationForm, AdminCreateWorkerForm
 from .utils import allowed_file, createTimeReportCH, createExpenseReportCH, createEventReport
 from flask_mail import Message
+from werkzeug.security import generate_password_hash
 
 @login_manager.user_loader
 def load_user(user_id):
     return Worker.query.get(int(user_id))
 
+@app.route('/admin/create_worker', methods=['GET', 'POST'])
+def admin_create_worker():
+    form = AdminCreateWorkerForm()
+    if form.validate_on_submit():
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        is_admin = form.is_admin.data
+        is_account_manager = form.is_account_manager.data
+        temporary_password = 'TempPassword123'  # You may want to generate a more secure temporary password
+
+        # Generate a temporary email
+        temp_email = f'{first_name.lower()}@nationalshowsystems.com'
+
+        new_worker = Worker(
+            first_name=first_name,
+            last_name=last_name,
+            email=temp_email,  # Use the temporary email
+            password_hash=generate_password_hash(temporary_password),
+            is_admin=is_admin,
+            is_account_manager=is_account_manager
+        )
+        db.session.add(new_worker)
+        db.session.commit()
+        flash(f'Worker {first_name} {last_name} created with temporary email {temp_email} and temporary password', 'success')
+        return redirect(url_for('admin_create_worker'))  # Change this to the appropriate redirect location
+
+    return render_template('admin_create_worker.html', form=form)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        worker = Worker.query.filter_by(email=form.email.data).first()
-        if worker is None or not worker.check_password(form.password.data):
-            flash('Invalid email or password', 'danger')
-            return redirect(url_for('login'))
-        login_user(worker)
-        return redirect(url_for('index'))
+        user = Worker.query.filter_by(email=form.email.data).first()
+        if user and user.check_password(form.password.data):
+            if user.check_password('TempPassword123'):  # Check if the password is the temporary one
+                flash('Please update your password and email', 'warning')
+                return redirect(url_for('update_profile'))
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', form=form)
+
+@app.route('/update_profile', methods=['GET', 'POST'])
+@login_required
+def update_profile():
+    form = UpdateWorkerForm(obj=current_user)
+    if form.validate_on_submit():
+        current_user.email = form.email.data
+        current_user.phone_number = form.phone_number.data
+        if form.password.data:
+            current_user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your profile has been updated!', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('update_profile.html', form=form)
+
+
+@app.route('/update_password', methods=['GET', 'POST'])
+@login_required
+def update_password():
+    form = UpdatePasswordForm()
+    if form.validate_on_submit():
+        current_user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your password has been updated!', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('update_password.html', form=form)
+
+
 
 @app.route('/logout')
 @login_required

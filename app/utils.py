@@ -2,11 +2,15 @@ import os
 from datetime import datetime
 import pandas as pd
 from flask import current_app, url_for
-from .models import Expense, Event, Shift
+from .models import Expense, Event, Shift, Worker
 from . import logger
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+def get_account_managers():
+    return Worker.query.filter_by(is_account_manager=True).all()
+
 
 def createTimeReportCH(shifts):
     data = {
