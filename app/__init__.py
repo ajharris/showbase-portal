@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def create_app(config_class='config.Config'):
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static')
     app.config.from_object(config_class)
 
     db.init_app(app)

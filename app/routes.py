@@ -378,6 +378,13 @@ def set_event_status(event_id, status):
         return 'Success', 200
     return 'Event not found', 404
 
+@app.route('/events', methods=['GET'])
+@login_required
+def events():
+    event_report = createEventReport()
+    return render_template('events.html', event_report=event_report)
+
+
 @app.route('/event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def view_event(event_id):

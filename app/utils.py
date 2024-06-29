@@ -94,6 +94,6 @@ def createEventReport(filter_option='all'):
         data['Actions'].append(button_html + view_button)
 
     event_report = pd.DataFrame(data)
-    report_html = event_report.to_html(index=False, classes='table table-striped table-hover', escape=False)
+    report_html = event_report.to_html(index=False, classes='table table-bordered table-striped table-hover', escape=False)
 
     return report_html
