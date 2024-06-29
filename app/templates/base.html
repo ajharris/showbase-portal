@@ -6,21 +6,77 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
     <style>
         body.light-mode {
-            background-color: #ffffff;
-            color: #000000;
-        }
-        body.dark-mode {
-            background-color: #333333;
-            color: #ffffff;
-        }
-        .navbar-inverse.light-mode {
-            background-color: #f8f9fa;
-            color: #000000;
-        }
-        .navbar-inverse.dark-mode {
-            background-color: #333333;
-            color: #ffffff;
-        }
+    background-color: #ffffff;
+    color: #000000;
+}
+body.dark-mode {
+    background-color: #333333;
+    color: #ffffff;
+}
+.navbar-inverse.light-mode {
+    background-color: #f8f9fa;
+    color: #333333; /* Changed to a darker shade */
+}
+.navbar-inverse.dark-mode {
+    background-color: #333333;
+    color: #ffffff;
+}
+.navbar-inverse.light-mode .navbar-nav > li > a {
+    color: #333333; /* Changed to a darker shade */
+}
+.navbar-inverse.dark-mode .navbar-nav > li > a {
+    color: #cccccc;
+}
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 15px 10px;
+}
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+}
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #2196F3;
+}
+input:checked + .slider:before {
+    transform: translateX(14px);
+}
+.toggle-label {
+    margin-left: 10px;
+    font-weight: normal; /* Ensure the font weight is the same as the rest of the menu */
+}
+
+
     </style>
 {% endblock %}
 
@@ -54,8 +110,12 @@
                     <li><a href="{{ url_for('register') }}">Register</a></li>
                 {% endif %}
                 {% if current_user.is_authenticated %}
-                    <li>
-                        <a href="#" id="toggle-theme">Toggle Theme</a>
+                    <li class="theme-switch-wrapper">
+                        <label class="theme-switch" for="checkbox">
+                            <input type="checkbox" id="checkbox" />
+                            <span class="slider round"></span>
+                        </label>
+                        <label for="checkbox" class="toggle-label">Light/Dark Scheme</label>
                     </li>
                 {% endif %}
             </ul>
@@ -77,13 +137,14 @@
             const currentTheme = localStorage.getItem('theme') || 'light';
             document.body.classList.add(currentTheme + '-mode');
             document.querySelector('.navbar-inverse').classList.add(currentTheme + '-mode');
+            document.getElementById('checkbox').checked = currentTheme === 'dark';
 
-            document.getElementById('toggle-theme').addEventListener('click', function() {
-                const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
-                document.body.classList.toggle('light-mode');
-                document.body.classList.toggle('dark-mode');
-                document.querySelector('.navbar-inverse').classList.toggle('light-mode');
-                document.querySelector('.navbar-inverse').classList.toggle('dark-mode');
+            document.getElementById('checkbox').addEventListener('change', function() {
+                const newTheme = this.checked ? 'dark' : 'light';
+                document.body.classList.toggle('light-mode', newTheme === 'light');
+                document.body.classList.toggle('dark-mode', newTheme === 'dark');
+                document.querySelector('.navbar-inverse').classList.toggle('light-mode', newTheme === 'light');
+                document.querySelector('.navbar-inverse').classList.toggle('dark-mode', newTheme === 'dark');
                 localStorage.setItem('theme', newTheme);
 
                 fetch("{{ url_for('save_theme') }}", {
