@@ -1,42 +1,50 @@
-
 body.light-mode {
     background-color: #ffffff;
     color: #000000;
 }
+
 body.dark-mode {
     background-color: #333333;
     color: #ffffff;
 }
+
 .navbar-inverse.light-mode {
     background-color: #f8f9fa;
-    color: #333333; /* Changed to a darker shade */
+    color: #333333;
 }
+
 .navbar-inverse.dark-mode {
     background-color: #333333;
     color: #ffffff;
 }
+
 .navbar-inverse.light-mode .navbar-nav > li > a {
-    color: #333333; /* Changed to a darker shade */
+    color: #333333;
 }
+
 .navbar-inverse.dark-mode .navbar-nav > li > a {
     color: #cccccc;
 }
+
 .theme-switch-wrapper, .view-switch-wrapper {
     display: flex;
     align-items: center;
     padding: 15px 10px;
 }
+
 .theme-switch, .view-switch {
     position: relative;
     display: inline-block;
     width: 34px;
     height: 20px;
 }
+
 .theme-switch input, .view-switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
+
 .slider, .view-slider {
     position: absolute;
     cursor: pointer;
@@ -48,6 +56,7 @@ body.dark-mode {
     transition: .4s;
     border-radius: 20px;
 }
+
 .slider:before, .view-slider:before {
     position: absolute;
     content: "";
@@ -59,14 +68,54 @@ body.dark-mode {
     transition: .4s;
     border-radius: 50%;
 }
+
 input:checked + .slider, input:checked + .view-slider {
     background-color: #2196F3;
 }
+
 input:checked + .slider:before, input:checked + .view-slider:before {
     transform: translateX(14px);
 }
+
 .toggle-label {
     margin-left: 10px;
-    font-weight: normal; /* Ensure the font weight is the same as the rest of the menu */
-    color: inherit; /* Ensure the color follows the theme */
+    font-weight: normal;
+    color: inherit;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: inherit;
+}
+
+.table th, .table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.1);
+}
+
+.light-mode .table-hover tbody tr {
+    background-color: #ffffff;
+}
+
+.dark-mode .table-hover tbody tr {
+    background-color: #555555;
+}
+
+.light-mode .table-hover tbody tr:hover {
+    background-color: #eeeeee;
+}
+
+.dark-mode .table-hover tbody tr:hover {
+    background-color: #777777;
 }

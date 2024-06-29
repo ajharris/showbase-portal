@@ -32,9 +32,18 @@
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
                             <ul class="dropdown-menu">
                                 <li><a href="{{ url_for('admin_create_worker') }}">Create Worker</a></li>
-                                <li><a href='/create_event'>Create Event</a></li>
-                                <li><a href='/timesheet'>Timesheet</a></li>
-                                <li><a href='/expenses'>Expenses</a></li>
+                                <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
+                                <li><a href="{{ url_for('timesheet') }}">Timesheet</a></li>
+                                <li><a href="{{ url_for('expenses') }}">Expenses</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if current_user.is_admin or current_user.is_account_manager %}
+                        <li class="account-manager-dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
+                                <li><a href="{{ url_for('events') }}">List Events</a></li>
                             </ul>
                         </li>
                     {% endif %}
@@ -81,6 +90,7 @@
         const adminFields = document.querySelectorAll('.admin-field');
         const accountManagerFields = document.querySelectorAll('.account-manager-field');
         const adminDropdown = document.querySelector('.admin-dropdown');
+        const accountManagerDropdown = document.querySelector('.account-manager-dropdown');
 
         if (themeCheckbox) {
             const currentTheme = localStorage.getItem('theme') || 'light';
@@ -115,10 +125,12 @@
                     adminFields.forEach(field => field.style.display = 'none');
                     accountManagerFields.forEach(field => field.style.display = 'none');
                     if (adminDropdown) adminDropdown.style.display = 'none';
+                    if (accountManagerDropdown) accountManagerDropdown.style.display = 'none';
                 } else {
                     adminFields.forEach(field => field.style.display = 'block');
                     accountManagerFields.forEach(field => field.style.display = 'block');
                     if (adminDropdown) adminDropdown.style.display = 'block';
+                    if (accountManagerDropdown) accountManagerDropdown.style.display = 'block';
                 }
             }
 
@@ -144,5 +156,22 @@
             });
         }
     });
+
+    function setEventStatus(eventId, status) {
+        fetch(`/set_event_status/${eventId}/${status}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to update event status.');
+            }
+        });
+    }
 </script>
 {% endblock %}
+
