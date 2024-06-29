@@ -24,8 +24,9 @@ class AdminCreateWorkerForm(FlaskForm):
     submit = SubmitField('Create Worker')
 
 class UpdatePasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('New Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('password')])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Update Password')
 
 
