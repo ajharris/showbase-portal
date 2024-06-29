@@ -24,13 +24,13 @@
                 {{ form.phone_number(class="form-control") }}
             </div>
             {% if form.is_admin is not none %}
-                <div class="form-group">
+                <div class="form-group admin-field">
                     {{ form.is_admin.label(class="form-control-label") }}
                     {{ form.is_admin(class="form-control") }}
                 </div>
             {% endif %}
             {% if form.is_account_manager is not none %}
-                <div class="form-group">
+                <div class="form-group account-manager-field">
                     {{ form.is_account_manager.label(class="form-control-label") }}
                     {{ form.is_account_manager(class="form-control") }}
                 </div>
