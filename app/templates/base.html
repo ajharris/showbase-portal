@@ -23,9 +23,6 @@
             <ul class="nav navbar-nav">
                 {% if current_user.is_authenticated %}
                     <li><a href="/">Home</a></li>
-                    <li><a href='/create_event'>Create Event</a></li>
-                    <li><a href='/timesheet'>Timesheet</a></li>
-                    <li><a href='/expenses'>Expenses</a></li>
                 {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -35,7 +32,9 @@
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
                             <ul class="dropdown-menu">
                                 <li><a href="{{ url_for('admin_create_worker') }}">Create Worker</a></li>
-                                <!-- Add more admin links here -->
+                                <li><a href='/create_event'>Create Event</a></li>
+                                <li><a href='/timesheet'>Timesheet</a></li>
+                                <li><a href='/expenses'>Expenses</a></li>
                             </ul>
                         </li>
                     {% endif %}
