@@ -43,6 +43,17 @@ def admin_create_worker():
 
     return render_template('admin_create_worker.html', form=form, workers=workers)
 
+@app.route('/update_temp_password', methods=['GET', 'POST'])
+@login_required
+def update_temp_password():
+    form = UpdatePasswordForm()
+    if form.validate_on_submit():
+        current_user.set_password(form.password.data)
+        current_user.email = form.email.data  # If email update is required
+        db.session.commit()
+        flash('Your password has been updated!', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('update_temp_password.html', form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -51,14 +62,15 @@ def login():
     if form.validate_on_submit():
         user = Worker.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
+            login_user(user)
             if user.check_password('TempPassword123'):  # Check if the password is the temporary one
                 flash('Please update your password and email', 'warning')
-                return redirect(url_for('update_profile'))
-            login_user(user)
-            return redirect(url_for('dashboard'))
+                return redirect(url_for('update_temp_password'))
+            return redirect(url_for('index'))
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', form=form)
+
 
 @app.route('/update_profile', methods=['GET', 'POST'])
 @login_required
