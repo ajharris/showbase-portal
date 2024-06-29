@@ -38,6 +38,13 @@ class UpdateWorkerForm(FlaskForm):
     is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
     submit = SubmitField('Update')
 
+    def __init__(self, *args, **kwargs):
+        view_as_employee = kwargs.pop('view_as_employee', False)
+        super(UpdateWorkerForm, self).__init__(*args, **kwargs)
+        if view_as_employee:
+            del self.is_admin
+            del self.is_account_manager
+
 class AdminUpdateWorkerForm(UpdateWorkerForm):
     is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
     is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])

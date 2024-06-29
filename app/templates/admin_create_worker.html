@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-
-{% block title %}Create Event{% endblock %}
+{% block title %}Admin Create Worker{% endblock %}
 {% block content %}
     <div class="container">
         <h2>Create Worker</h2>
@@ -27,5 +26,31 @@
                 {{ form.submit(class="btn btn-primary") }}
             </div>
         </form>
+        <h3>Existing Workers</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Is Admin</th>
+                    <th>Is Account Manager</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for worker in workers %}
+                    <tr>
+                        <td{% if worker.first_name == 'TempFirstName' %} class="bg-warning"{% endif %}>{{ worker.first_name }}</td>
+                        <td{% if worker.last_name == 'TempLastName' %} class="bg-warning"{% endif %}>{{ worker.last_name }}</td>
+                        <td{% if worker.email.endswith('@example.com') %} class="bg-warning"{% endif %}>{{ worker.email }}</td>
+                        <td{% if not worker.phone_number %} class="bg-warning"{% endif %}>{{ worker.phone_number or 'Not Updated' }}</td>
+                        <td>{{ worker.is_admin and 'Yes' or 'No' }}</td>
+                        <td>{{ worker.is_account_manager and 'Yes' or 'No' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 {% endblock %}
+
