@@ -17,6 +17,7 @@ def load_user(user_id):
 @app.route('/admin/create_worker', methods=['GET', 'POST'])
 def admin_create_worker():
     form = AdminCreateWorkerForm()
+    workers = Worker.query.all()
     if form.validate_on_submit():
         first_name = form.first_name.data
         last_name = form.last_name.data
@@ -40,7 +41,8 @@ def admin_create_worker():
         flash(f'Worker {first_name} {last_name} created with temporary email {temp_email} and temporary password', 'success')
         return redirect(url_for('admin_create_worker'))  # Change this to the appropriate redirect location
 
-    return render_template('admin_create_worker.html', form=form)
+    return render_template('admin_create_worker.html', form=form, workers=workers)
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -111,28 +113,31 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
+
 @app.route('/update_worker/<int:worker_id>', methods=['GET', 'POST'])
 @login_required
 def update_worker(worker_id):
     worker = Worker.query.get_or_404(worker_id)
-    if worker.id != current_user.id and not current_user.is_admin:
-        flash('You do not have permission to update this profile.', 'danger')
-        return redirect(url_for('index'))
-
-    form = UpdateWorkerForm(obj=worker)
+    view_as_employee = session.get('view_as_employee', False)
+    form = UpdateWorkerForm(view_as_employee=view_as_employee, obj=worker)
+    
     if form.validate_on_submit():
         worker.first_name = form.first_name.data
         worker.last_name = form.last_name.data
         worker.email = form.email.data
         worker.phone_number = form.phone_number.data
-        if current_user.is_admin:
+        if not view_as_employee:
             worker.is_admin = form.is_admin.data
             worker.is_account_manager = form.is_account_manager.data
         db.session.commit()
-        flash('Your profile has been updated.', 'success')
-        return redirect(url_for('index'))
+        flash('Your profile has been updated!', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('update_profile.html', form=form)
 
-    return render_template('update_worker.html', form=form, worker=worker)
+
+
+
+
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
@@ -340,6 +345,28 @@ def refresh_event_display():
     filter_option = request.args.get('filter', 'all')
     event_report = createEventReport(filter_option)
     return event_report
+
+from flask import request, jsonify, session
+
+@app.route('/save_view_mode', methods=['POST'])
+def save_view_mode():
+    data = request.get_json()
+    view_as_employee = data.get('viewAsEmployee') == 'true'
+    session['view_as_employee'] = view_as_employee
+    return jsonify(success=True)
+
+
+
+
+
+@app.route('/admin_dashboard')
+@login_required
+def admin_dashboard():
+    if session.get('view_as_employee'):
+        return redirect(url_for('employee_dashboard'))
+    # Admin dashboard logic here
+    return render_template('admin_dashboard.html')
+
 
 @app.route('/set_event_status/<int:event_id>/<status>', methods=['POST'])
 @login_required
