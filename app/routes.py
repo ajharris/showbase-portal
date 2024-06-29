@@ -52,7 +52,7 @@ def update_temp_password():
         current_user.email = form.email.data  # If email update is required
         db.session.commit()
         flash('Your password has been updated!', 'success')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('index'))
     return render_template('update_temp_password.html', form=form)
 
 
@@ -83,7 +83,7 @@ def update_profile():
             current_user.set_password(form.password.data)
         db.session.commit()
         flash('Your profile has been updated!', 'success')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('index'))
     return render_template('update_profile.html', form=form)
 
 
@@ -95,7 +95,7 @@ def update_password():
         current_user.set_password(form.password.data)
         db.session.commit()
         flash('Your password has been updated!', 'success')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('index'))
     return render_template('update_password.html', form=form)
 
 
@@ -143,7 +143,7 @@ def update_worker(worker_id):
             worker.is_account_manager = form.is_account_manager.data
         db.session.commit()
         flash('Your profile has been updated!', 'success')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('index'))
     return render_template('update_profile.html', form=form)
 
 
@@ -366,18 +366,6 @@ def save_view_mode():
     view_as_employee = data.get('viewAsEmployee') == 'true'
     session['view_as_employee'] = view_as_employee
     return jsonify(success=True)
-
-
-
-
-
-@app.route('/admin_dashboard')
-@login_required
-def admin_dashboard():
-    if session.get('view_as_employee'):
-        return redirect(url_for('employee_dashboard'))
-    # Admin dashboard logic here
-    return render_template('admin_dashboard.html')
 
 
 @app.route('/set_event_status/<int:event_id>/<status>', methods=['POST'])
