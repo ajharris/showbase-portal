@@ -103,6 +103,15 @@ input:checked + .slider:before {
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('admin_create_worker') }}">Create Worker</a></li>
+                                <!-- Add more admin links here -->
+                            </ul>
+                        </li>
+                    {% endif %}
                     <li><a href="{{ url_for('update_worker', worker_id=current_user.id) }}">Update Profile</a></li>
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% else %}
@@ -123,6 +132,7 @@ input:checked + .slider:before {
     </div>
 </div>
 {% endblock %}
+
 
 {% block content %}
     <div class="container">

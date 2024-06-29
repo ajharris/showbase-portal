@@ -3,6 +3,32 @@ from wtforms import StringField, SubmitField, IntegerField, FloatField, SelectFi
 from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo
 from flask_wtf.file import FileAllowed
 
+from .utils import get_account_managers
+
+class EventForm(FlaskForm):
+    showName = StringField('Show Name:', validators=[InputRequired(), DataRequired()])
+    showNumber = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
+    accountManager = SelectField('Account Manager:', choices=[], validators=[InputRequired(), DataRequired()])
+    location = StringField('Location:', validators=[InputRequired(), DataRequired()])
+    submit = SubmitField('Submit')
+
+    def __init__(self, *args, **kwargs):
+        super(EventForm, self).__init__(*args, **kwargs)
+        self.accountManager.choices = [(am.id, f'{am.first_name} {am.last_name}') for am in get_account_managers()]
+
+class AdminCreateWorkerForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], default=0, coerce=int, validators=[InputRequired()])
+    is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], default=0, coerce=int, validators=[InputRequired()])
+    submit = SubmitField('Create Worker')
+
+class UpdatePasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Update Password')
+
+
 class UpdateWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
@@ -32,13 +58,6 @@ class ExpenseForm(FlaskForm):
     hst = FloatField('HST:', validators=[InputRequired(), DataRequired()])
     receipt = FileField('Receipt', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'pdf'], 'Images and PDFs only!')])
     worker = SelectField('Worker:', coerce=int, validators=[InputRequired(), DataRequired()])  # New field
-    submit = SubmitField('Submit')
-
-class EventForm(FlaskForm):
-    showName = StringField('Show Name:', validators=[InputRequired(), DataRequired()])
-    showNumber = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
-    accountManager = SelectField('Account Manager:', choices=[], validators=[InputRequired(), DataRequired()])
-    location = StringField('Location:', validators=[InputRequired(), DataRequired()])
     submit = SubmitField('Submit')
 
 class NoteForm(FlaskForm):
