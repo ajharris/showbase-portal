@@ -6,16 +6,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const adminDropdown = document.querySelector('.admin-dropdown');
     const accountManagerDropdown = document.querySelector('.account-manager-dropdown');
 
+    // Theme toggle functionality
     if (themeCheckbox) {
         const currentTheme = localStorage.getItem('theme') || 'light';
-        console.log(`Current theme: ${currentTheme}`); // Debug log
         document.body.classList.add(currentTheme + '-mode');
         document.querySelector('.navbar-inverse').classList.add(currentTheme + '-mode');
         themeCheckbox.checked = currentTheme === 'dark';
 
         themeCheckbox.addEventListener('change', function() {
             const newTheme = this.checked ? 'dark' : 'light';
-            console.log(`Switching to ${newTheme} theme`); // Debug log
             document.body.classList.toggle('light-mode', newTheme === 'light');
             document.body.classList.toggle('dark-mode', newTheme === 'dark');
             document.querySelector('.navbar-inverse').classList.toggle('light-mode', newTheme === 'light');
@@ -33,6 +32,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     }
 
+    // View as Employee functionality
     if (viewCheckbox) {
         function toggleFields() {
             if (viewCheckbox.checked) {
@@ -69,8 +69,25 @@ document.addEventListener('DOMContentLoaded', (event) => {
             });
         });
     }
+
+    // Worker select functionality
+    const workerSelect = document.getElementById('worker_select');
+    if (workerSelect) {
+        workerSelect.addEventListener('change', function() {
+            const selectedWorkerId = workerSelect.value;
+            if (selectedWorkerId) {
+                const url = workerSelect.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url + "?worker_id=" + selectedWorkerId;
+                } else {
+                    console.error('Data-url attribute not found.');
+                }
+            }
+        });
+    }
 });
 
+// Function to set event status
 function setEventStatus(eventId, status) {
     fetch(`/set_event_status/${eventId}/${status}`, {
         method: 'POST',

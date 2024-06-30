@@ -1,8 +1,17 @@
+# models.py
+
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from flask import current_app
 from . import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+
+class Crew(db.Model):
+    __tablename__ = 'crews'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+    event = db.relationship('Event', back_populates='crews')
+    # Additional fields can be added here as required
 
 class Worker(db.Model, UserMixin):
     __tablename__ = 'workers'
@@ -53,9 +62,36 @@ class Event(db.Model):
     documents = db.relationship('Document', backref='event', lazy=True)
     expenses = db.relationship('Expense', back_populates='event', primaryjoin="Event.showNumber == Expense.showNumber", foreign_keys="[Expense.showNumber]")
     shifts = db.relationship('Shift', back_populates='event', primaryjoin="Event.showNumber == Shift.showNumber", foreign_keys="[Shift.showNumber]")
+    crews = db.relationship('Crew', back_populates='event', lazy=True)
 
+    def add_crew_request(self, account_manager, crew_data, shift_data):
+        # Check if the account_manager is valid and has permission
+        if not account_manager.is_account_manager:
+            raise ValueError("User does not have account manager permissions.")
+
+        # Create a new Crew request
+        new_crew = Crew(event_id=self.id)
+        db.session.add(new_crew)
+
+        # Create and associate Shifts
+        for shift in shift_data:
+            new_shift = Shift(
+                start=shift['start'],
+                end=shift['end'],
+                showName=self.showName,
+                showNumber=self.showNumber,
+                accountManager=account_manager.email,
+                location=shift['location'],
+                worker_id=shift['worker_id'],
+                event_id=self.id
+            )
+            db.session.add(new_shift)
+
+        # Commit changes to the database
+        db.session.commit()
 
 class Document(db.Model):
+    __tablename__ = 'documents'
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String, nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
@@ -94,4 +130,3 @@ class Shift(db.Model):
 
     def __repr__(self):
         return f'<Shift {self.showNumber} - {self.showName}>'
-
