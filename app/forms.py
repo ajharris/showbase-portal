@@ -6,11 +6,9 @@ from flask_wtf.file import FileAllowed
 from .utils import get_account_managers, ROLES
 from .models import Worker
 
-
-
 class CrewRequestForm(FlaskForm):
-    date = DateTimeField('Date', validators=[DataRequired()])
-    time = DateTimeField('Time', validators=[DataRequired()])
+    start_time = DateTimeField('Start Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
+    end_time = DateTimeField('End Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     worker = SelectField('Worker', choices=[], coerce=int, validators=[DataRequired()])
     setup = BooleanField('Setup')
     show = BooleanField('Show')
@@ -141,20 +139,4 @@ class ResetPasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
 
-from flask_wtf import FlaskForm
-from wtforms import DateField, TimeField, BooleanField, SubmitField, SelectField
-from wtforms.validators import DataRequired
-
-class CrewRequestForm(FlaskForm):
-    date = DateField('Date', validators=[DataRequired()])
-    time = TimeField('Time', validators=[DataRequired()])
-    worker = SelectField('Worker', choices=[], coerce=int, validators=[DataRequired()])
-    setup = BooleanField('Setup')
-    show = BooleanField('Show')
-    strike = BooleanField('Strike')
-    submit = SubmitField('Add Crew Request')
-
-    def __init__(self, *args, **kwargs):
-        super(CrewRequestForm, self).__init__(*args, **kwargs)
-        self.worker.choices = [(w.id, f'{w.first_name} {w.last_name}') for w in Worker.query.all()]
 
