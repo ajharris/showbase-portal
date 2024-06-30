@@ -1,49 +1,73 @@
-from flask import render_template, redirect, url_for, flash, request, current_app as app, jsonify, session
+import os
+from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
-import os
-from . import db, login_manager, mail
-from .models import Worker, Shift, Event, Expense, Document, Crew
-from .forms import LoginForm, UpdateProfileForm, UpdatePasswordForm, RequestResetForm, ResetPasswordForm, EventForm, ExpenseForm, ShiftForm, NoteForm, DocumentForm, SharePointForm, RegistrationForm, AdminCreateWorkerForm, CrewRequestForm
-from .utils import allowed_file, createTimeReportCH, createExpenseReportCH, createEventReport
 from flask_mail import Message
 from werkzeug.security import generate_password_hash
 
+from . import db, login_manager, mail
+from .models import Worker, Shift, Event, Expense, Document, Crew
+from .forms import (
+    LoginForm, UpdateProfileForm, UpdatePasswordForm, RequestResetForm, ResetPasswordForm,
+    EventForm, ExpenseForm, ShiftForm, NoteForm, DocumentForm, SharePointForm, RegistrationForm,
+    AdminCreateWorkerForm, CrewRequestForm
+)
+from .utils import allowed_file, createTimeReportCH, createExpenseReportCH, createEventReport, ROLES
 
-@app.route('/add_shift', methods=['GET', 'POST'])
+@current_app.route('/event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
-def add_shift():
-    form = ShiftForm()
-    form.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
+def view_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    shifts = Shift.query.filter_by(showNumber=event.showNumber).all()
+    expenses = Expense.query.filter_by(showNumber=event.showNumber).all()
 
-    if form.validate_on_submit():
-        start_time = datetime.strptime(form.start.data, '%Y-%m-%d %H:%M')
-        end_time = datetime.strptime(form.end.data, '%Y-%m-%d %H:%M')
-        shift = Shift(
-            start=start_time,
-            end=end_time,
-            showName=form.showNumber.data,
-            showNumber=form.showNumber.data,
-            worker_id=form.worker.data,
-            accountManager=current_user.email,
-            location=form.location.data,
-            roles=','.join(form.roles.data)  # Convert list of roles to comma-separated string
+    note_form = NoteForm()
+    document_form = DocumentForm()
+    sharepoint_form = SharePointForm()
+    crew_request_form = CrewRequestForm()
+
+    # Debugging lines
+    print(f"start_time: {hasattr(crew_request_form, 'start_time')}")
+    print(f"end_time: {hasattr(crew_request_form, 'end_time')}")
+    print(f"worker: {hasattr(crew_request_form, 'worker')}")
+    print(f"setup: {hasattr(crew_request_form, 'setup')}")
+    print(f"show: {hasattr(crew_request_form, 'show')}")
+    print(f"strike: {hasattr(crew_request_form, 'strike')}")
+    print(f"submit: {hasattr(crew_request_form, 'submit')}")
+
+    if crew_request_form.validate_on_submit():
+        start_time = crew_request_form.start_time.data
+        end_time = crew_request_form.end_time.data
+
+        new_crew = Crew(
+            event_id=event.id,
+            worker_id=crew_request_form.worker.data,
+            setup=crew_request_form.setup.data,
+            show=crew_request_form.show.data,
+            strike=crew_request_form.strike.data,
+            start_time=start_time,
+            end_time=end_time,
+            roles=''  # Assuming roles data is handled elsewhere since it's not defined in the form
         )
-        
-        db.session.add(shift)
-        db.session.commit()
-        flash('Shift added successfully!', 'success')
-        return redirect(url_for('view_event', event_id=shift.showNumber))
 
-    return render_template('add_shift.html', form=form)
+        db.session.add(new_crew)
+        db.session.commit()
+        flash('Crew request added successfully.', 'success')
+        return redirect(url_for('view_event', event_id=event.id))
+
+    return render_template('view_event.html', event=event, shifts=shifts, expenses=expenses, 
+                           note_form=note_form, document_form=document_form, 
+                           sharepoint_form=sharepoint_form, crew_request_form=crew_request_form)
+
+
 
 
 @login_manager.user_loader
 def load_user(user_id):
     return Worker.query.get(int(user_id))
 
-@app.route('/update_profile', methods=['GET', 'POST'])
+@current_app.route('/update_profile', methods=['GET', 'POST'])
 @login_required
 def update_profile():
     worker_id = request.args.get('worker_id')
@@ -75,50 +99,7 @@ def update_profile():
     return render_template('update_profile.html', form=form, worker=worker)
 
 
-@app.route('/event/<int:event_id>', methods=['GET', 'POST'])
-@login_required
-def view_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    shifts = Shift.query.filter_by(showNumber=event.showNumber).all()
-    expenses = Expense.query.filter_by(showNumber=event.showNumber).all()
-
-    note_form = NoteForm()
-    document_form = DocumentForm()
-    sharepoint_form = SharePointForm()
-    crew_request_form = CrewRequestForm()
-
-    if crew_request_form.validate_on_submit():
-        account_manager = Worker.query.filter_by(email=event.accountManager).first()
-        if account_manager:
-            start_time = datetime.combine(crew_request_form.date.data, crew_request_form.time.data.time())
-            end_time = start_time + timedelta(hours=4)  # Adjust end time as necessary
-
-            roles = ','.join(crew_request_form.roles.data)  # Convert list of roles to comma-separated string
-
-            new_crew = Crew(
-                event_id=event.id,
-                worker_id=crew_request_form.worker.data,
-                setup=crew_request_form.setup.data,
-                show=crew_request_form.show.data,
-                strike=crew_request_form.strike.data,
-                start_time=start_time,
-                end_time=end_time,
-                roles=roles
-            )
-
-            db.session.add(new_crew)
-            db.session.commit()
-            flash('Crew request added successfully.', 'success')
-            return redirect(url_for('view_event', event_id=event.id))
-        else:
-            flash('Account manager not found.', 'danger')
-
-    return render_template('view_event.html', event=event, shifts=shifts, expenses=expenses, 
-                           note_form=note_form, document_form=document_form, 
-                           sharepoint_form=sharepoint_form, crew_request_form=crew_request_form)
-
-
-@app.route('/admin/create_worker', methods=['GET', 'POST'])
+@current_app.route('/admin/create_worker', methods=['GET', 'POST'])
 def admin_create_worker():
     form = AdminCreateWorkerForm()
     workers = Worker.query.all()
@@ -147,7 +128,7 @@ def admin_create_worker():
 
     return render_template('admin_create_worker.html', form=form, workers=workers)
 
-@app.route('/update_temp_password', methods=['GET', 'POST'])
+@current_app.route('/update_temp_password', methods=['GET', 'POST'])
 @login_required
 def update_temp_password():
     form = UpdatePasswordForm()
@@ -164,33 +145,33 @@ def load_user(user_id):
     return Worker.query.get(int(user_id))
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@current_app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        app.logger.info('Form validated successfully')
+        current_app.logger.info('Form validated successfully')
         user = Worker.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
-            app.logger.info('User authenticated successfully')
+            current_app.logger.info('User authenticated successfully')
             login_user(user)
             if user.check_password('TempPassword123'):  # Check if the password is the temporary one
                 flash('Please update your password and email', 'warning')
                 return redirect(url_for('update_temp_password'))
             next_page = request.args.get('next')
-            app.logger.info(f'Next page: {next_page}')
+            current_app.logger.info(f'Next page: {next_page}')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
-            app.logger.info('Authentication failed')
+            current_app.logger.info('Authentication failed')
             flash('Login Unsuccessful. Please check email and password', 'danger')
     else:
         if request.method == 'POST':
-            app.logger.info('Form validation failed')
+            current_app.logger.info('Form validation failed')
             flash('Form validation failed.', 'danger')
     return render_template('login.html', form=form)
 
 
 
-@app.route('/update_password', methods=['GET', 'POST'])
+@current_app.route('/update_password', methods=['GET', 'POST'])
 @login_required
 def update_password():
     form = UpdatePasswordForm()
@@ -201,13 +182,13 @@ def update_password():
         return redirect(url_for('index'))
     return render_template('update_password.html', form=form)
 
-@app.route('/logout')
+@current_app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route('/register', methods=['GET', 'POST'])
+@current_app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -225,7 +206,7 @@ def register():
     return render_template('register.html', form=form)
 
 
-@app.route('/reset_password', methods=['GET', 'POST'])
+@current_app.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -238,7 +219,7 @@ def reset_request():
         return redirect(url_for('login'))
     return render_template('reset_request.html', form=form)
 
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+@current_app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_token(token):
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -266,12 +247,12 @@ If you did not make this request then simply ignore this email and no changes wi
 '''
     mail.send(msg)
 
-@app.route('/')
+@current_app.route('/')
 @login_required
 def index():
     return render_template('index.html', theme=current_user.theme)
 
-@app.route('/create_event', methods=['GET', 'POST'])
+@current_app.route('/create_event', methods=['GET', 'POST'])
 @login_required
 def create_event():
     form = EventForm()
@@ -296,7 +277,7 @@ def create_event():
 
     return render_template('create_event.html', form=form, event_report=event_report)
 
-@app.route('/timesheet', methods=['GET', 'POST'])
+@current_app.route('/timesheet', methods=['GET', 'POST'])
 @login_required
 def timesheet():
     shift_form = ShiftForm()
@@ -333,7 +314,7 @@ def timesheet():
     report = createTimeReportCH(shifts)
     return render_template('timesheet.html', shift=shift_form, report=report)
 
-@app.route('/expenses', methods=['GET', 'POST'])
+@current_app.route('/expenses', methods=['GET', 'POST'])
 @login_required
 def expenses():
     expense_form = ExpenseForm()
@@ -347,7 +328,7 @@ def expenses():
             receipt_file = expense_form.receipt.data
             if receipt_file and allowed_file(receipt_file.filename):
                 filename = secure_filename(receipt_file.filename)
-                receipt_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                receipt_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
 
                 date_str = expense_form.date.data
                 try:
@@ -388,7 +369,7 @@ def expenses():
 
     return render_template('expenses.html', expense_form=expense_form, expenses=expenses)
 
-@app.route('/save_theme', methods=['POST'])
+@current_app.route('/save_theme', methods=['POST'])
 @login_required
 def save_theme():
     data = request.get_json()
@@ -399,7 +380,7 @@ def save_theme():
         return {'status': 'success'}, 200
     return {'status': 'error'}, 400
 
-@app.route('/refreshTimesheetDisplay')
+@current_app.route('/refreshTimesheetDisplay')
 @login_required
 def refresh_timesheet_display():
     if current_user.is_admin:
@@ -412,7 +393,7 @@ def refresh_timesheet_display():
     report = createTimeReportCH(shifts)
     return report
 
-@app.route('/refreshExpenseDisplay')
+@current_app.route('/refreshExpenseDisplay')
 @login_required
 def refresh_expense_display():
     if current_user.is_admin:
@@ -425,21 +406,21 @@ def refresh_expense_display():
     report = createExpenseReportCH(expenses)
     return render_template('expense_report.html', report=report)
 
-@app.route('/refreshEventDisplay')
+@current_app.route('/refreshEventDisplay')
 @login_required
 def refresh_event_display():
     filter_option = request.args.get('filter', 'all')
     event_report = createEventReport(filter_option)
     return event_report
 
-@app.route('/save_view_mode', methods=['POST'])
+@current_app.route('/save_view_mode', methods=['POST'])
 def save_view_mode():
     data = request.get_json()
     view_as_employee = data.get('viewAsEmployee') == 'true'
     session['view_as_employee'] = view_as_employee
     return jsonify(success=True)
 
-@app.route('/set_event_status/<int:event_id>/<status>', methods=['POST'])
+@current_app.route('/set_event_status/<int:event_id>/<status>', methods=['POST'])
 @login_required
 def set_event_status(event_id, status):
     event = Event.query.get(event_id)
@@ -449,7 +430,7 @@ def set_event_status(event_id, status):
         return 'Success', 200
     return 'Event not found', 404
 
-@app.route('/events', methods=['GET'])
+@current_app.route('/events', methods=['GET'])
 @login_required
 def events():
     event_report = createEventReport()

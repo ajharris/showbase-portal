@@ -8,37 +8,39 @@
     <h3>Request Crew</h3>
     <form method="POST" action="{{ url_for('view_event', event_id=event.id) }}">
         {{ crew_request_form.hidden_tag() }}
-        {{ form_field(crew_request_form.date, class="flatpickr") }}
-        {{ form_field(crew_request_form.time, class="flatpickr") }}
-        {{ form_field(crew_request_form.roles) }}
+        {{ form_field(crew_request_form.start_time, class="flatpickr") }}
+        {{ form_field(crew_request_form.end_time, class="flatpickr") }}
+        {{ form_field(crew_request_form.worker) }}
         {{ form_field(crew_request_form.setup) }}
         {{ form_field(crew_request_form.show) }}
         {{ form_field(crew_request_form.strike) }}
-        {{ crew_request_form.submit(class="btn btn-primary") }}
+        {{ form_field(crew_request_form.submit, class="btn btn-primary") }}
     </form>
 
     <h3>Notes</h3>
     <form method="POST" action="{{ url_for('view_event', event_id=event.id) }}">
         {{ note_form.hidden_tag() }}
         {{ form_field(note_form.notes) }}
-        {{ note_form.submit(class="btn btn-primary") }}
+        {{ form_field(note_form.submit, class="btn btn-primary") }}
     </form>
 
     <h3>Documents</h3>
     <form method="POST" enctype="multipart/form-data" action="{{ url_for('view_event', event_id=event.id) }}">
         {{ document_form.hidden_tag() }}
         {{ form_field(document_form.document) }}
-        {{ document_form.submit(class="btn btn-primary") }}
+        {{ form_field(document_form.submit, class="btn btn-primary") }}
     </form>
 
     <h3>SharePoint</h3>
     <form method="POST" action="{{ url_for('view_event', event_id=event.id) }}">
         {{ sharepoint_form.hidden_tag() }}
         {{ form_field(sharepoint_form.sharepoint_link) }}
-        {{ sharepoint_form.submit(class="btn btn-primary") }}
+        {{ form_field(sharepoint_form.submit, class="btn btn-primary") }}
     </form>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         flatpickr(".flatpickr", {
