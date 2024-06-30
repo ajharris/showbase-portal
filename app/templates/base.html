@@ -28,27 +28,29 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
-                    {% if current_user.is_admin %}
-                        <li class="admin-dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="{{ url_for('admin_create_worker') }}">Create Worker</a></li>
-                                <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
-                                <li><a href="{{ url_for('timesheet') }}">Timesheet</a></li>
-                                <li><a href="{{ url_for('expenses') }}">Expenses</a></li>
-                            </ul>
-                        </li>
+                    {% if not session.get('view_as_employee', False) %}
+                        {% if current_user.is_admin %}
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="{{ url_for('admin_create_worker') }}">Create Worker</a></li>
+                                    <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
+                                    <li><a href="{{ url_for('timesheet') }}">Timesheet</a></li>
+                                    <li><a href="{{ url_for('expenses') }}">Expenses</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                        {% if current_user.is_admin or current_user.is_account_manager %}
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
+                                    <li><a href="{{ url_for('events') }}">List Events</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
                     {% endif %}
-                    {% if current_user.is_admin or current_user.is_account_manager %}
-                        <li class="account-manager-dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
-                                <li><a href="{{ url_for('events') }}">List Events</a></li>
-                            </ul>
-                        </li>
-                    {% endif %}
-                    <li><a href="{{ url_for('update_worker', worker_id=current_user.id) }}">Update Profile</a></li>
+                    <li><a href="{{ url_for('update_profile', worker_id=current_user.id) }}">Update Profile</a></li>
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                     <li class="theme-switch-wrapper">
                         <label class="theme-switch" for="theme-checkbox">
@@ -59,7 +61,7 @@
                     </li>
                     {% if current_user.is_admin or current_user.is_account_manager %}
                         <li class="view-switch-wrapper">
-                            <label class="view-switch" for="view-checkbox">
+                            <label class="view-switch" for="view-checkbox" data-checked="{{ 'true' if session.get('view_as_employee', False) else 'false' }}" data-url="{{ url_for('save_view_mode') }}">
                                 <input type="checkbox" id="view-checkbox" />
                                 <span class="view-slider round"></span>
                             </label>
@@ -86,3 +88,13 @@
 {{ super() }}
 <script src="{{ url_for('static', filename='js/base.js') }}"></script>
 {% endblock %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="alert-container">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

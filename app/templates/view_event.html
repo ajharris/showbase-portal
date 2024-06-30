@@ -35,5 +35,20 @@
 
     <h2>Add SharePoint Link</h2>
     {{ wtf.quick_form(sharepoint_form) }}
+
+    <h2>Add Crew Request</h2>
+    <form method="post" action="{{ url_for('add_crew_request', event_id=event.id) }}">
+        {{ crew_request_form.hidden_tag() }}
+        {{ wtf.form_field(crew_request_form.date) }}
+        {{ wtf.form_field(crew_request_form.time) }}
+        {{ wtf.form_field(crew_request_form.worker) }}
+        <div class="form-group">
+            <label>Type of Crew</label><br>
+            {{ wtf.form_field(crew_request_form.setup) }} Setup<br>
+            {{ wtf.form_field(crew_request_form.show) }} Show<br>
+            {{ wtf.form_field(crew_request_form.strike) }} Strike
+        </div>
+        {{ wtf.form_field(crew_request_form.submit) }}
+    </form>
 </div>
 {% endblock %}
