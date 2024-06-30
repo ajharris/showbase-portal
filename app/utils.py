@@ -5,6 +5,10 @@ from flask import current_app, url_for
 from .models import Expense, Event, Shift, Worker
 from . import logger
 
+
+ROLES = ['TD', 'Video', 'Audio', 'Lighting', 'Staging', 'Stagehand', 'Lift Op']
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 

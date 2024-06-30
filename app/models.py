@@ -1,5 +1,3 @@
-# models.py
-
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from flask import current_app
 from . import db
@@ -31,6 +29,7 @@ class Crew(db.Model):
     strike = db.Column(db.Boolean, default=False)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
+    roles = db.Column(db.String)  # Comma-separated list of roles
     event = db.relationship('Event', back_populates='crews')
     worker = db.relationship('Worker', back_populates='crews')
 
@@ -108,3 +107,5 @@ class Shift(db.Model):
     worker_id = db.Column(db.Integer, db.ForeignKey('workers.id'))
     worker = db.relationship('Worker', back_populates='shifts')
     event = db.relationship('Event', back_populates='shifts', primaryjoin="Shift.showNumber == Event.showNumber")
+    roles = db.Column(db.String)  # Comma-separated list of roles
+

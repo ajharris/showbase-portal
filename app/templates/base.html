@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 {% endblock %}
 
 {% block navbar %}
@@ -82,6 +84,8 @@
 <div class="container">
     {% block page_content %}{% endblock %}
 </div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 {% endblock %}
 
 {% block scripts %}
