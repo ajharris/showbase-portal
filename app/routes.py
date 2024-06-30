@@ -5,29 +5,82 @@ from datetime import datetime, timedelta
 import os
 from . import db, login_manager, mail
 from .models import Worker, Shift, Event, Expense, Document, Crew
-from .forms import LoginForm, UpdateWorkerForm, UpdatePasswordForm, RequestResetForm, ResetPasswordForm, EventForm, ExpenseForm, ShiftForm, NoteForm, DocumentForm, SharePointForm, RegistrationForm, AdminCreateWorkerForm, CrewRequestForm
+from .forms import LoginForm, UpdateProfileForm, UpdatePasswordForm, RequestResetForm, ResetPasswordForm, EventForm, ExpenseForm, ShiftForm, NoteForm, DocumentForm, SharePointForm, RegistrationForm, AdminCreateWorkerForm, CrewRequestForm
 from .utils import allowed_file, createTimeReportCH, createExpenseReportCH, createEventReport
 from flask_mail import Message
 from werkzeug.security import generate_password_hash
+
+
+@app.route('/add_shift', methods=['GET', 'POST'])
+@login_required
+def add_shift():
+    form = ShiftForm()
+    form.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
+
+    if form.validate_on_submit():
+        start_time = datetime.strptime(form.start.data, '%Y-%m-%d %H:%M')
+        end_time = datetime.strptime(form.end.data, '%Y-%m-%d %H:%M')
+        shift = Shift(
+            start=start_time,
+            end=end_time,
+            showName=form.showNumber.data,
+            showNumber=form.showNumber.data,
+            worker_id=form.worker.data,
+            accountManager=current_user.email,
+            location=form.location.data,
+            roles=','.join(form.roles.data)  # Convert list of roles to comma-separated string
+        )
+        
+        db.session.add(shift)
+        db.session.commit()
+        flash('Shift added successfully!', 'success')
+        return redirect(url_for('view_event', event_id=shift.showNumber))
+
+    return render_template('add_shift.html', form=form)
 
 
 @login_manager.user_loader
 def load_user(user_id):
     return Worker.query.get(int(user_id))
 
-from datetime import datetime, timedelta
-from flask import render_template, redirect, url_for, flash, request, current_app as app
-from flask_login import login_required, current_user
-from . import db
-from .models import Worker, Shift, Event, Expense, Document, Crew, Note
-from .forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm
+@app.route('/update_profile', methods=['GET', 'POST'])
+@login_required
+def update_profile():
+    worker_id = request.args.get('worker_id')
+    if current_user.is_admin and worker_id:
+        worker = Worker.query.get_or_404(worker_id)
+    else:
+        worker = current_user
+
+    form = UpdateProfileForm(obj=worker)
+
+    if current_user.is_admin:
+        form.worker_select.choices = [(w.id, f"{w.first_name} {w.last_name}") for w in Worker.query.all()]
+
+    if form.validate_on_submit():
+        worker.first_name = form.first_name.data
+        worker.last_name = form.last_name.data
+        worker.email = form.email.data
+        worker.phone_number = form.phone_number.data
+        if current_user.is_admin:
+            worker.is_admin = form.is_admin.data
+            worker.is_account_manager = form.is_account_manager.data
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('update_profile', worker_id=worker.id if current_user.is_admin else None))
+    else:
+        if form.errors:
+            print(form.errors)
+    
+    return render_template('update_profile.html', form=form, worker=worker)
+
 
 @app.route('/event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def view_event(event_id):
     event = Event.query.get_or_404(event_id)
-    shifts = Shift.query.filter_by(event_id=event.id).all()
-    expenses = Expense.query.filter_by(event_id=event.id).all()
+    shifts = Shift.query.filter_by(showNumber=event.showNumber).all()
+    expenses = Expense.query.filter_by(showNumber=event.showNumber).all()
 
     note_form = NoteForm()
     document_form = DocumentForm()
@@ -40,6 +93,8 @@ def view_event(event_id):
             start_time = datetime.combine(crew_request_form.date.data, crew_request_form.time.data.time())
             end_time = start_time + timedelta(hours=4)  # Adjust end time as necessary
 
+            roles = ','.join(crew_request_form.roles.data)  # Convert list of roles to comma-separated string
+
             new_crew = Crew(
                 event_id=event.id,
                 worker_id=crew_request_form.worker.data,
@@ -47,7 +102,8 @@ def view_event(event_id):
                 show=crew_request_form.show.data,
                 strike=crew_request_form.strike.data,
                 start_time=start_time,
-                end_time=end_time
+                end_time=end_time,
+                roles=roles
             )
 
             db.session.add(new_crew)
@@ -56,36 +112,6 @@ def view_event(event_id):
             return redirect(url_for('view_event', event_id=event.id))
         else:
             flash('Account manager not found.', 'danger')
-
-    elif note_form.validate_on_submit():
-        new_note = Note(
-            event_id=event.id,
-            content=note_form.notes.data
-        )
-        db.session.add(new_note)
-        db.session.commit()
-        flash('Note added successfully.', 'success')
-        return redirect(url_for('view_event', event_id=event.id))
-
-    elif document_form.validate_on_submit():
-        document_file = document_form.document.data
-        if document_file:
-            filename = secure_filename(document_file.filename)
-            document_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            new_document = Document(
-                event_id=event.id,
-                filename=filename
-            )
-            db.session.add(new_document)
-            db.session.commit()
-            flash('Document uploaded successfully.', 'success')
-            return redirect(url_for('view_event', event_id=event.id))
-
-    elif sharepoint_form.validate_on_submit():
-        event.sharepoint_link = sharepoint_form.sharepoint_link.data
-        db.session.commit()
-        flash('SharePoint link added successfully.', 'success')
-        return redirect(url_for('view_event', event_id=event.id))
 
     return render_template('view_event.html', event=event, shifts=shifts, expenses=expenses, 
                            note_form=note_form, document_form=document_form, 
@@ -183,8 +209,6 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         worker = Worker(
@@ -196,46 +220,9 @@ def register():
         worker.set_password(form.password.data)
         db.session.add(worker)
         db.session.commit()
-        flash('Registration successful! Please log in.', 'success')
+        flash('Registration successful! You can now log in.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
-
-@app.route('/update_profile', methods=['GET', 'POST'])
-@login_required
-def update_profile():
-    worker_id = request.args.get('worker_id', type=int, default=current_user.id)
-    worker = Worker.query.get_or_404(worker_id)
-    view_as_employee = not current_user.is_admin
-    form = UpdateWorkerForm(view_as_employee=view_as_employee)
-
-    if form.validate_on_submit():
-        worker.first_name = form.first_name.data
-        worker.last_name = form.last_name.data
-        worker.email = form.email.data
-        worker.phone_number = form.phone_number.data
-        if not view_as_employee:
-            worker.is_admin = form.is_admin.data
-            worker.is_account_manager = form.is_account_manager.data
-        db.session.commit()
-        flash('Profile updated successfully!', 'success')
-        return redirect(url_for('update_profile', worker_id=worker.id))
-    else:
-        if current_user.is_admin and form.worker_select.data:
-            worker = Worker.query.get_or_404(form.worker_select.data)
-        form.first_name.data = worker.first_name
-        form.last_name.data = worker.last_name
-        form.email.data = worker.email
-        form.phone_number.data = worker.phone_number
-        if 'is_admin' in form:
-            form.is_admin.data = worker.is_admin
-        if 'is_account_manager' in form:
-            form.is_account_manager.data = worker.is_account_manager
-
-    if not view_as_employee:
-        form.worker_select.choices = [(w.id, f'{w.first_name} {w.last_name}') for w in Worker.query.all()]
-
-    return render_template('update_profile.html', form=form, worker=worker)
-
 
 
 @app.route('/reset_password', methods=['GET', 'POST'])

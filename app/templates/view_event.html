@@ -4,22 +4,13 @@
 {% block content %}
 <div class="container">
     <h2>Event: {{ event.showName }}</h2>
-    <!-- <h3>Shifts</h3>
-    {% for shift in shifts %}
-        <p>{{ shift.start }} - {{ shift.end }}: {{ shift.worker.first_name }} {{ shift.worker.last_name }}</p>
-    {% endfor %}
-
-    <h3>Expenses</h3>
-    {% for expense in expenses %}
-        <p>{{ expense.date }}: {{ expense.details }} - {{ expense.net }}</p>
-    {% endfor %} -->
 
     <h3>Request Crew</h3>
     <form method="POST" action="{{ url_for('view_event', event_id=event.id) }}">
         {{ crew_request_form.hidden_tag() }}
-        {{ form_field(crew_request_form.date) }}
-        {{ form_field(crew_request_form.time) }}
-        {{ form_field(crew_request_form.worker) }}
+        {{ form_field(crew_request_form.date, class="flatpickr") }}
+        {{ form_field(crew_request_form.time, class="flatpickr") }}
+        {{ form_field(crew_request_form.roles) }}
         {{ form_field(crew_request_form.setup) }}
         {{ form_field(crew_request_form.show) }}
         {{ form_field(crew_request_form.strike) }}
@@ -47,4 +38,14 @@
         {{ sharepoint_form.submit(class="btn btn-primary") }}
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr(".flatpickr", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            clickOpens: true // Ensures the calendar opens on clicking anywhere in the input field
+        });
+    });
+</script>
 {% endblock %}

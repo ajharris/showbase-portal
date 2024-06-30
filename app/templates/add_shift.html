@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "bootstrap/wtf.html" import form_field %}
+
+{% block content %}
+<div class="container">
+    <h2>Add Shift</h2>
+    <form method="POST" action="{{ url_for('add_shift') }}">
+        {{ form.hidden_tag() }}
+        {{ form_field(form.start, class="flatpickr") }}
+        {{ form_field(form.end, class="flatpickr") }}
+        {{ form_field(form.showNumber) }}
+        {{ form_field(form.worker) }}
+        {{ form_field(form.roles) }}
+        {{ form_field(form.location) }}
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr(".flatpickr", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            clickOpens: true // Ensures the calendar opens on clicking anywhere in the input field
+        });
+    });
+</script>
+{% endblock %}

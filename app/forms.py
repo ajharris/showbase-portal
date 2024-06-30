@@ -1,10 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, PasswordField, DateTimeField, BooleanField
+from wtforms import StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, PasswordField, DateTimeField, BooleanField, SelectMultipleField
 from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo
 from flask_wtf.file import FileAllowed
 
-from .utils import get_account_managers
+from .utils import get_account_managers, ROLES
 from .models import Worker
+
 
 
 class CrewRequestForm(FlaskForm):
@@ -47,7 +48,7 @@ class UpdatePasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Update Password')
 
-class UpdateWorkerForm(FlaskForm):
+class UpdateProfileForm(FlaskForm):
     worker_select = SelectField('Select Worker', choices=[], coerce=int)
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
@@ -58,7 +59,7 @@ class UpdateWorkerForm(FlaskForm):
     submit = SubmitField('Update')
 
     def __init__(self, view_as_employee=False, *args, **kwargs):
-        super(UpdateWorkerForm, self).__init__(*args, **kwargs)
+        super(UpdateProfileForm, self).__init__(*args, **kwargs)
         if view_as_employee:
             del self.is_admin
             del self.is_account_manager
@@ -67,9 +68,11 @@ class UpdateWorkerForm(FlaskForm):
             self.worker_select.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
 
 
-class AdminUpdateWorkerForm(UpdateWorkerForm):
+class AdminUpdateProfileForm(UpdateProfileForm):
     is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
     is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
+
+
 
 
 class ShiftForm(FlaskForm):
@@ -77,7 +80,11 @@ class ShiftForm(FlaskForm):
     end = StringField('Shift End:', id='endpick', validators=[InputRequired(), DataRequired()])
     showNumber = IntegerField('Event Number:', validators=[InputRequired(), DataRequired()])
     worker = SelectField('Worker:', coerce=int, validators=[InputRequired(), DataRequired()])
+    roles = SelectMultipleField('Roles:', choices=[(role, role) for role in ROLES], validators=[InputRequired(), DataRequired()])
+    location = StringField('Location:', validators=[InputRequired(), DataRequired()])
     submit = SubmitField('Submit')
+
+
 
 
 class ExpenseForm(FlaskForm):
@@ -114,13 +121,14 @@ class LoginForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    first_name = StringField('First Name', validators=[InputRequired(), DataRequired()])
-    last_name = StringField('Last Name', validators=[InputRequired(), DataRequired()])
-    email = StringField('Email', validators=[InputRequired(), DataRequired(), Email()])
-    phone_number = StringField('Phone Number', validators=[Optional()])
-    password = PasswordField('Password', validators=[InputRequired(), DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[InputRequired(), DataRequired(), EqualTo('password')])
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
+
 
 
 class RequestResetForm(FlaskForm):
