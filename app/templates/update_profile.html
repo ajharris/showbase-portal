@@ -33,17 +33,19 @@
             {{ form.phone_number.label(class="form-control-label") }}
             {{ form.phone_number(class="form-control") }}
         </div>
-        {% if form.is_admin is not none %}
-            <div class="form-group admin-field">
-                {{ form.is_admin.label(class="form-control-label") }}
-                {{ form.is_admin(class="form-control") }}
-            </div>
-        {% endif %}
-        {% if form.is_account_manager is not none %}
-            <div class="form-group account-manager-field">
-                {{ form.is_account_manager.label(class="form-control-label") }}
-                {{ form.is_account_manager(class="form-control") }}
-            </div>
+        {% if not session.get('view_as_employee', False) and current_user.is_admin %}
+            {% if form.is_admin is not none %}
+                <div class="form-group admin-field">
+                    {{ form.is_admin.label(class="form-control-label") }}
+                    {{ form.is_admin(class="form-control") }}
+                </div>
+            {% endif %}
+            {% if form.is_account_manager is not none %}
+                <div class="form-group account-manager-field">
+                    {{ form.is_account_manager.label(class="form-control-label") }}
+                    {{ form.is_account_manager(class="form-control") }}
+                </div>
+            {% endif %}
         {% endif %}
         <div class="form-group">
             {{ form.submit(class="btn btn-primary") }}
