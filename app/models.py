@@ -6,12 +6,33 @@ from . import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+class Event(db.Model):
+    __tablename__ = 'events'
+    id = db.Column(db.Integer, primary_key=True)
+    showName = db.Column(db.String, nullable=False)
+    showNumber = db.Column(db.Integer, unique=True, nullable=False)
+    accountManager = db.Column(db.String)
+    location = db.Column(db.String)
+    active = db.Column(db.Boolean)
+    notes = db.Column(db.Text)
+    sharepoint_link = db.Column(db.String)
+    documents = db.relationship('Document', backref='event', lazy=True)
+    expenses = db.relationship('Expense', back_populates='event', primaryjoin="Event.showNumber == Expense.showNumber", foreign_keys="[Expense.showNumber]")
+    shifts = db.relationship('Shift', back_populates='event', primaryjoin="Event.showNumber == Shift.showNumber", foreign_keys="[Shift.showNumber]")
+    crews = db.relationship('Crew', back_populates='event', lazy=True)
+
 class Crew(db.Model):
     __tablename__ = 'crews'
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+    worker_id = db.Column(db.Integer, db.ForeignKey('workers.id'), nullable=False)
+    setup = db.Column(db.Boolean, default=False)
+    show = db.Column(db.Boolean, default=False)
+    strike = db.Column(db.Boolean, default=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
     event = db.relationship('Event', back_populates='crews')
-    # Additional fields can be added here as required
+    worker = db.relationship('Worker', back_populates='crews')
 
 class Worker(db.Model, UserMixin):
     __tablename__ = 'workers'
@@ -26,9 +47,7 @@ class Worker(db.Model, UserMixin):
     theme = db.Column(db.String, default='light')
     shifts = db.relationship('Shift', back_populates='worker', lazy=True)
     expenses = db.relationship('Expense', back_populates='worker', lazy=True)
-
-    def __repr__(self):
-        return f'<Worker {self.first_name} {self.last_name}>'
+    crews = db.relationship('Crew', back_populates='worker', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -49,46 +68,11 @@ class Worker(db.Model, UserMixin):
             return None
         return Worker.query.get(user_id)
 
-class Event(db.Model):
-    __tablename__ = 'events'
+class Note(db.Model):
+    __tablename__ = 'notes'
     id = db.Column(db.Integer, primary_key=True)
-    showName = db.Column(db.String, nullable=False)
-    showNumber = db.Column(db.Integer, unique=True, nullable=False)
-    accountManager = db.Column(db.String)
-    location = db.Column(db.String)
-    active = db.Column(db.Boolean)
-    notes = db.Column(db.Text)
-    sharepoint_link = db.Column(db.String)
-    documents = db.relationship('Document', backref='event', lazy=True)
-    expenses = db.relationship('Expense', back_populates='event', primaryjoin="Event.showNumber == Expense.showNumber", foreign_keys="[Expense.showNumber]")
-    shifts = db.relationship('Shift', back_populates='event', primaryjoin="Event.showNumber == Shift.showNumber", foreign_keys="[Shift.showNumber]")
-    crews = db.relationship('Crew', back_populates='event', lazy=True)
-
-    def add_crew_request(self, account_manager, crew_data, shift_data):
-        # Check if the account_manager is valid and has permission
-        if not account_manager.is_account_manager:
-            raise ValueError("User does not have account manager permissions.")
-
-        # Create a new Crew request
-        new_crew = Crew(event_id=self.id)
-        db.session.add(new_crew)
-
-        # Create and associate Shifts
-        for shift in shift_data:
-            new_shift = Shift(
-                start=shift['start'],
-                end=shift['end'],
-                showName=self.showName,
-                showNumber=self.showNumber,
-                accountManager=account_manager.email,
-                location=shift['location'],
-                worker_id=shift['worker_id'],
-                event_id=self.id
-            )
-            db.session.add(new_shift)
-
-        # Commit changes to the database
-        db.session.commit()
+    content = db.Column(db.Text, nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
 
 class Document(db.Model):
     __tablename__ = 'documents'
@@ -112,9 +96,6 @@ class Expense(db.Model):
     worker = db.relationship('Worker', back_populates='expenses')
     event = db.relationship('Event', back_populates='expenses', primaryjoin="Expense.showNumber == Event.showNumber")
 
-    def __repr__(self):
-        return f'<Expense {self.showNumber} - {self.showName}>'
-
 class Shift(db.Model):
     __tablename__ = 'shifts'
     id = db.Column(db.Integer, primary_key=True)
@@ -127,6 +108,3 @@ class Shift(db.Model):
     worker_id = db.Column(db.Integer, db.ForeignKey('workers.id'))
     worker = db.relationship('Worker', back_populates='shifts')
     event = db.relationship('Event', back_populates='shifts', primaryjoin="Shift.showNumber == Event.showNumber")
-
-    def __repr__(self):
-        return f'<Shift {self.showNumber} - {self.showName}>'

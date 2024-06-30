@@ -48,17 +48,16 @@ class UpdatePasswordForm(FlaskForm):
     submit = SubmitField('Update Password')
 
 class UpdateWorkerForm(FlaskForm):
-    worker_select = SelectField('Select Worker', choices=[], coerce=int, validators=[Optional()])
+    worker_select = SelectField('Select Worker', choices=[], coerce=int)
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number', validators=[Optional()])
-    is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
-    is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
+    phone_number = StringField('Phone Number')
+    is_admin = BooleanField('Admin')
+    is_account_manager = BooleanField('Account Manager')
     submit = SubmitField('Update')
 
-    def __init__(self, *args, **kwargs):
-        view_as_employee = kwargs.pop('view_as_employee', False)
+    def __init__(self, view_as_employee=False, *args, **kwargs):
         super(UpdateWorkerForm, self).__init__(*args, **kwargs)
         if view_as_employee:
             del self.is_admin
@@ -66,9 +65,6 @@ class UpdateWorkerForm(FlaskForm):
             del self.worker_select
         else:
             self.worker_select.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
-
-
-
 
 
 class AdminUpdateWorkerForm(UpdateWorkerForm):
@@ -136,3 +132,21 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
+
+from flask_wtf import FlaskForm
+from wtforms import DateField, TimeField, BooleanField, SubmitField, SelectField
+from wtforms.validators import DataRequired
+
+class CrewRequestForm(FlaskForm):
+    date = DateField('Date', validators=[DataRequired()])
+    time = TimeField('Time', validators=[DataRequired()])
+    worker = SelectField('Worker', choices=[], coerce=int, validators=[DataRequired()])
+    setup = BooleanField('Setup')
+    show = BooleanField('Show')
+    strike = BooleanField('Strike')
+    submit = SubmitField('Add Crew Request')
+
+    def __init__(self, *args, **kwargs):
+        super(CrewRequestForm, self).__init__(*args, **kwargs)
+        self.worker.choices = [(w.id, f'{w.first_name} {w.last_name}') for w in Worker.query.all()]
+

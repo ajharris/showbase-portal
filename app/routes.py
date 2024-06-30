@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, current_app as app, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from . import db, login_manager, mail
 from .models import Worker, Shift, Event, Expense, Document, Crew
@@ -14,6 +14,13 @@ from werkzeug.security import generate_password_hash
 @login_manager.user_loader
 def load_user(user_id):
     return Worker.query.get(int(user_id))
+
+from datetime import datetime, timedelta
+from flask import render_template, redirect, url_for, flash, request, current_app as app
+from flask_login import login_required, current_user
+from . import db
+from .models import Worker, Shift, Event, Expense, Document, Crew, Note
+from .forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm
 
 @app.route('/event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
@@ -30,23 +37,60 @@ def view_event(event_id):
     if crew_request_form.validate_on_submit():
         account_manager = Worker.query.filter_by(email=event.accountManager).first()
         if account_manager:
-            crew_data = {
-                'date': crew_request_form.date.data,
-                'time': crew_request_form.time.data,
-                'worker_id': crew_request_form.worker.data.id
-            }
-            shift_data = [
-                {'start': crew_request_form.date.data, 'end': crew_request_form.time.data, 'location': event.location, 'worker_id': crew_request_form.worker.data.id}
-            ]
-            event.add_crew_request(account_manager, crew_data, shift_data)
+            start_time = datetime.combine(crew_request_form.date.data, crew_request_form.time.data.time())
+            end_time = start_time + timedelta(hours=4)  # Adjust end time as necessary
+
+            new_crew = Crew(
+                event_id=event.id,
+                worker_id=crew_request_form.worker.data,
+                setup=crew_request_form.setup.data,
+                show=crew_request_form.show.data,
+                strike=crew_request_form.strike.data,
+                start_time=start_time,
+                end_time=end_time
+            )
+
+            db.session.add(new_crew)
+            db.session.commit()
             flash('Crew request added successfully.', 'success')
             return redirect(url_for('view_event', event_id=event.id))
         else:
             flash('Account manager not found.', 'danger')
 
+    elif note_form.validate_on_submit():
+        new_note = Note(
+            event_id=event.id,
+            content=note_form.notes.data
+        )
+        db.session.add(new_note)
+        db.session.commit()
+        flash('Note added successfully.', 'success')
+        return redirect(url_for('view_event', event_id=event.id))
+
+    elif document_form.validate_on_submit():
+        document_file = document_form.document.data
+        if document_file:
+            filename = secure_filename(document_file.filename)
+            document_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            new_document = Document(
+                event_id=event.id,
+                filename=filename
+            )
+            db.session.add(new_document)
+            db.session.commit()
+            flash('Document uploaded successfully.', 'success')
+            return redirect(url_for('view_event', event_id=event.id))
+
+    elif sharepoint_form.validate_on_submit():
+        event.sharepoint_link = sharepoint_form.sharepoint_link.data
+        db.session.commit()
+        flash('SharePoint link added successfully.', 'success')
+        return redirect(url_for('view_event', event_id=event.id))
+
     return render_template('view_event.html', event=event, shifts=shifts, expenses=expenses, 
                            note_form=note_form, document_form=document_form, 
                            sharepoint_form=sharepoint_form, crew_request_form=crew_request_form)
+
 
 @app.route('/admin/create_worker', methods=['GET', 'POST'])
 def admin_create_worker():
@@ -159,11 +203,10 @@ def register():
 @app.route('/update_profile', methods=['GET', 'POST'])
 @login_required
 def update_profile():
-    worker_id = request.args.get('worker_id', default=current_user.id, type=int)
+    worker_id = request.args.get('worker_id', type=int, default=current_user.id)
     worker = Worker.query.get_or_404(worker_id)
-    view_as_employee = session.get('view_as_employee', False)
-    
-    form = UpdateWorkerForm(obj=worker, view_as_employee=view_as_employee)
+    view_as_employee = not current_user.is_admin
+    form = UpdateWorkerForm(view_as_employee=view_as_employee)
 
     if form.validate_on_submit():
         worker.first_name = form.first_name.data
@@ -179,13 +222,18 @@ def update_profile():
     else:
         if current_user.is_admin and form.worker_select.data:
             worker = Worker.query.get_or_404(form.worker_select.data)
-            form.first_name.data = worker.first_name
-            form.last_name.data = worker.last_name
-            form.email.data = worker.email
-            form.phone_number.data = worker.phone_number
+        form.first_name.data = worker.first_name
+        form.last_name.data = worker.last_name
+        form.email.data = worker.email
+        form.phone_number.data = worker.phone_number
+        if 'is_admin' in form:
             form.is_admin.data = worker.is_admin
+        if 'is_account_manager' in form:
             form.is_account_manager.data = worker.is_account_manager
-    
+
+    if not view_as_employee:
+        form.worker_select.choices = [(w.id, f'{w.first_name} {w.last_name}') for w in Worker.query.all()]
+
     return render_template('update_profile.html', form=form, worker=worker)
 
 
