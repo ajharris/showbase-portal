@@ -13,6 +13,7 @@ from app.utils import (
     createTimeReportCH, createExpenseReportCH, createEventReport, 
     allowed_file
 )
+
 misc_bp = Blueprint('misc', __name__)
 
 @misc_bp.route('/')
@@ -36,7 +37,9 @@ def save_theme():
 def save_view_mode():
     data = request.get_json()
     view_as_employee = data.get('viewAsEmployee') == 'true'
+    view_as_manager = data.get('viewAsManager') == 'true'
     session['view_as_employee'] = view_as_employee
+    session['view_as_account_manager'] = view_as_manager
     return jsonify(success=True)
 
 @misc_bp.route('/timesheet', methods=['GET', 'POST'])
