@@ -11,10 +11,10 @@
         <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
             {{ crew_request_form.hidden_tag() }}
             <div class="form-group">
-                {{ form_field(crew_request_form.start_time, class="form-control") }}
+                {{ form_field(crew_request_form.start_time, class="form-control datetimepicker") }}
             </div>
             <div class="form-group">
-                {{ form_field(crew_request_form.end_time, class="form-control") }}
+                {{ form_field(crew_request_form.end_time, class="form-control datetimepicker") }}
             </div>
             {% if current_user.is_admin and not session.get('view_as_manager', False) %}
             <div class="form-group admin-field">
