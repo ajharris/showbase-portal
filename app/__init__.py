@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -6,7 +7,6 @@ from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from flask_mail import Mail
 from dotenv import load_dotenv
-import logging
 import os
 
 # Load environment variables from .env file
@@ -19,10 +19,6 @@ csrf = CSRFProtect()
 bootstrap = Bootstrap()
 login_manager = LoginManager()
 mail = Mail()
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 def create_app(config_class='config.Config'):
     """
@@ -43,12 +39,34 @@ def create_app(config_class='config.Config'):
     mail.init_app(app)
 
     # Configure Flask-Login
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
+
+    from .models import Worker  # Import models after initializing db
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Worker.query.get(int(user_id))
 
     with app.app_context():
         # Import routes and models to register them with the app
-        from . import routes, models
+        from .routes.admin import admin_bp
+        from .routes.auth import auth_bp
+        from .routes.misc import misc_bp
+        from .routes.events import events_bp
+        from .routes.profile import profile_bp
+        from .routes.errorhandlers import error_bp
+
+        app.register_blueprint(admin_bp)
+        app.register_blueprint(auth_bp)
+        app.register_blueprint(misc_bp)
+        app.register_blueprint(events_bp)
+        app.register_blueprint(profile_bp)
+        app.register_blueprint(error_bp)
+
         db.create_all()
 
     return app
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)

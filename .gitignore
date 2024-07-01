@@ -1,6 +1,6 @@
 *.sqlite
 *.db
-
+.env
 /venv
 .idea/
 .vscode/

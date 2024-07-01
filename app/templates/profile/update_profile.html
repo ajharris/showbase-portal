@@ -5,12 +5,12 @@
 {% block content %}
 <div class="container">
     <h2>Update Profile</h2>
-    <form method="POST" action="">
+    <form method="POST" action="{{ url_for('profile.update_profile', worker_id=worker.id) }}">
         {{ form.hidden_tag() }}
         {% if not session.get('view_as_employee', False) and current_user.is_admin %}
             <div class="form-group">
                 {{ form.worker_select.label(class="form-control-label") }}
-                <select class="form-control" id="worker_select" name="worker_select" data-url="{{ url_for('update_profile') }}">
+                <select class="form-control" id="worker_select" name="worker_select" data-url="{{ url_for('profile.update_profile') }}">
                     {% for id, name in form.worker_select.choices %}
                         <option value="{{ id }}" {% if worker.id == id %}selected{% endif %}>{{ name }}</option>
                     {% endfor %}
