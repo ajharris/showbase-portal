@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "bootstrap/wtf.html" import form_field %}
 
-{% block content %}
+{% block page_content %}
 <div class="container">
     <h2>Event: {{ event.showName }}</h2>
 
@@ -38,16 +38,4 @@
         {{ form_field(sharepoint_form.submit, class="btn btn-primary") }}
     </form>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        flatpickr(".flatpickr", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            clickOpens: true // Ensures the calendar opens on clicking anywhere in the input field
-        });
-    });
-</script>
 {% endblock %}

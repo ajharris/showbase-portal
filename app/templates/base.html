@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block navbar %}
-<div class="navbar navbar-inverse" role="navigation">
+<nav class="navbar navbar-inverse" role="navigation">
     <div class="container">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -76,28 +76,30 @@
             </ul>
         </div>
     </div>
-</div>
+</nav>
 {% endblock %}
 
 {% block content %}
 <div class="container">
     {% block page_content %}{% endblock %}
 </div>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-    // Initialize flatpickr
-    flatpickr(".flatpickr", {
-        enableTime: true,
-        dateFormat: "Y-m-d H:i",
-    });
-</script>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script src="{{ url_for('static', filename='js/base.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // Initialize flatpickr
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr(".flatpickr", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+        });
+    });
+</script>
+<script src="{{ url_for('static', filename='js/base.js') }}"></script>
 {% endblock %}
 
 {% with messages = get_flashed_messages(with_categories=true) %}
