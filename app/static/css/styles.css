@@ -119,3 +119,11 @@ input:checked + .slider:before, input:checked + .view-slider:before {
 .dark-mode .table-hover tbody tr:hover {
     background-color: #777777;
 }
+.horizontal-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+}
+.form-check-inline {
+    margin-right: 15px;
+    margin-bottom: 10px;
+}

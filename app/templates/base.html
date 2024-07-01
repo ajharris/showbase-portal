@@ -34,10 +34,10 @@
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('admin_create_worker') }}">Create Worker</a></li>
-                                    <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
-                                    <li><a href="{{ url_for('timesheet') }}">Timesheet</a></li>
-                                    <li><a href="{{ url_for('expenses') }}">Expenses</a></li>
+                                    <li><a href="{{ url_for('admin.admin_create_worker') }}">Create Worker</a></li>
+                                    <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                    <li><a href="{{ url_for('misc.timesheet') }}">Timesheet</a></li>
+                                    <li><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
                                 </ul>
                             </li>
                         {% endif %}
@@ -45,14 +45,14 @@
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('create_event') }}">Create Event</a></li>
-                                    <li><a href="{{ url_for('events') }}">List Events</a></li>
+                                    <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                    <li><a href="{{ url_for('events.events') }}">List Events</a></li>
                                 </ul>
                             </li>
                         {% endif %}
                     {% endif %}
-                    <li><a href="{{ url_for('update_profile', worker_id=current_user.id) }}">Update Profile</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    <li><a href="{{ url_for('profile.update_profile', worker_id=current_user.id) }}">Update Profile</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                     <li class="theme-switch-wrapper">
                         <label class="theme-switch" for="theme-checkbox">
                             <input type="checkbox" id="theme-checkbox" />
@@ -62,7 +62,7 @@
                     </li>
                     {% if current_user.is_admin or current_user.is_account_manager %}
                         <li class="view-switch-wrapper">
-                            <label class="view-switch" for="view-checkbox" data-checked="{{ 'true' if session.get('view_as_employee', False) else 'false' }}" data-url="{{ url_for('save_view_mode') }}">
+                            <label class="view-switch" for="view-checkbox" data-checked="{{ 'true' if session.get('view_as_employee', False) else 'false' }}" data-url="{{ url_for('misc.save_view_mode') }}">
                                 <input type="checkbox" id="view-checkbox" />
                                 <span class="view-slider round"></span>
                             </label>
@@ -70,8 +70,8 @@
                         </li>
                     {% endif %}
                 {% else %}
-                    <li><a href="{{ url_for('login') }}">Login</a></li>
-                    <li><a href="{{ url_for('register') }}">Register</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Register</a></li>
                 {% endif %}
             </ul>
         </div>

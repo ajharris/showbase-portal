@@ -2,19 +2,18 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, PasswordField, DateTimeField, BooleanField, SelectMultipleField
 from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo
 from flask_wtf.file import FileAllowed
-
-from .utils import get_account_managers, ROLES
+from wtforms.widgets import ListWidget, CheckboxInput
 from .models import Worker
+from .utils import ROLES, get_account_managers
 
 class CrewRequestForm(FlaskForm):
     start_time = DateTimeField('Start Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     end_time = DateTimeField('End Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     worker = SelectField('Worker', choices=[], coerce=int, validators=[DataRequired()])
-    setup = BooleanField('Setup')
-    show = BooleanField('Show')
-    strike = BooleanField('Strike')
+    roles = SelectMultipleField('Roles', choices=[(role, role) for role in ROLES], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
+    shiftType = SelectMultipleField('Shift Type', choices=[('setup', 'Setup'), ('show', 'Show'), ('strike', 'Strike')], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
     submit = SubmitField('Add Crew Request')
-
+    
     def __init__(self, *args, **kwargs):
         super(CrewRequestForm, self).__init__(*args, **kwargs)
         self.worker.choices = [(w.id, f'{w.first_name} {w.last_name}') for w in Worker.query.all()]

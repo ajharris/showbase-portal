@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "bootstrap/wtf.html" import form_field %}
+
+{% block page_content %}
+<div class="container">
+    <h2>Event: {{ event.showName }}</h2>
+
+    {% if current_user.is_admin or current_user.is_account_manager %}
+    <div id="request-crew-section">
+        <h3>Request Crew</h3>
+        <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
+            {{ crew_request_form.hidden_tag() }}
+            <div class="form-group">
+                {{ form_field(crew_request_form.start_time, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(crew_request_form.end_time, class="form-control") }}
+            </div>
+            {% if current_user.is_admin and not session.get('view_as_manager', False) %}
+            <div class="form-group admin-field">
+                {{ form_field(crew_request_form.worker, class="form-control") }}
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label>Roles</label>
+                <div class="horizontal-checkbox-group">
+                    {% for role in crew_request_form.roles %}
+                        <div class="form-check form-check-inline">
+                            {{ role(class="form-check-input") }}
+                            <label class="form-check-label">{{ role.label }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Shift Type</label>
+                <div class="horizontal-checkbox-group">
+                    {% for shift in crew_request_form.shiftType %}
+                        <div class="form-check form-check-inline">
+                            {{ shift(class="form-check-input") }}
+                            <label class="form-check-label">{{ shift.label }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group">
+                {{ form_field(crew_request_form.submit, class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <h3>Notes</h3>
+    <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
+        {{ note_form.hidden_tag() }}
+        <div class="form-group">
+            {{ form_field(note_form.notes, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(note_form.submit, class="btn btn-primary") }}
+        </div>
+    </form>
+
+    <h3>Documents</h3>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('events.view_event', event_id=event.id) }}">
+        {{ document_form.hidden_tag() }}
+        <div class="form-group">
+            {{ form_field(document_form.document, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(document_form.submit, class="btn btn-primary") }}
+        </div>
+    </form>
+
+    <h3>SharePoint</h3>
+    <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
+        {{ sharepoint_form.hidden_tag() }}
+        <div class="form-group">
+            {{ form_field(sharepoint_form.sharepoint_link, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(sharepoint_form.submit, class="btn btn-primary") }}
+        </div>
+    </form>
+</div>
+
+<style>
+    .horizontal-checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .form-check-inline {
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
