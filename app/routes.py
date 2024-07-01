@@ -27,15 +27,6 @@ def view_event(event_id):
     sharepoint_form = SharePointForm()
     crew_request_form = CrewRequestForm()
 
-    # Debugging lines
-    print(f"start_time: {hasattr(crew_request_form, 'start_time')}")
-    print(f"end_time: {hasattr(crew_request_form, 'end_time')}")
-    print(f"worker: {hasattr(crew_request_form, 'worker')}")
-    print(f"setup: {hasattr(crew_request_form, 'setup')}")
-    print(f"show: {hasattr(crew_request_form, 'show')}")
-    print(f"strike: {hasattr(crew_request_form, 'strike')}")
-    print(f"submit: {hasattr(crew_request_form, 'submit')}")
-
     if crew_request_form.validate_on_submit():
         start_time = crew_request_form.start_time.data
         end_time = crew_request_form.end_time.data
@@ -48,7 +39,7 @@ def view_event(event_id):
             strike=crew_request_form.strike.data,
             start_time=start_time,
             end_time=end_time,
-            roles=''  # Assuming roles data is handled elsewhere since it's not defined in the form
+            roles=','.join(ROLES)  # Join roles list into a comma-separated string
         )
 
         db.session.add(new_crew)
@@ -59,8 +50,6 @@ def view_event(event_id):
     return render_template('view_event.html', event=event, shifts=shifts, expenses=expenses, 
                            note_form=note_form, document_form=document_form, 
                            sharepoint_form=sharepoint_form, crew_request_form=crew_request_form)
-
-
 
 
 @login_manager.user_loader
