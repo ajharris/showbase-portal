@@ -30,7 +30,7 @@
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
                     {% if not session.get('view_as_employee', False) %}
-                        {% if current_user.is_admin %}
+                        {% if current_user.is_admin and not session.get('view_as_account_manager', False)%}
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
                                 <ul class="dropdown-menu">
@@ -69,6 +69,16 @@
                             <label for="view-checkbox" class="toggle-label">View as Employee</label>
                         </li>
                     {% endif %}
+                    {% if current_user.is_admin %}
+                        <li class="view-switch-wrapper">
+                            <label class="view-switch" for="view-checkbox-manager" data-checked="{{ 'true' if session.get('view_as_manager', False) else 'false' }}" data-url="{{ url_for('misc.save_view_mode') }}">
+                                <input type="checkbox" id="view-checkbox-manager" />
+                                <span class="view-slider round"></span>
+                            </label>
+                            <label for="view-checkbox-manager" class="toggle-label">View as Account Manager</label>
+                        </li>
+                    {% endif %}
+
                 {% else %}
                     <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                     <li><a href="{{ url_for('auth.register') }}">Register</a></li>

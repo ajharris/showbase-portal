@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     const viewCheckbox = document.getElementById('view-checkbox');
     const themeCheckbox = document.getElementById('theme-checkbox');
+    const viewCheckboxManager = document.getElementById('view-checkbox-manager');
     const adminFields = document.querySelectorAll('.admin-field');
     const accountManagerFields = document.querySelectorAll('.account-manager-field');
     const adminDropdown = document.querySelector('.admin-dropdown');
@@ -32,22 +33,34 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     }
 
+    // Function to toggle view as employee fields
+    function toggleFields() {
+        if (viewCheckbox && viewCheckbox.checked) {
+            adminFields.forEach(field => field.style.display = 'none');
+            accountManagerFields.forEach(field => field.style.display = 'none');
+            if (adminDropdown) adminDropdown.style.display = 'none';
+            if (accountManagerDropdown) accountManagerDropdown.style.display = 'none';
+        } else {
+            adminFields.forEach(field => field.style.display = 'block');
+            accountManagerFields.forEach(field => field.style.display = 'block');
+            if (adminDropdown) adminDropdown.style.display = 'block';
+            if (accountManagerDropdown) accountManagerDropdown.style.display = 'block';
+        }
+    }
+
+    // Function to toggle view as manager fields
+    function toggleManagerFields() {
+        if (viewCheckboxManager && viewCheckboxManager.checked) {
+            adminFields.forEach(field => field.style.display = 'none');
+            if (adminDropdown) adminDropdown.style.display = 'none';
+        } else {
+            adminFields.forEach(field => field.style.display = 'block');
+            if (adminDropdown) adminDropdown.style.display = 'block';
+        }
+    }
+
     // View as Employee functionality
     if (viewCheckbox) {
-        function toggleFields() {
-            if (viewCheckbox.checked) {
-                adminFields.forEach(field => field.style.display = 'none');
-                accountManagerFields.forEach(field => field.style.display = 'none');
-                if (adminDropdown) adminDropdown.style.display = 'none';
-                if (accountManagerDropdown) accountManagerDropdown.style.display = 'none';
-            } else {
-                adminFields.forEach(field => field.style.display = 'block');
-                accountManagerFields.forEach(field => field.style.display = 'block');
-                if (adminDropdown) adminDropdown.style.display = 'block';
-                if (accountManagerDropdown) accountManagerDropdown.style.display = 'block';
-            }
-        }
-
         const viewAsEmployee = localStorage.getItem('viewAsEmployee') === 'true';
         viewCheckbox.checked = viewAsEmployee;
         toggleFields(); // Initial call to set the correct state
@@ -63,7 +76,31 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ viewAsEmployee: viewMode })
+                body: JSON.stringify({ viewAsEmployee: viewMode, viewAsManager: 'false' })
+            }).then(() => {
+                location.reload();
+            });
+        });
+    }
+
+    // View as Account Manager functionality
+    if (viewCheckboxManager) {
+        const viewAsManager = localStorage.getItem('viewAsManager') === 'true';
+        viewCheckboxManager.checked = viewAsManager;
+        toggleManagerFields(); // Initial call to set the correct state
+
+        viewCheckboxManager.addEventListener('change', function() {
+            const viewMode = this.checked ? 'true' : 'false';
+            localStorage.setItem('viewAsManager', viewMode);
+            toggleManagerFields();
+
+            fetch("/save_view_mode", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ viewAsManager: viewMode, viewAsEmployee: 'false' })
             }).then(() => {
                 location.reload();
             });
