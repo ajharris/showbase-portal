@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({ theme: newTheme })
-            });
+            }).catch(error => console.error('Error:', error));
         });
     }
 
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 body: JSON.stringify({ viewAsEmployee: viewMode, viewAsManager: 'false' })
             }).then(() => {
                 location.reload();
-            });
+            }).catch(error => console.error('Error:', error));
         });
     }
 
@@ -103,9 +103,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 body: JSON.stringify({ viewAsManager: viewMode, viewAsEmployee: 'false' })
             }).then(() => {
                 location.reload();
-            });
+            }).catch(error => console.error('Error:', error));
         });
     }
+
+    // Initialize flatpickr
+    flatpickr(".datetimepicker", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+    });
 
     // Worker select functionality
     const workerSelect = document.getElementById('worker_select');
@@ -138,5 +144,5 @@ function setEventStatus(eventId, status) {
         } else {
             alert('Failed to update event status.');
         }
-    });
+    }).catch(error => console.error('Error:', error));
 }
