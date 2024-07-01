@@ -66,6 +66,10 @@ def create_app(config_class='config.Config'):
 
         db.create_all()
 
+    # Register CLI commands
+    from .update_db import register_commands
+    register_commands(app)
+
     return app
 
 # Set up logging
