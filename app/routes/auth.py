@@ -8,20 +8,24 @@ from .. import db, login_manager, mail
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+from flask_login import login_user
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = Worker.query.filter_by(email=form.email.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            next_page = request.args.get('next')
-            if not next_page:
-                next_page = url_for('misc.index')
-            return redirect(next_page)
+        worker = Worker.query.filter_by(email=form.email.data).first()
+        if worker and worker.check_password(form.password.data):
+            if worker.is_active:
+                login_user(worker, remember=form.remember.data)
+                next_page = request.args.get('next')
+                return redirect(next_page) if next_page else redirect(url_for('home'))
+            else:
+                flash('Account is disabled. Please contact an admin.', 'danger')
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
-    return render_template('auth/login.html', form=form)
+    return render_template('login.html', title='Login', form=form)
+
 
 @auth_bp.route('/logout')
 @login_required

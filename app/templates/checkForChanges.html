@@ -24,10 +24,12 @@
             <div class="form-group">
                 <label>Roles</label>
                 <div class="horizontal-role-group">
-                    {% for role, count in roles.items() %}
+                    {% for role_form in crew_request_form.roles %}
                         <div class="form-group role-entry">
-                            <label>{{ role }}</label>
-                            <input type="number" name="{{ role }}" value="{{ count }}" class="form-control">
+                            <label>Role: {{ role_form.role.data }}</label>
+                            {{ role_form.role }}
+                            <label for="number-{{ loop.index0 }}">{{ role_form.number.label.text }}</label>
+                            {{ role_form.number(class="form-control", id="number-{{ loop.index0 }}") }}
                         </div>
                     {% endfor %}
                 </div>

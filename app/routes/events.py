@@ -1,9 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
-from flask_login import login_required
-from ..models import Event, Shift, Expense, Crew, Worker
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_required, current_user
+from ..models import Event, Shift, Expense, Crew, Worker, Note, CrewAssignment
 from ..forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm, EventForm
 from .. import db
 from ..utils import ROLES, createEventReport
+import logging, json
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
@@ -19,22 +23,30 @@ def view_event(event_id):
     sharepoint_form = SharePointForm()
     crew_request_form = CrewRequestForm()
 
-    # Populate roles field
-    crew_request_form.roles.choices = [(role, role) for role in ROLES]
+    # Pre-fill roles in JSON format
+    if request.method == 'GET':
+        roles = {role: 0 for role in ROLES}  # Default value for each role
+        crew_request_form.roles_json.data = json.dumps(roles)
 
+    roles_dict = json.loads(crew_request_form.roles_json.data) if crew_request_form.roles_json.data else {}
+
+    # Handle crew request form submission
     if crew_request_form.validate_on_submit():
         start_time = crew_request_form.start_time.data
         end_time = crew_request_form.end_time.data
-        roles = crew_request_form.roles.data
+        roles = json.loads(crew_request_form.roles_json.data)
+        for role in roles:
+            roles[role] = int(request.form.get(role, 1))  # Get the input value from the form
         shiftType = crew_request_form.shiftType.data
+        description = crew_request_form.description.data
 
         new_crew = Crew(
             event_id=event.id,
-            worker_id=crew_request_form.worker.data,
             start_time=start_time,
             end_time=end_time,
-            shiftType=','.join(shiftType),  # Join shift types into a comma-separated string
-            roles=','.join(roles)  # Join roles list into a comma-separated string
+            roles=json.dumps(roles),
+            shift_type=",".join(shiftType),
+            description=description
         )
 
         db.session.add(new_crew)
@@ -42,9 +54,43 @@ def view_event(event_id):
         flash('Crew request added successfully.', 'success')
         return redirect(url_for('events.view_event', event_id=event.id))
 
+    # Handle note form submission
+    if note_form.validate_on_submit():
+        new_note = Note(
+            content=note_form.notes.data,
+            worker_id=current_user.id,
+            event_id=event.id,
+            account_manager_only=note_form.account_manager_only.data,
+            account_manager_and_td_only=note_form.account_manager_and_td_only.data
+        )
+        db.session.add(new_note)
+        db.session.commit()
+        flash('Note added successfully.', 'success')
+        return redirect(url_for('events.view_event', event_id=event.id))
+
+    # Get the list of notes, filtered by the current user's permissions
+    notes_query = Note.query.filter_by(event_id=event.id)
+    if current_user.is_admin:
+        notes = notes_query.all()
+    elif current_user.is_account_manager:
+        notes = notes_query.filter(
+            (Note.account_manager_only == False) | 
+            (Note.account_manager_only == True)
+        ).all()
+    else:
+        worker_ids = [assignment.worker_id for assignment in CrewAssignment.query.join(Crew).filter(Crew.event_id == event.id).all()]
+        if current_user.id in worker_ids:
+            notes = notes_query.filter(
+                (Note.account_manager_and_td_only == False) |
+                ((Note.account_manager_and_td_only == True) & (current_user.id in worker_ids))
+            ).all()
+        else:
+            notes = notes_query.filter_by(account_manager_only=False, account_manager_and_td_only=False).all()
+
     return render_template('events/view_event.html', event=event, shifts=shifts, expenses=expenses, 
                            note_form=note_form, document_form=document_form, 
-                           sharepoint_form=sharepoint_form, crew_request_form=crew_request_form)
+                           sharepoint_form=sharepoint_form, crew_request_form=crew_request_form, 
+                           notes=notes, roles=roles_dict)
 
 @events_bp.route('/create', methods=['GET', 'POST'])
 @login_required

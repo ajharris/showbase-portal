@@ -1,22 +1,35 @@
+from flask import redirect, url_for, render_template, flash
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, PasswordField, DateTimeField, BooleanField, SelectMultipleField
-from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo
+from wtforms import FormField, TextAreaField, HiddenField, FieldList, StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, PasswordField, DateTimeField, BooleanField, SelectMultipleField
+from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo, URL
 from flask_wtf.file import FileAllowed
 from wtforms.widgets import ListWidget, CheckboxInput
 from .models import Worker
 from .utils import ROLES, get_account_managers
+from app import db
+
+from flask_wtf import FlaskForm
+from wtforms import (
+    StringField, SubmitField, IntegerField, DateTimeField, FieldList, FormField, SelectMultipleField
+)
+from wtforms.validators import DataRequired, InputRequired
+from wtforms.widgets import CheckboxInput, ListWidget
+from .models import Worker
+from .utils import ROLES
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class CrewRequestForm(FlaskForm):
     start_time = DateTimeField('Start Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     end_time = DateTimeField('End Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
-    worker = SelectField('Worker', choices=[], coerce=int, validators=[DataRequired()])
-    roles = SelectMultipleField('Roles', choices=[(role, role) for role in ROLES], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
+    description = StringField('Description', validators=[DataRequired()])
+    roles_json = HiddenField('Roles JSON', validators=[DataRequired()])
     shiftType = SelectMultipleField('Shift Type', choices=[('setup', 'Setup'), ('show', 'Show'), ('strike', 'Strike')], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
     submit = SubmitField('Add Crew Request')
-    
-    def __init__(self, *args, **kwargs):
-        super(CrewRequestForm, self).__init__(*args, **kwargs)
-        self.worker.choices = [(w.id, f'{w.first_name} {w.last_name}') for w in Worker.query.all()]
+
 
 
 class EventForm(FlaskForm):
@@ -24,12 +37,12 @@ class EventForm(FlaskForm):
     showNumber = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
     accountManager = SelectField('Account Manager:', choices=[], validators=[InputRequired(), DataRequired()])
     location = StringField('Location:', validators=[InputRequired(), DataRequired()])
+    sharepoint = StringField('SharePoint Link:', validators=[URL()])
     submit = SubmitField('Submit')
 
     def __init__(self, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)
         self.accountManager.choices = [(am.id, f'{am.first_name} {am.last_name}') for am in get_account_managers()]
-
 
 class AdminCreateWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -37,7 +50,6 @@ class AdminCreateWorkerForm(FlaskForm):
     is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], default=0, coerce=int, validators=[InputRequired()])
     is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], default=0, coerce=int, validators=[InputRequired()])
     submit = SubmitField('Create Worker')
-
 
 class UpdatePasswordForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -64,13 +76,29 @@ class UpdateProfileForm(FlaskForm):
         else:
             self.worker_select.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
 
-
 class AdminUpdateProfileForm(UpdateProfileForm):
     is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
     is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
 
+class AdminUpdateWorkerForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number')
+    is_admin = BooleanField('Admin')
+    is_account_manager = BooleanField('Account Manager')
+    active = BooleanField('Active')
+    submit = SubmitField('Update')
 
-
+def update_worker(worker_id):
+    worker = Worker.query.get_or_404(worker_id)
+    form = AdminUpdateWorkerForm(obj=worker)
+    if form.validate_on_submit():
+        form.populate_obj(worker)
+        db.session.commit()
+        flash('Worker updated successfully.', 'success')
+        return redirect(url_for('admin.manage_workers'))
+    return render_template('admin/update_worker.html', form=form)
 
 class ShiftForm(FlaskForm):
     start = StringField('Shift Start:', id='startpick', validators=[InputRequired(), DataRequired()])
@@ -80,9 +108,6 @@ class ShiftForm(FlaskForm):
     roles = SelectMultipleField('Roles:', choices=[(role, role) for role in ROLES], validators=[InputRequired(), DataRequired()])
     location = StringField('Location:', validators=[InputRequired(), DataRequired()])
     submit = SubmitField('Submit')
-
-
-
 
 class ExpenseForm(FlaskForm):
     receiptNumber = IntegerField('Receipt Number:', validators=[InputRequired(), DataRequired()])
@@ -95,27 +120,22 @@ class ExpenseForm(FlaskForm):
     worker = SelectField('Worker:', coerce=int, validators=[InputRequired(), DataRequired()])
     submit = SubmitField('Submit')
 
-
 class NoteForm(FlaskForm):
     notes = StringField('Notes', validators=[DataRequired()])
     submit = SubmitField('Add Notes')
-
 
 class DocumentForm(FlaskForm):
     document = FileField('Upload Document', validators=[FileAllowed(['pdf', 'jpeg', 'jpg', 'png', 'docx', 'xlsx'], 'Documents only!')])
     submit = SubmitField('Upload Document')
 
-
 class SharePointForm(FlaskForm):
     sharepoint_link = StringField('SharePoint Link', validators=[DataRequired()])
     submit = SubmitField('Add Link')
-
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), DataRequired(), Email()])
     password = PasswordField('Password', validators=[InputRequired(), DataRequired()])
     submit = SubmitField('Login')
-
 
 class RegistrationForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -126,16 +146,17 @@ class RegistrationForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 
-
-
 class RequestResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Request Password Reset')
-
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
 
-
+class NoteForm(FlaskForm):
+    notes = TextAreaField('Note Content', validators=[DataRequired()])
+    account_manager_only = BooleanField('Visible to Account Managers Only')
+    account_manager_and_td_only = BooleanField('Visible to Account Managers and TDs Only')
+    submit = SubmitField('Add Note')

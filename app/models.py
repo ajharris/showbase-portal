@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from flask import current_app
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from . import db
+import json
 
 class Worker(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -11,6 +12,9 @@ class Worker(db.Model, UserMixin):
     last_name = db.Column(db.String(64))
     email = db.Column(db.String(120), unique=True, index=True)
     phone_number = db.Column(db.String(20))
+    street_address = db.Column(db.String)
+    city = db.Column(db.String)
+    postal = db.Column(db.String)
     is_admin = db.Column(db.Boolean, default=False)
     is_account_manager = db.Column(db.Boolean, default=False)
     password_hash = db.Column(db.String(128))
@@ -47,22 +51,42 @@ class Event(db.Model):
     showNumber = db.Column(db.String(100), unique=True, nullable=False)
     accountManager = db.Column(db.String(120), db.ForeignKey('worker.email'), nullable=False)
     location = db.Column(db.String(200))
+    sharepoint = db.Column(db.String, nullable=True)
     active = db.Column(db.Boolean, default=True)
 
     account_manager = db.relationship('Worker', backref='events', lazy=True)
 
-class Shift(db.Model):
+class Crew(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    start = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    end = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    showName = db.Column(db.String(100))
-    showNumber = db.Column(db.String(100), db.ForeignKey('event.showNumber'), nullable=False)
-    accountManager = db.Column(db.String(120))
-    location = db.Column(db.String(200))
-    worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    end_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    roles = db.Column(db.JSON, nullable=False)  # JSON field to store role requirements
+    shift_type = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.String(500), nullable=True)  # New field for work assignment details
 
-    event = db.relationship('Event', backref='shifts', lazy=True)
-    worker = db.relationship('Worker', backref='shifts', lazy=True)
+    event = db.relationship('Event', backref='crews', lazy=True)
+
+    def __init__(self, **kwargs):
+        super(Crew, self).__init__(**kwargs)
+        if isinstance(self.roles, dict):
+            self.roles = json.dumps(self.roles)
+
+    def get_roles(self):
+        return json.loads(self.roles)
+
+
+class CrewAssignment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    crew_id = db.Column(db.Integer, db.ForeignKey('crew.id'), nullable=False)
+    worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
+    role = db.Column(db.String(64), nullable=False)
+    accepted = db.Column(db.Boolean, default=False)
+    assigned_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    crew = db.relationship('Crew', backref='assignments', lazy=True)
+    worker = db.relationship('Worker', backref='assignments', lazy=True)
+
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,16 +104,27 @@ class Expense(db.Model):
     event = db.relationship('Event', backref='expenses', lazy=True)
     worker = db.relationship('Worker', backref='expenses', lazy=True)
 
-class Crew(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
-    worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
-    setup = db.Column(db.Boolean, default=False)
-    show = db.Column(db.Boolean, default=False)
-    strike = db.Column(db.Boolean, default=False)
-    start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    end_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    roles = db.Column(db.String(200))
 
-    event = db.relationship('Event', backref='crews', lazy=True)
-    worker = db.relationship('Worker', backref='crews', lazy=True)
+class Shift(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    start = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    end = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    showName = db.Column(db.String(100))
+    showNumber = db.Column(db.String(100), db.ForeignKey('event.showNumber'), nullable=False)
+    accountManager = db.Column(db.String(120))
+    location = db.Column(db.String(200))
+    worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
+
+    event = db.relationship('Event', backref='shifts', lazy=True)
+    worker = db.relationship('Worker', backref='shifts', lazy=True)
+
+
+class Note(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    account_manager_only = db.Column(db.Boolean, default=False)
+    account_manager_and_td_only = db.Column(db.Boolean, default=False)
+
+    event = db.relationship('Event', backref='notes', lazy=True)
