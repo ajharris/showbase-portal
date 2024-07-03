@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "bootstrap/wtf.html" import form_field %}
+
+{% block content %}
+    <div class="container">
+        <h2>Update Worker</h2>
+        <form method="POST" action="{{ url_for('admin.update_worker', worker_id=worker.id) }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form_field(form.first_name, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(form.last_name, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(form.email, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(form.phone_number, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(form.is_admin, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(form.is_account_manager, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(form.active, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form_field(form.submit, class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+{% endblock %}

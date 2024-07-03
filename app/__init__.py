@@ -68,6 +68,7 @@ def create_app(config_class='config.Config'):
 
     # Register CLI commands
     from .update_db import register_commands
+    from .populate_db import register_commands
     register_commands(app)
 
     return app
