@@ -146,3 +146,20 @@ function setEventStatus(eventId, status) {
         }
     }).catch(error => console.error('Error:', error));
 }
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const workerSelect = document.getElementById('worker_select');
+    if (workerSelect) {
+        workerSelect.addEventListener('change', function() {
+            const selectedWorkerId = workerSelect.value;
+            if (selectedWorkerId) {
+                const url = workerSelect.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url + "?worker_id=" + selectedWorkerId;
+                } else {
+                    console.error('Data-url attribute not found.');
+                }
+            }
+        });
+    }
+});
