@@ -140,4 +140,86 @@ input:checked + .slider:before, input:checked + .view-slider:before {
     max-width: 90%;
     margin: auto;
     padding: 0 15px;
+    padding-top: 60px;
+}
+.horizontal-role-group {
+    display: flex;
+    flex-wrap: wrap;
+}
+.role-entry {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 15px;
+}
+.form-check-inline {
+    margin-right: 15px;
+    margin-bottom: 10px;
+}
+.crew-report {
+    margin-top: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+.crew-report form {
+    display: inline;
+}
+.crew-report form button {
+    margin-top: 10px;
+}
+
+/* Smaller checkboxes */
+input[type="checkbox"] {
+    transform: scale(0.75); /* Adjust the scale as needed */
+    margin-right: 10px;
+}
+
+/* Align is_admin and is_account_manager fields on the same line */
+.admin-account-manager-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.admin-account-manager-group .form-group {
+    flex: 1;
+    min-width: 200px;
+    margin-right: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.admin-account-manager-group .form-group label {
+    margin-bottom: 5px;
+}
+
+.admin-account-manager-group .form-group:last-child {
+    margin-right: 0;
+}
+/* General link styles */
+a {
+    color: #007bff; /* Default link color */
+    text-decoration: none; /* Remove underline */
+}
+
+a:hover {
+    color: #0056b3; /* Hover color */
+    text-decoration: underline; /* Underline on hover */
+}
+
+/* Adjust for light and dark modes */
+body.light-mode a {
+    color: #007bff;
+}
+
+body.light-mode a:hover {
+    color: #0056b3;
+}
+
+body.dark-mode a {
+    color: #66b2ff;
+}
+
+body.dark-mode a:hover {
+    color: #3399ff;
 }

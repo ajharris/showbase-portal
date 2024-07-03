@@ -40,10 +40,12 @@ def update_profile():
 @profile_bp.route('/update_password', methods=['GET', 'POST'])
 @login_required
 def update_password():
+    worker = Worker.query.get_or_404(current_user.id)
     form = UpdatePasswordForm()
     if form.validate_on_submit():
-        current_user.set_password(form.password.data)
+        worker.set_password(form.password.data)
         db.session.commit()
         flash('Your password has been updated!', 'success')
-        return redirect(url_for('misc.index'))
-    return render_template('profile/update_password.html', form=form)
+        return redirect(url_for('profile.update_profile', worker_id=current_user.id))
+    return render_template('auth/update_password.html', title='Update Password', form=form, worker=worker)
+
