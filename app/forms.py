@@ -27,7 +27,7 @@ class CrewRequestForm(FlaskForm):
     end_time = DateTimeField('End Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     description = StringField('Description', validators=[DataRequired()])
     roles_json = HiddenField('Roles JSON', validators=[DataRequired()])
-    shiftType = SelectMultipleField('Shift Type', choices=[('setup', 'Setup'), ('show', 'Show'), ('strike', 'Strike')], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
+    shiftType = SelectMultipleField('Shift Type', choices=[('Setup', 'Setup'), ('Show', 'Show'), ('Strike', 'Strike')], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
     submit = SubmitField('Add Crew Request')
 
 
@@ -37,7 +37,6 @@ class EventForm(FlaskForm):
     showNumber = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
     accountManager = SelectField('Account Manager:', choices=[], validators=[InputRequired(), DataRequired()])
     location = StringField('Location:', validators=[InputRequired(), DataRequired()])
-    sharepoint = StringField('SharePoint Link:', validators=[URL()])
     submit = SubmitField('Submit')
 
     def __init__(self, *args, **kwargs):
@@ -135,6 +134,7 @@ class SharePointForm(FlaskForm):
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), DataRequired(), Email()])
     password = PasswordField('Password', validators=[InputRequired(), DataRequired()])
+    remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
 
 class RegistrationForm(FlaskForm):
