@@ -19,12 +19,12 @@ def login():
             if worker.is_active:
                 login_user(worker, remember=form.remember.data)
                 next_page = request.args.get('next')
-                return redirect(next_page) if next_page else redirect(url_for('home'))
+                return redirect(next_page) if next_page else redirect(url_for('misc.index'))
             else:
                 flash('Account is disabled. Please contact an admin.', 'danger')
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
-    return render_template('login.html', title='Login', form=form)
+    return render_template('auth/login.html', title='Login', form=form)
 
 
 @auth_bp.route('/logout')
