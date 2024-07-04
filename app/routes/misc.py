@@ -14,7 +14,16 @@ from app.utils import (
     allowed_file
 )
 
+
+
 misc_bp = Blueprint('misc', __name__)
+
+@misc_bp.route('/upcoming_shifts')
+@login_required
+def upcoming_shifts():
+    now = datetime.utcnow()
+    shifts = Shift.query.filter(Shift.worker_id == current_user.id, Shift.start_time > now).order_by(Shift.start_time).all()
+    return render_template('upcoming_shifts.html', shifts=shifts)
 
 @misc_bp.route('/')
 @login_required

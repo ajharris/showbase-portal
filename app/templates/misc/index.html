@@ -7,8 +7,10 @@
     <h1>Welcome to the NSS Portal</h1>
     {% if current_user.is_authenticated %}
         <p>Hello, {{ current_user.first_name }}!</p>
+        <div id="upcoming-shifts">
+            {% include 'misc/upcoming_shifts.html' %}
+        </div>        
     {% endif %}
-    <p>This is a simple Flask application with user authentication and CRUD operations.</p>
-    <p>Use the navigation bar to access different features.</p>
+
 </div>
 {% endblock %}
