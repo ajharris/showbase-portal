@@ -21,12 +21,6 @@ login_manager = LoginManager()
 mail = Mail()
 
 def create_app(config_class='config.Config'):
-    """
-    Factory function to create and configure the Flask application.
-    
-    :param config_class: The configuration class to use for the application.
-    :return: The configured Flask application.
-    """
     app = Flask(__name__, static_folder='static')
     app.config.from_object(config_class)
 
@@ -42,20 +36,22 @@ def create_app(config_class='config.Config'):
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
 
-    from .models import Worker  # Import models after initializing db
-
-    @login_manager.user_loader
-    def load_user(user_id):
-        return Worker.query.get(int(user_id))
-
     with app.app_context():
-        # Import routes and models to register them with the app
+        # Import models after initializing db
+        from .models import Worker
+
+        @login_manager.user_loader
+        def load_user(user_id):
+            return Worker.query.get(int(user_id))
+
+        # Import routes and register blueprints
         from .routes.admin import admin_bp
         from .routes.auth import auth_bp
         from .routes.misc import misc_bp
         from .routes.events import events_bp
         from .routes.profile import profile_bp
         from .routes.errorhandlers import error_bp
+        from .routes.backup_routes import backup_bp
 
         app.register_blueprint(admin_bp)
         app.register_blueprint(auth_bp)
@@ -63,13 +59,15 @@ def create_app(config_class='config.Config'):
         app.register_blueprint(events_bp)
         app.register_blueprint(profile_bp)
         app.register_blueprint(error_bp)
+        app.register_blueprint(backup_bp)
 
         db.create_all()
 
     # Register CLI commands
-    from .update_db import register_commands
-    from .populate_db import register_commands
-    register_commands(app)
+    from .update_db import register_commands as update_db_commands
+    from .populate_db import register_commands as populate_db_commands
+    update_db_commands(app)
+    populate_db_commands(app)
 
     return app
 

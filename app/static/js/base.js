@@ -163,3 +163,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     }
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Flatpickr for date-time pickers
+    flatpickr('#shift_start', {
+        enableTime: true,
+        dateFormat: 'm/d/Y h:i K'
+    });
+
+    flatpickr('#shift_end', {
+        enableTime: true,
+        dateFormat: 'm/d/Y h:i K'
+    });
+
+    // Add any other necessary JavaScript initialization here
+});

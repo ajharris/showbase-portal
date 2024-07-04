@@ -31,15 +31,19 @@
                 {% if current_user.is_authenticated %}
                     {% if not session.get('view_as_employee', False) %}
                         {% if current_user.is_admin and not session.get('view_as_account_manager', False) %}
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
-                                <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('admin.admin_create_worker') }}">Create Worker</a></li>
-                                    <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
-                                    <li><a href="{{ url_for('misc.timesheet') }}">Timesheet</a></li>
-                                    <li><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
-                                </ul>
-                            </li>
+
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('admin.admin_create_worker') }}">Create Worker</a></li>
+                                <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                <li><a href="{{ url_for('misc.timesheet') }}">Timesheet</a></li>
+                                <li><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
+                                <li><a href="{{ url_for('backup.show_backup_restore') }}">Backup/Restore Database</a></li> <!-- New entry -->
+                            </ul>
+                        </li>
+
+                        
                         {% endif %}
                         {% if current_user.is_admin or current_user.is_account_manager %}
                             <li class="dropdown">

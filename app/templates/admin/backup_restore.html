@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Backup/Restore Database{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <h1>Backup/Restore Database</h1>
+    
+    <h2>Backup Database</h2>
+    <form method="post" action="{{ url_for('backup.backup') }}">
+        <div class="form-group">
+            <label for="backup-path">Backup File Path</label>
+            <input type="text" class="form-control" id="backup-path" name="backup_path" placeholder="Enter file path (leave empty for default)">
+        </div>
+        <button type="submit" class="btn btn-primary">Backup Database</button>
+    </form>
+
+    <h2>Restore Database</h2>
+    <form method="post" action="{{ url_for('backup.restore') }}">
+        <div class="form-group">
+            <label for="restore-path">Restore File Path</label>
+            <input type="text" class="form-control" id="restore-path" name="restore_path" placeholder="Enter file path (leave empty to use the most recent backup)">
+        </div>
+        <button type="submit" class="btn btn-primary">Restore Database</button>
+    </form>
+</div>
+{% endblock %}
