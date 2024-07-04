@@ -223,3 +223,16 @@ body.dark-mode a {
 body.dark-mode a:hover {
     color: #3399ff;
 }
+
+/* Dropdown menu styles */
+.dropdown-menu {
+    background-color: #f1f1f1; /* Default background color */
+}
+
+body.light-mode .dropdown-menu {
+    background-color: #e0e0e0; /* Slightly darker than light background */
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: #444444; /* Slightly lighter than dark background */
+}
