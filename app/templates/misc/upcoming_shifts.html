@@ -1,0 +1,28 @@
+
+<div class="container">
+    <h2>Upcoming Shifts</h2>
+    {% if shifts %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Shift Start</th>
+                    <th>Shift End</th>
+                    <th>Role</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for shift in shifts %}
+                    <tr>
+                        <td>{{ shift.start_time }}</td>
+                        <td>{{ shift.end_time }}</td>
+                        <td>{{ shift.role }}</td>
+                        <td>{{ shift.location }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no upcoming shifts.</p>
+    {% endif %}
+
