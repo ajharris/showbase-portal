@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import (
     Blueprint, render_template, redirect, url_for, flash, request, 
     session, jsonify, current_app
@@ -11,10 +11,8 @@ from app.models import Worker, Event, Shift, Expense
 from app.forms import ShiftForm, ExpenseForm
 from app.utils import (
     createTimeReportCH, createExpenseReportCH, createEventReport, 
-    allowed_file
+    allowed_file, get_pay_periods
 )
-
-
 
 misc_bp = Blueprint('misc', __name__)
 
@@ -22,13 +20,36 @@ misc_bp = Blueprint('misc', __name__)
 @login_required
 def upcoming_shifts():
     now = datetime.utcnow()
-    shifts = Shift.query.filter(Shift.worker_id == current_user.id, Shift.start_time > now).order_by(Shift.start_time).all()
+    shifts = Shift.query.filter(Shift.worker_id == current_user.id, Shift.start > now).order_by(Shift.start).all()
     return render_template('upcoming_shifts.html', shifts=shifts)
 
 @misc_bp.route('/')
 @login_required
-def index():
-    return render_template('misc/index.html', theme=current_user.theme)
+def home():
+    now = datetime.utcnow()
+    upcoming_shifts = Shift.query.filter(Shift.worker_id == current_user.id, Shift.start > now).order_by(Shift.start).all()
+
+    # Generate a limited number of pay periods
+    start_date = datetime(2024, 1, 7)
+    num_periods = 5  # Adjust as needed
+    pay_periods = get_pay_periods(start_date, num_periods)
+
+    selected_period_start = request.args.get('pay_period', default=None)
+    if selected_period_start:
+        selected_period_start = datetime.strptime(selected_period_start, '%Y-%m-%d %H:%M:%S')
+        selected_period_end = selected_period_start + timedelta(weeks=2) - timedelta(seconds=1)
+    else:
+        selected_period_start, selected_period_end = pay_periods[-1]  # Default to the most recent completed period
+
+    # Query shifts and expenses based on the selected pay period
+    shifts = Shift.query.filter(Shift.worker_id == current_user.id, Shift.start >= selected_period_start, Shift.end <= selected_period_end).all()
+    expenses = Expense.query.filter(Expense.worker_id == current_user.id, Expense.date >= selected_period_start, Expense.date <= selected_period_end).all()
+
+    # Generate reports
+    shift_report = createTimeReportCH(shifts)
+    expense_report = createExpenseReportCH(expenses)
+
+    return render_template('misc/index.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report)
 
 
 @misc_bp.route('/save_theme', methods=['POST'])

@@ -1,12 +1,76 @@
-import os
-from datetime import datetime
+import os, json
+from datetime import datetime, timedelta
 import pandas as pd
 from flask import current_app, url_for
 from .models import Expense, Event, Shift, Worker
+from app import db
 
 ROLES = ['TD', 'Video', 'Audio', 'Lighting', 'Staging', 'Stagehand', 'Lift Op', 'Driver']
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
+from sqlalchemy.orm import class_mapper
+
+def backup_database_to_json(file_path):
+    try:
+        data = {}
+
+        # Loop through all tables
+        for table in db.metadata.sorted_tables:
+            table_name = table.name
+            data[table_name] = []
+            model_class = db.Model._decl_class_registry.get(table_name.capitalize())
+            if model_class:
+                # Query all data from the table
+                records = model_class.query.all()
+                for record in records:
+                    record_dict = {c.key: getattr(record, c.key) for c in class_mapper(model_class).columns}
+                    data[table_name].append(record_dict)
+
+        # Write to JSON file
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=4, default=str)
+
+        current_app.logger.info(f"Database backup saved to {file_path}")
+        return True
+
+    except Exception as e:
+        current_app.logger.error(f"Error backing up database: {e}")
+        return False
+    
+def restore_database_from_json(file_path):
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+
+        # Disable foreign key checks
+        db.engine.execute('SET FOREIGN_KEY_CHECKS=0;')
+
+        # Loop through all tables
+        for table_name, records in data.items():
+            model_class = db.Model._decl_class_registry.get(table_name.capitalize())
+            if model_class:
+                # Delete all existing records in the table
+                db.session.query(model_class).delete()
+                db.session.commit()
+                
+                # Insert records from JSON
+                for record_dict in records:
+                    record = model_class(**record_dict)
+                    db.session.add(record)
+                db.session.commit()
+
+        # Enable foreign key checks
+        db.engine.execute('SET FOREIGN_KEY_CHECKS=1;')
+
+        current_app.logger.info(f"Database restored from {file_path}")
+        return True
+
+    except Exception as e:
+        current_app.logger.error(f"Error restoring database: {e}")
+        return False
+
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -101,3 +165,30 @@ def createEventReport(filter_option='all'):
     report_html = event_report.to_html(index=False, classes='table table-bordered table-striped table-hover', escape=False)
 
     return report_html
+
+
+def get_pay_periods(start_date, num_periods):
+    pay_periods = []
+    now = datetime.utcnow()
+
+    # Calculate the current period start that should not be included
+    period_start = start_date
+    while period_start + timedelta(weeks=2) <= now:
+        period_start += timedelta(weeks=2)
+
+    # Calculate the most recent completed period
+    last_completed_period_start = period_start - timedelta(weeks=2)
+
+    # Generate pay periods up to the most recent completed period
+    for i in range(num_periods):
+        period_start = last_completed_period_start - timedelta(weeks=2 * i)
+        period_end = period_start + timedelta(weeks=2) - timedelta(seconds=1)
+        pay_periods.append((period_start, period_end))
+
+    # Reverse the list to start from the earliest period
+    pay_periods.reverse()
+
+    return pay_periods
+
+
+
