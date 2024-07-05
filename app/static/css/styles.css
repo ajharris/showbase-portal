@@ -1,3 +1,22 @@
+/* General Styles */
+body {
+    padding-top: 70px; /* Adjust this value as needed */
+}
+
+.navbar {
+    width: 100%;
+    margin-bottom: 20px; /* Optional: adds space below the navbar */
+}
+
+/* Container max width for larger screens */
+.container {
+    max-width: 90%;
+    margin: auto;
+    padding: 0 15px;
+    padding-top: 60px;
+}
+
+/* Styles for light and dark modes */
 body.light-mode {
     background-color: #f0f8ff; /* Very faint shade of blue */
     color: #000000;
@@ -83,6 +102,7 @@ input:checked + .slider:before, input:checked + .view-slider:before {
     color: inherit;
 }
 
+/* Table Styles */
 .table {
     width: 100%;
     margin-bottom: 1rem;
@@ -108,104 +128,19 @@ input:checked + .slider:before, input:checked + .view-slider:before {
 }
 
 .light-mode .table-hover tbody tr {
-    background-color: #f0f8ff;
-    color: #000000; /* Ensure text color is black in light mode */
+    background-color: #ffffff;
 }
 
 .dark-mode .table-hover tbody tr {
-    background-color: #3b3f45;
-    color: #ffffff; /* Ensure text color is white in dark mode */
+    background-color: #555555;
 }
 
 .light-mode .table-hover tbody tr:hover {
-    background-color: #d8e8ff; /* Slightly darker shade of blue on hover */
+    background-color: #eeeeee;
 }
 
 .dark-mode .table-hover tbody tr:hover {
-    background-color: #4a5059; /* Slightly lighter shade of grey with blue on hover */
-}
-
-.horizontal-checkbox-group {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.form-check-inline {
-    margin-right: 15px;
-    margin-bottom: 10px;
-}
-
-/* Updated CSS for full-width navbar and wider content area */
-.navbar {
-    width: 100%;
-    margin-bottom: 0;
-}
-
-.container {
-    max-width: 90%;
-    margin: auto;
-    padding: 0 15px;
-    padding-top: 60px;
-}
-
-.horizontal-role-group {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.role-entry {
-    flex: 1;
-    min-width: 200px;
-    margin-bottom: 15px;
-}
-
-.form-check-inline {
-    margin-right: 15px;
-    margin-bottom: 10px;
-}
-
-.crew-report {
-    margin-top: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ddd;
-}
-
-.crew-report form {
-    display: inline;
-}
-
-.crew-report form button {
-    margin-top: 10px;
-}
-
-/* Smaller checkboxes */
-input[type="checkbox"] {
-    transform: scale(0.75); /* Adjust the scale as needed */
-    margin-right: 10px;
-}
-
-/* Align is_admin and is_account_manager fields on the same line */
-.admin-account-manager-group {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.admin-account-manager-group .form-group {
-    flex: 1;
-    min-width: 200px;
-    margin-right: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.admin-account-manager-group .form-group label {
-    margin-bottom: 5px;
-}
-
-.admin-account-manager-group .form-group:last-child {
-    margin-right: 0;
+    background-color: #777777;
 }
 
 /* General link styles */
@@ -219,7 +154,6 @@ a:hover {
     text-decoration: underline; /* Underline on hover */
 }
 
-/* Adjust for light and dark modes */
 body.light-mode a {
     color: #007bff;
 }
@@ -307,14 +241,60 @@ body.dark-mode .btn-info:hover {
     border-color: #1a8cff;
 }
 
-/* styles.css */
+/* Responsive Styles */
+@media (max-width: 768px) {
+    /* Navbar adjustments */
+    .navbar-collapse {
+        background-color: #333333;
+    }
 
-body {
-    padding-top: 70px; /* Adjust this value as needed */
+    .navbar-nav > li > a {
+        color: #ffffff;
+    }
+
+    /* Make forms stack vertically */
+    .form-row {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group {
+        width: 100%;
+    }
+
+    /* Adjust padding and margins */
+    .container {
+        padding: 0 10px;
+        padding-top: 50px;
+    }
+
+    .shift-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .shift-actions {
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 10px;
+    }
+
+    /* Make tables scrollable */
+    .table-responsive {
+        overflow-x: auto;
+    }
 }
 
-.navbar {
-    margin-bottom: 20px; /* Optional: adds space below the navbar */
+/* Form Layouts */
+.form-check-inline {
+    margin-right: 15px;
+    margin-bottom: 10px;
+}
+
+/* Smaller checkboxes */
+input[type="checkbox"] {
+    transform: scale(0.75); /* Adjust the scale as needed */
+    margin-right: 10px;
 }
 
 /* Upcoming Shifts and Offers Window Styles */
@@ -371,36 +351,63 @@ body.dark-mode .shift-item:hover {
     gap: 15px;
 }
 
-/* Adjustments for buttons in light and dark modes */
-.btn-info {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
-    color: #ffffff;
+/* Horizontal group styles */
+.horizontal-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
 }
 
-.btn-info:hover {
-    background-color: #138496;
-    border-color: #117a8b;
+.form-check-inline {
+    margin-right: 15px;
+    margin-bottom: 10px;
 }
 
-body.light-mode .btn-info {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
-    color: #ffffff;
+.horizontal-role-group {
+    display: flex;
+    flex-wrap: wrap;
 }
 
-body.light-mode .btn-info:hover {
-    background-color: #138496;
-    border-color: #117a8b;
+.role-entry {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 15px;
 }
 
-body.dark-mode .btn-info {
-    background-color: #3399ff;
-    border-color: #3399ff;
-    color: #ffffff;
+/* Crew report styles */
+.crew-report {
+    margin-top: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
 }
 
-body.dark-mode .btn-info:hover {
-    background-color: #1a8cff;
-    border-color: #1a8cff;
+.crew-report form {
+    display: inline;
+}
+
+.crew-report form button {
+    margin-top: 10px;
+}
+
+/* Align is_admin and is_account_manager fields on the same line */
+.admin-account-manager-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.admin-account-manager-group .form-group {
+    flex: 1;
+    min-width: 200px;
+    margin-right: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.admin-account-manager-group .form-group label {
+    margin-bottom: 5px;
+}
+
+.admin-account-manager-group .form-group:last-child {
+    margin-right: 0;
 }
