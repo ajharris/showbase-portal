@@ -271,6 +271,17 @@ button.btn-danger:hover {
     border-color: #bd2130;
 }
 
+button.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: #ffffff;
+}
+
+button.btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+}
+
 /* styles.css */
 
 body {
@@ -282,25 +293,94 @@ body {
 }
 
 /* Upcoming Shifts and Offers Window Styles */
-.list-group-item {
+.shift-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shift-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
     background-color: inherit; /* Use the current background color of the body */
     color: inherit; /* Use the current text color of the body */
 }
 
-body.light-mode .list-group-item {
+.shift-info {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.shift-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+body.light-mode .shift-item {
     background-color: #f0f8ff;
     color: #000000;
 }
 
-body.dark-mode .list-group-item {
+body.dark-mode .shift-item {
     background-color: #3b3f45;
     color: #ffffff;
 }
 
-.light-mode .list-group-item:hover {
+body.light-mode .shift-item:hover {
     background-color: #d8e8ff;
 }
 
-.dark-mode .list-group-item:hover {
+body.dark-mode .shift-item:hover {
     background-color: #4a5059;
+}
+
+/* Styles for the upcoming shifts list */
+.shift-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.shift-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Adjustments for buttons in light and dark modes */
+.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: #ffffff;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+}
+
+body.light-mode .btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: #ffffff;
+}
+
+body.light-mode .btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+}
+
+body.dark-mode .btn-info {
+    background-color: #3399ff;
+    border-color: #3399ff;
+    color: #ffffff;
+}
+
+body.dark-mode .btn-info:hover {
+    background-color: #1a8cff;
+    border-color: #1a8cff;
 }
