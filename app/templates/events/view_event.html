@@ -6,7 +6,7 @@
 <div class="container">
     <h2>Event: {{ event.showName }}</h2>
 
-    {% if current_user.is_admin or current_user.is_account_manager %}
+    {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
     <div id="request-crew-section">
         <h3>Request Crew</h3>
         <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
@@ -85,10 +85,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
         <form method="POST" action="{{ url_for('events.delete_crew', crew_id=crew_id) }}">
             {{ crew_request_form.hidden_tag() }}
             <button type="submit" class="btn btn-danger">Delete</button>
         </form>
+        {% endif %}
     </div>
     {% endfor %}
 
