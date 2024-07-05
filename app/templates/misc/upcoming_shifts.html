@@ -1,28 +1,27 @@
+{% extends "base.html" %}
+{% from "bootstrap/wtf.html" import form_field %}
 
+{% block page_content %}
 <div class="container">
     <h2>Upcoming Shifts</h2>
-    {% if shifts %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Shift Start</th>
-                    <th>Shift End</th>
-                    <th>Role</th>
-                    <th>Location</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for shift in shifts %}
-                    <tr>
-                        <td>{{ shift.start_time }}</td>
-                        <td>{{ shift.end_time }}</td>
-                        <td>{{ shift.role }}</td>
-                        <td>{{ shift.location }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>You have no upcoming shifts.</p>
-    {% endif %}
 
+    {% for shift in upcoming_shifts %}
+        <div class="shift">
+            <h3>{{ shift.showName }} ({{ shift.showNumber }})</h3>
+            <p><strong>Location:</strong> {{ shift.location }}</p>
+            <p><strong>Start:</strong> {{ shift.start }}</p>
+            <p><strong>End:</strong> {{ shift.end }}</p>
+            <p><strong>Role:</strong> {{ shift.role }}</p>
+            <p><strong>Status:</strong> {{ shift.status }}</p>
+            {% if shift.status == 'Offered' %}
+                <form method="POST" action="{{ url_for('base.respond_to_shift', shift_id=shift.id, response='accept') }}">
+                    <button type="submit" class="btn btn-success">Accept</button>
+                </form>
+                <form method="POST" action="{{ url_for('base.respond_to_shift', shift_id=shift.id, response='reject') }}">
+                    <button type="submit" class="btn btn-danger">Reject</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

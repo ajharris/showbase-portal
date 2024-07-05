@@ -1,3 +1,5 @@
+# app/__init__.py
+
 import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -52,6 +54,7 @@ def create_app(config_class='config.Config'):
         from .routes.profile import profile_bp
         from .routes.errorhandlers import error_bp
         from .routes.backup_routes import backup_bp
+        from .routes.base import base_bp  # Import the base blueprint
 
         app.register_blueprint(admin_bp)
         app.register_blueprint(auth_bp)
@@ -60,6 +63,7 @@ def create_app(config_class='config.Config'):
         app.register_blueprint(profile_bp)
         app.register_blueprint(error_bp)
         app.register_blueprint(backup_bp)
+        app.register_blueprint(base_bp)  # Register the base blueprint
 
         db.create_all()
 

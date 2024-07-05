@@ -1,0 +1,68 @@
+<!-- base/home.html -->
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <h1>Welcome to the NSS Portal</h1>
+    {% if current_user.is_authenticated %}
+        <p>Hello, {{ current_user.first_name }}!</p>
+
+        <!-- Upcoming Shifts and Offers -->
+        <div id="upcoming-shifts">
+            <h2>Upcoming Shifts and Offers</h2>
+            {% if upcoming_shifts %}
+                <ul class="list-group">
+                    {% for shift in upcoming_shifts %}
+                        <li class="list-group-item">
+                            <p><strong>Show:</strong> {{ shift.crew.event.showName }} ({{ shift.crew.event.showNumber }})</p>
+                            <p><strong>Role:</strong> {{ shift.role }}</p>
+                            <p><strong>Start:</strong> {{ shift.crew.start_time }}</p>
+                            <p><strong>End:</strong> {{ shift.crew.end_time }}</p>
+                            {% if shift.status == 'offered' %}
+                                <form method="POST" action="{{ url_for('base.accept_offer') }}">
+                                    <input type="hidden" name="assignment_id" value="{{ shift.id }}">
+                                    <button type="submit" class="btn btn-success">Accept</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('base.reject_offer') }}">
+                                    <input type="hidden" name="assignment_id" value="{{ shift.id }}">
+                                    <button type="submit" class="btn btn-danger">Reject</button>
+                                </form>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No upcoming shifts or offers.</p>
+            {% endif %}
+        </div>
+
+        <!-- Pay Period Selection -->
+        <div class="form-group mt-3">
+            <label for="pay-period">Pay Period</label>
+            <form method="get" action="{{ url_for('base.home') }}">
+                <select id="pay-period" name="pay_period" class="form-control" onchange="this.form.submit()">
+                    {% for start, end in pay_periods %}
+                        <option value="{{ start }}" {% if start == selected_period_start %}selected{% endif %}>
+                            Pay Period: {{ start.strftime('%Y-%m-%d') }} - {{ end.strftime('%Y-%m-%d') }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <!-- Shift Report -->
+        <div id="shift-report" class="mt-3">
+            <h3>Shift Report</h3>
+            {{ shift_report|safe }}
+        </div>
+
+        <!-- Expense Report -->
+        <div id="expense-report" class="mt-3">
+            <h3>Expense Report</h3>
+            {{ expense_report|safe }}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
