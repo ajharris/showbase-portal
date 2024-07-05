@@ -1,10 +1,10 @@
 body.light-mode {
-    background-color: #ffffff;
+    background-color: #f0f8ff; /* Very faint shade of blue */
     color: #000000;
 }
 
 body.dark-mode {
-    background-color: #333333;
+    background-color: #3b3f45; /* Grey with some blue added */
     color: #ffffff;
 }
 
@@ -105,19 +105,21 @@ input:checked + .slider:before, input:checked + .view-slider:before {
 }
 
 .light-mode .table-hover tbody tr {
-    background-color: #ffffff;
+    background-color: #f0f8ff;
+    color: #000000; /* Ensure text color is black in light mode */
 }
 
 .dark-mode .table-hover tbody tr {
-    background-color: #555555;
+    background-color: #3b3f45;
+    color: #ffffff; /* Ensure text color is white in dark mode */
 }
 
 .light-mode .table-hover tbody tr:hover {
-    background-color: #eeeeee;
+    background-color: #d8e8ff; /* Slightly darker shade of blue on hover */
 }
 
 .dark-mode .table-hover tbody tr:hover {
-    background-color: #777777;
+    background-color: #4a5059; /* Slightly lighter shade of grey with blue on hover */
 }
 
 .horizontal-checkbox-group {
@@ -142,27 +144,33 @@ input:checked + .slider:before, input:checked + .view-slider:before {
     padding: 0 15px;
     padding-top: 60px;
 }
+
 .horizontal-role-group {
     display: flex;
     flex-wrap: wrap;
 }
+
 .role-entry {
     flex: 1;
     min-width: 200px;
     margin-bottom: 15px;
 }
+
 .form-check-inline {
     margin-right: 15px;
     margin-bottom: 10px;
 }
+
 .crew-report {
     margin-top: 20px;
     padding-bottom: 20px;
     border-bottom: 1px solid #ddd;
 }
+
 .crew-report form {
     display: inline;
 }
+
 .crew-report form button {
     margin-top: 10px;
 }
@@ -196,6 +204,7 @@ input[type="checkbox"] {
 .admin-account-manager-group .form-group:last-child {
     margin-right: 0;
 }
+
 /* General link styles */
 a {
     color: #007bff; /* Default link color */
@@ -237,6 +246,31 @@ body.dark-mode .dropdown-menu {
     background-color: #444444; /* Slightly lighter than dark background */
 }
 
+/* Adjust button styles for better contrast */
+button {
+    color: #fff;
+}
+
+button.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+button.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+button.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+button.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
 /* styles.css */
 
 body {
@@ -245,4 +279,28 @@ body {
 
 .navbar {
     margin-bottom: 20px; /* Optional: adds space below the navbar */
+}
+
+/* Upcoming Shifts and Offers Window Styles */
+.list-group-item {
+    background-color: inherit; /* Use the current background color of the body */
+    color: inherit; /* Use the current text color of the body */
+}
+
+body.light-mode .list-group-item {
+    background-color: #f0f8ff;
+    color: #000000;
+}
+
+body.dark-mode .list-group-item {
+    background-color: #3b3f45;
+    color: #ffffff;
+}
+
+.light-mode .list-group-item:hover {
+    background-color: #d8e8ff;
+}
+
+.dark-mode .list-group-item:hover {
+    background-color: #4a5059;
 }
