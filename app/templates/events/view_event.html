@@ -1,3 +1,4 @@
+<!-- app/templates/events/view_event.html -->
 {% extends "base.html" %}
 {% from "bootstrap/wtf.html" import form_field %}
 
@@ -98,6 +99,14 @@
             {{ form_field(note_form.notes, class="form-control") }}
         </div>
         <div class="form-group">
+            {{ form_field(note_form.account_manager_only) }}
+            <label>{{ note_form.account_manager_only.label }}</label>
+        </div>
+        <div class="form-group">
+            {{ form_field(note_form.account_manager_and_td_only) }}
+            <label>{{ note_form.account_manager_and_td_only.label }}</label>
+        </div>
+        <div class="form-group">
             {{ form_field(note_form.submit, class="btn btn-primary") }}
         </div>
     </form>
@@ -124,6 +133,5 @@
         </div>
     </form>
 </div>
-
 
 {% endblock %}

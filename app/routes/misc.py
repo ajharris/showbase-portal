@@ -47,6 +47,7 @@ def home():
 
     # Generate reports
     shift_report = createTimeReportCH(shifts)
+    print(shift_report)
     expense_report = createExpenseReportCH(expenses)
 
     return render_template('misc/index.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report)
