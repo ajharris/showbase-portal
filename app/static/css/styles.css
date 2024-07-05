@@ -317,7 +317,7 @@ body {
 
 .shift-actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* Change from column to row */
     gap: 5px;
 }
 
@@ -344,11 +344,6 @@ body.dark-mode .shift-item:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
-}
-
-.shift-actions {
-    display: flex;
-    gap: 10px;
 }
 
 /* Adjustments for buttons in light and dark modes */
