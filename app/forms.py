@@ -100,9 +100,9 @@ def update_worker(worker_id):
     return render_template('admin/update_worker.html', form=form)
 
 class ShiftForm(FlaskForm):
-    start = StringField('Shift Start:', id='startpick', validators=[InputRequired(), DataRequired()])
-    end = StringField('Shift End:', id='endpick', validators=[InputRequired(), DataRequired()])
-    showNumber = IntegerField('Event Number:', validators=[InputRequired(), DataRequired()])
+    start = StringField('Shift Start:', id='shift_start', validators=[InputRequired(), DataRequired()])
+    end = StringField('Shift End:', id='shift_end', validators=[InputRequired(), DataRequired()])
+    showNumber = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
     worker = SelectField('Worker:', coerce=int, validators=[InputRequired(), DataRequired()])
     roles = SelectMultipleField('Roles:', choices=[(role, role) for role in ROLES], validators=[InputRequired(), DataRequired()])
     location = StringField('Location:', validators=[InputRequired(), DataRequired()])
@@ -160,3 +160,15 @@ class NoteForm(FlaskForm):
     account_manager_only = BooleanField('Visible to Account Managers Only')
     account_manager_and_td_only = BooleanField('Visible to Account Managers and TDs Only')
     submit = SubmitField('Add Note')
+
+
+# forms.py
+class AssignWorkerForm(FlaskForm):
+    worker = SelectField('Select Worker', choices=[], coerce=int, validators=[DataRequired()])
+    role = StringField('Role', validators=[DataRequired()])
+    crew_id = HiddenField('Crew ID', validators=[DataRequired()])
+    submit = SubmitField('Assign Worker')
+
+    def __init__(self, *args, **kwargs):
+        super(AssignWorkerForm, self).__init__(*args, **kwargs)
+        self.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]

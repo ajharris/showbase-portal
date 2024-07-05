@@ -236,3 +236,13 @@ body.light-mode .dropdown-menu {
 body.dark-mode .dropdown-menu {
     background-color: #444444; /* Slightly lighter than dark background */
 }
+
+/* styles.css */
+
+body {
+    padding-top: 70px; /* Adjust this value as needed */
+}
+
+.navbar {
+    margin-bottom: 20px; /* Optional: adds space below the navbar */
+}

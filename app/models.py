@@ -1,3 +1,5 @@
+# models.py
+
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -56,6 +58,7 @@ class Event(db.Model):
 
     account_manager = db.relationship('Worker', backref='events', lazy=True)
 
+
 class Crew(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
@@ -66,6 +69,7 @@ class Crew(db.Model):
     description = db.Column(db.String(500), nullable=True)  # New field for work assignment details
 
     event = db.relationship('Event', backref='crews', lazy=True)
+    assignments = db.relationship('CrewAssignment', backref='assigned_crew', lazy=True)
 
     def __init__(self, **kwargs):
         super(Crew, self).__init__(**kwargs)
@@ -76,16 +80,17 @@ class Crew(db.Model):
         return json.loads(self.roles)
 
 
+# models.py
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     crew_id = db.Column(db.Integer, db.ForeignKey('crew.id'), nullable=False)
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
     role = db.Column(db.String(64), nullable=False)
-    accepted = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(64), default='offered')  # New status field
     assigned_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    crew = db.relationship('Crew', backref='assignments', lazy=True)
     worker = db.relationship('Worker', backref='assignments', lazy=True)
+
 
 
 class Expense(db.Model):
@@ -124,7 +129,9 @@ class Note(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
     account_manager_only = db.Column(db.Boolean, default=False)
     account_manager_and_td_only = db.Column(db.Boolean, default=False)
 
     event = db.relationship('Event', backref='notes', lazy=True)
+    worker = db.relationship('Worker', backref='notes', lazy=True)

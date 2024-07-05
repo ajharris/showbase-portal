@@ -8,6 +8,8 @@ import json
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
+# events.py
+
 @events_bp.route('/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def view_event(event_id):
