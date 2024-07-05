@@ -87,12 +87,15 @@ input:checked + .slider:before, input:checked + .view-slider:before {
     width: 100%;
     margin-bottom: 1rem;
     color: inherit;
+    background-color: inherit; /* Use the current background color of the body */
 }
 
 .table th, .table td {
     padding: 0.75rem;
     vertical-align: top;
     border-top: 1px solid #dee2e6;
+    color: inherit; /* Use the current text color of the body */
+    background-color: inherit; /* Use the current background color of the body */
 }
 
 .table thead th {
@@ -280,6 +283,28 @@ button.btn-info {
 button.btn-info:hover {
     background-color: #138496;
     border-color: #117a8b;
+}
+
+body.light-mode .btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: #ffffff;
+}
+
+body.light-mode .btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+}
+
+body.dark-mode .btn-info {
+    background-color: #3399ff;
+    border-color: #3399ff;
+    color: #ffffff;
+}
+
+body.dark-mode .btn-info:hover {
+    background-color: #1a8cff;
+    border-color: #1a8cff;
 }
 
 /* styles.css */
