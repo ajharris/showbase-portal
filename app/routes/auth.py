@@ -1,34 +1,32 @@
+# routes/auth.py
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required, current_user
+from flask_login import login_user, logout_user, current_user
 from sqlalchemy.exc import IntegrityError
-from flask_mail import Message
 from ..models import Worker
-from ..forms import LoginForm, RegistrationForm, RequestResetForm, ResetPasswordForm
-from .. import db, login_manager, mail
+from ..forms import LoginForm, RegistrationForm, RequestResetForm
+from .. import db, mail
+from flask_mail import Message
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
-
-from flask_login import login_user
+auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('base.home'))
+    
     form = LoginForm()
     if form.validate_on_submit():
         worker = Worker.query.filter_by(email=form.email.data).first()
         if worker and worker.check_password(form.password.data):
-            if worker.is_active:
-                login_user(worker, remember=form.remember.data)
-                next_page = request.args.get('next')
-                return redirect(next_page) if next_page else redirect(url_for('misc.index'))
-            else:
-                flash('Account is disabled. Please contact an admin.', 'danger')
+            login_user(worker, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('base.home'))
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('auth/login.html', title='Login', form=form)
 
-
 @auth_bp.route('/logout')
-@login_required
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
@@ -57,7 +55,7 @@ def register():
 @auth_bp.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
-        return redirect(url_for('misc.index'))
+        return redirect(url_for('base.home'))
     form = RequestResetForm()
     if form.validate_on_submit():
         user = Worker.query.filter_by(email=form.email.data).first()

@@ -1,3 +1,4 @@
+<!-- base/home.html -->
 {% extends "base.html" %}
 
 {% block title %}Home{% endblock %}
@@ -8,11 +9,31 @@
     {% if current_user.is_authenticated %}
         <p>Hello, {{ current_user.first_name }}!</p>
         <div id="upcoming-shifts">
-            {% include 'misc/upcoming_shifts.html' %}
-        </div>        
+            <h2>Upcoming Shifts</h2>
+            {% for shift in upcoming_shifts %}
+                <div class="shift">
+                    <h3>{{ shift.crew.event.showName }} ({{ shift.crew.event.showNumber }})</h3>
+                    <p><strong>Location:</strong> {{ shift.crew.event.location }}</p>
+                    <p><strong>Start:</strong> {{ shift.crew.start_time }}</p>
+                    <p><strong>End:</strong> {{ shift.crew.end_time }}</p>
+                    <p><strong>Role:</strong> {{ shift.role }}</p>
+                    <p><strong>Status:</strong> {{ shift.status }}</p>
+                    {% if shift.status == 'Offered' %}
+                        <form method="POST" action="{{ url_for('base.accept_offer') }}">
+                            <input type="hidden" name="assignment_id" value="{{ shift.id }}">
+                            <button type="submit" class="btn btn-success">Accept</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('base.reject_offer') }}">
+                            <input type="hidden" name="assignment_id" value="{{ shift.id }}">
+                            <button type="submit" class="btn btn-danger">Reject</button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
         <div class="form-group mt-3">
             <label for="pay-period">Pay Period</label>
-            <form method="get" action="{{ url_for('misc.home') }}">
+            <form method="get" action="{{ url_for('base.home') }}">
                 <select id="pay-period" name="pay_period" class="form-control" onchange="this.form.submit()">
                     {% for start, end in pay_periods %}
                         <option value="{{ start }}" {% if start == selected_period_start %}selected{% endif %}>

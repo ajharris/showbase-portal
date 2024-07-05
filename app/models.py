@@ -1,5 +1,3 @@
-# models.py
-
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -69,7 +67,7 @@ class Crew(db.Model):
     description = db.Column(db.String(500), nullable=True)  # New field for work assignment details
 
     event = db.relationship('Event', backref='crews', lazy=True)
-    assignments = db.relationship('CrewAssignment', backref='assigned_crew', lazy=True)
+    crew_assignments = db.relationship('CrewAssignment', backref='crew_assignment', lazy=True)
 
     def __init__(self, **kwargs):
         super(Crew, self).__init__(**kwargs)
@@ -80,17 +78,16 @@ class Crew(db.Model):
         return json.loads(self.roles)
 
 
-# models.py
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     crew_id = db.Column(db.Integer, db.ForeignKey('crew.id'), nullable=False)
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
     role = db.Column(db.String(64), nullable=False)
-    status = db.Column(db.String(64), default='offered')  # New status field
+    status = db.Column(db.String(20), nullable=False, default='offered')
     assigned_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
+    crew = db.relationship('Crew', backref='assignments', lazy=True)
     worker = db.relationship('Worker', backref='assignments', lazy=True)
-
 
 
 class Expense(db.Model):
