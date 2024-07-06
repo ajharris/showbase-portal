@@ -100,7 +100,7 @@ tests/example_app/exampledb
 tests/example_app/exampledb_test
 tests/example_app/example/exampledb
 
-/migrations/
+
 /uploads/
 app/create_admin.py
 /documents 
