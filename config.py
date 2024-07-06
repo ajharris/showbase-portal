@@ -2,7 +2,10 @@ import os
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'sqlite:///app.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads/receipts'
     ALLOWED_EXTENSIONS = {'pdf', 'jpeg', 'jpg', 'png'}
