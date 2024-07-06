@@ -5,10 +5,10 @@ app = create_app()
 app.app_context().push()
 
 # Replace these with your actual details
-first_name = "YourFirstName"
-last_name = "YourLastName"
-email = "your.email@example.com"
-password = "yourpassword"
+first_name = "Andrew"
+last_name = "Harris"
+email = "andrew.harris.av@gmail.com"
+password = "Ernskyk3!"
 
 # Check if the user already exists
 existing_worker = Worker.query.filter_by(email=email).first()
