@@ -41,7 +41,8 @@ class EventForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)
-        self.accountManager.choices = [(am.id, f'{am.first_name} {am.last_name}') for am in get_account_managers()]
+        self.accountManager.choices = [(am.email, f'{am.first_name} {am.last_name}') for am in get_account_managers()]
+
 
 class AdminCreateWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])

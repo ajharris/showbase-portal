@@ -35,10 +35,10 @@ def home():
         selected_period_start, selected_period_end = pay_periods[-1]  # Default to the most recent completed period
 
     # Query shifts and expenses based on the selected pay period
-    shifts = CrewAssignment.query.filter(
+    shifts = CrewAssignment.query.join(Crew).filter(
         CrewAssignment.worker_id == current_user.id,
-        CrewAssignment.crew.has(Crew.start_time >= selected_period_start),
-        CrewAssignment.crew.has(Crew.end_time <= selected_period_end)
+        Crew.start_time >= selected_period_start,
+        Crew.end_time <= selected_period_end
     ).all()
     
     # Debugging: Log the shifts for the pay period
@@ -56,7 +56,6 @@ def home():
     expense_report = createExpenseReportCH(expenses)
 
     return render_template('base/home.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report)
-
 
 @base_bp.route('/accept_offer', methods=['POST'])
 @login_required

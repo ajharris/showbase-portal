@@ -147,25 +147,8 @@ function setEventStatus(eventId, status) {
     }).catch(error => console.error('Error:', error));
 }
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    const workerSelect = document.getElementById('worker_select');
-    if (workerSelect) {
-        workerSelect.addEventListener('change', function() {
-            const selectedWorkerId = workerSelect.value;
-            if (selectedWorkerId) {
-                const url = workerSelect.getAttribute('data-url');
-                if (url) {
-                    window.location.href = url + "?worker_id=" + selectedWorkerId;
-                } else {
-                    console.error('Data-url attribute not found.');
-                }
-            }
-        });
-    }
-});
-
+// Initialize Flatpickr for date-time pickers
 document.addEventListener('DOMContentLoaded', function () {
-    // Initialize Flatpickr for date-time pickers
     flatpickr('#shift_start', {
         enableTime: true,
         dateFormat: 'm/d/Y h:i K'
@@ -175,6 +158,11 @@ document.addEventListener('DOMContentLoaded', function () {
         enableTime: true,
         dateFormat: 'm/d/Y h:i K'
     });
-
-    // Add any other necessary JavaScript initialization here
 });
+
+// Confirm Delete Function
+function confirmDelete(eventId) {
+    if (confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
+        document.getElementById('delete-event-form-' + eventId).submit();
+    }
+}

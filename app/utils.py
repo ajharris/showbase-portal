@@ -133,6 +133,8 @@ def createExpenseReportCH(expenses):
 
     return report_html
 
+from flask_wtf.csrf import generate_csrf
+
 def createEventReport(filter_option='all'):
     if filter_option == 'active':
         events = Event.query.filter_by(active=True).order_by(Event.showNumber).all()
@@ -159,13 +161,22 @@ def createEventReport(filter_option='all'):
                        if event.active else
                        f'<button class="btn btn-success" onclick="setEventStatus({event.id}, \'active\')">Set Active</button>')
         view_button = f'<a href="{url_for("events.view_event", event_id=event.id)}" class="btn btn-info">View Details</a>'
-        data['Actions'].append(button_html + view_button)
+        edit_button = f'<a href="{url_for("events.edit_event", event_id=event.id)}" class="btn btn-warning">Edit</a>'
+
+        csrf_token = generate_csrf()  # Generate CSRF token for each form
+        delete_form = (
+            f'<form id="delete-event-form-{event.id}" action="{url_for("events.delete_event", event_id=event.id)}" method="POST" style="display: inline;">'
+            f'<input type="hidden" name="csrf_token" value="{csrf_token}">'
+            f'<button type="button" class="btn btn-danger" onclick="confirmDelete({event.id})">Delete</button>'
+            f'</form>'
+        )
+
+        data['Actions'].append(button_html + view_button + edit_button + delete_form)
 
     event_report = pd.DataFrame(data)
     report_html = event_report.to_html(index=False, classes='table table-bordered table-striped table-hover', escape=False)
 
     return report_html
-
 
 def get_pay_periods(start_date, num_periods):
     pay_periods = []
