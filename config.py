@@ -9,7 +9,8 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads/receipts'
     ALLOWED_EXTENSIONS = {'pdf', 'jpeg', 'jpg', 'png'}
-    
+    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
+
     # Email settings
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.googlemail.com')
     MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
