@@ -17,3 +17,5 @@ class Config:
     MAIL_USERNAME = os.getenv('EMAIL_USER')
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
+
+print(f"Configured DATABASE_URL: {Config.SQLALCHEMY_DATABASE_URI}")
