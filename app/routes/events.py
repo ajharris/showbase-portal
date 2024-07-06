@@ -6,135 +6,63 @@ from ..models import Event, Shift, Expense, Crew, Worker, Note, CrewAssignment
 from ..forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm, EventForm
 from .. import db
 from ..utils import ROLES, createEventReport
+from sqlalchemy.exc import IntegrityError  # Import IntegrityError
 import json
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
-# events.py
-
-@events_bp.route('/<int:event_id>', methods=['GET', 'POST'])
-@login_required
-def view_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    shifts = Shift.query.filter_by(showNumber=event.showNumber).all()
-    expenses = Expense.query.filter_by(showNumber=event.showNumber).all()
-
-    note_form = NoteForm()
-    document_form = DocumentForm()
-    sharepoint_form = SharePointForm()
-    crew_request_form = CrewRequestForm()
-
-    if request.method == 'GET':
-        roles = {role: 0 for role in ROLES}
-        crew_request_form.roles_json.data = json.dumps(roles)
-
-    roles_dict = json.loads(crew_request_form.roles_json.data) if crew_request_form.roles_json.data else {}
-
-    if crew_request_form.validate_on_submit():
-        start_time = crew_request_form.start_time.data
-        end_time = crew_request_form.end_time.data
-        roles = json.loads(crew_request_form.roles_json.data)
-        for role in roles:
-            roles[role] = int(request.form.get(role, 0))
-        shiftType = crew_request_form.shiftType.data
-        description = crew_request_form.description.data
-
-        new_crew = Crew(
-            event_id=event.id,
-            start_time=start_time,
-            end_time=end_time,
-            roles=json.dumps(roles),
-            shift_type=",".join(shiftType),
-            description=description
-        )
-
-        db.session.add(new_crew)
-        db.session.commit()
-        flash('Crew request added successfully.', 'success')
-        return redirect(url_for('events.view_event', event_id=event.id))
-
-    if note_form.validate_on_submit():
-        new_note = Note(
-            content=note_form.notes.data,
-            worker_id=current_user.id,
-            event_id=event.id,
-            account_manager_only=note_form.account_manager_only.data,
-            account_manager_and_td_only=note_form.account_manager_and_td_only.data
-        )
-        db.session.add(new_note)
-        db.session.commit()
-        flash('Note added successfully.', 'success')
-        return redirect(url_for('events.view_event', event_id=event.id))
-
-    notes_query = Note.query.filter_by(event_id=event.id)
-    if current_user.is_admin:
-        notes = notes_query.all()
-    elif current_user.is_account_manager:
-        notes = notes_query.filter(
-            (Note.account_manager_only == False) | 
-            (Note.account_manager_only == True)
-        ).all()
-    else:
-        worker_ids = [assignment.worker_id for assignment in CrewAssignment.query.join(Crew).filter(Crew.event_id == event.id).all()]
-        if current_user.id in worker_ids:
-            notes = notes_query.filter(
-                (Note.account_manager_and_td_only == False) |
-                ((Note.account_manager_and_td_only == True) & (current_user.id in worker_ids))
-            ).all()
-        else:
-            notes = notes_query.filter_by(account_manager_only=False, account_manager_and_td_only=False).all()
-
-    crews = Crew.query.filter_by(event_id=event.id).all()
-    crew_assignments = {}
-    for crew in crews:
-        requested_roles = json.loads(crew.roles)
-        assignments = CrewAssignment.query.filter_by(crew_id=crew.id).all()
-        assignment_data = {role: {'name': 'Not Yet Assigned', 'phone': '', 'email': ''} for role in requested_roles if requested_roles[role] > 0}
-        for assignment in assignments:
-            worker = Worker.query.get(assignment.worker_id)
-            if worker:
-                assignment_data[assignment.role] = {
-                    'name': f'{worker.first_name} {worker.last_name}',
-                    'phone': worker.phone_number,
-                    'email': worker.email
-                }
-        crew_assignments[crew.id] = {
-            'description': crew.description,
-            'start_time': crew.start_time,
-            'end_time': crew.end_time,
-            'shift_type': crew.shift_type,
-            'assignments': assignment_data
-        }
-
-    return render_template('events/view_event.html', event=event, shifts=shifts, expenses=expenses, 
-                           note_form=note_form, document_form=document_form, 
-                           sharepoint_form=sharepoint_form, crew_request_form=crew_request_form, 
-                           notes=notes, roles=roles_dict, crew_assignments=crew_assignments)
-
-@events_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_event():
     form = EventForm()
-    form.accountManager.choices = [(manager.email, f"{manager.first_name} {manager.last_name}") for manager in Worker.query.filter_by(is_account_manager=True).all()]
-    event_report = createEventReport()
-
     if form.validate_on_submit():
-        existing_event = Event.query.filter_by(showNumber=form.showNumber.data).first()
+        show_number = form.showNumber.data
+        
+        # Check if an event with the same showNumber already exists
+        existing_event = Event.query.filter_by(showNumber=show_number).first()
         if existing_event:
-            flash('An event with this Show Number already exists.', 'danger')
-        else:
-            event = Event(
-                showName=form.showName.data,
-                showNumber=form.showNumber.data,
-                accountManager=form.accountManager.data,
-                location=form.location.data
-            )
-            db.session.add(event)
+            flash('An event with this show number already exists. Please use a different show number.', 'danger')
+            return redirect(url_for('events.create_event'))
+        
+        event = Event(
+            showName=form.showName.data,
+            showNumber=show_number,
+            accountManager=form.accountManager.data,
+            location=form.location.data,
+            sharepoint=form.sharepoint.data,
+            active=form.active.data
+        )
+        db.session.add(event)
+        try:
             db.session.commit()
             flash('Event created successfully!', 'success')
-            return redirect(url_for('events.create_event'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('An error occurred while creating the event. Please try again.', 'danger')
+        
+        return redirect(url_for('events.list_events'))
+    
+    # Fetch events to display in the event list
+    events = Event.query.all()
+    return render_template('events/create_event.html', form=form, events=events)
 
-    return render_template('events/create_event.html', event_form=form, event_report=event_report)
+@events_bp.route('/create_event', methods=['GET', 'POST'])
+def create_event():
+    event_form = EventForm()
+    if event_form.validate_on_submit():
+        event = Event(
+            showName=event_form.showName.data,
+            showNumber=event_form.showNumber.data,
+            accountManager=event_form.accountManager.data,
+            location=event_form.location.data,
+            active=True
+        )
+        db.session.add(event)
+        db.session.commit()
+        flash('Event created successfully!', 'success')
+        return redirect(url_for('events.create_event'))  # Redirect to the same view to refresh the form
+
+    event_report = createEventReport()  # Generate the event report
+    return render_template('events/create_event.html', event_form=event_form, event_report=event_report)
 
 @events_bp.route('/')
 @login_required
@@ -150,3 +78,28 @@ def delete_crew(crew_id):
     db.session.commit()
     flash('Crew assignment deleted successfully.', 'success')
     return redirect(url_for('events.view_event', event_id=crew.event_id))
+
+@events_bp.route('/events/edit/<int:event_id>', methods=['GET', 'POST'])
+def edit_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    form = EventForm(obj=event)
+
+    if form.validate_on_submit():
+        form.populate_obj(event)
+        db.session.commit()
+        flash('Event updated successfully!', 'success')
+        return redirect(url_for('events.view_event', event_id=event.id))
+
+    return render_template('events/edit_event.html', form=form, event=event)
+
+
+@events_bp.route('/events/delete/<int:event_id>', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    db.session.delete(event)
+    db.session.commit()
+    flash('Event deleted successfully.', 'success')
+    return redirect(url_for('events.index'))
+
+

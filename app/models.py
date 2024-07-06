@@ -4,7 +4,6 @@ from flask_login import UserMixin
 from flask import current_app
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from . import db
-import json
 
 class Worker(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,7 +16,7 @@ class Worker(db.Model, UserMixin):
     postal = db.Column(db.String)
     is_admin = db.Column(db.Boolean, default=False)
     is_account_manager = db.Column(db.Boolean, default=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256))  
     theme = db.Column(db.String(10), default='light')
     active = db.Column(db.Boolean, default=True)
 
@@ -45,6 +44,7 @@ class Worker(db.Model, UserMixin):
         return Worker.query.get(user_id)
 
 
+
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     showName = db.Column(db.String(100))
@@ -55,6 +55,7 @@ class Event(db.Model):
     active = db.Column(db.Boolean, default=True)
 
     account_manager = db.relationship('Worker', backref='events', lazy=True)
+    crews = db.relationship('Crew', backref='event', lazy=True, cascade="all, delete-orphan")
 
 
 class Crew(db.Model):
@@ -62,21 +63,11 @@ class Crew(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     end_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    roles = db.Column(db.JSON, nullable=False)  # JSON field to store role requirements
+    roles = db.Column(db.JSON, nullable=False)
     shift_type = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.String(500), nullable=True)  # New field for work assignment details
-
-    event = db.relationship('Event', backref='crews', lazy=True)
-    crew_assignments = db.relationship('CrewAssignment', backref='crew_assignment', lazy=True)
-
-    def __init__(self, **kwargs):
-        super(Crew, self).__init__(**kwargs)
-        if isinstance(self.roles, dict):
-            self.roles = json.dumps(self.roles)
-
-    def get_roles(self):
-        return json.loads(self.roles)
-
+    description = db.Column(db.String(500), nullable=True)
+    
+    crew_assignments = db.relationship('CrewAssignment', backref='crew', lazy=True, cascade="all, delete-orphan")
 
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -85,9 +76,9 @@ class CrewAssignment(db.Model):
     role = db.Column(db.String(64), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='offered')
     assigned_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-    crew = db.relationship('Crew', backref='assignments', lazy=True)
+    
     worker = db.relationship('Worker', backref='assignments', lazy=True)
+
 
 
 class Expense(db.Model):
