@@ -1,8 +1,8 @@
 import os
 
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')  # Added default secret key
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')  # Fallback to SQLite
+    SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads/receipts'
     ALLOWED_EXTENSIONS = {'pdf', 'jpeg', 'jpg', 'png'}
