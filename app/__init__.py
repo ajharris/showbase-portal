@@ -64,8 +64,6 @@ def create_app(config_class='config.Config'):
         app.register_blueprint(backup_bp)
         app.register_blueprint(base_bp)  # Register the base blueprint
 
-        db.create_all()
-
     # Register CLI commands
     from .update_db import register_commands as update_db_commands
     from .populate_db import register_commands as populate_db_commands
