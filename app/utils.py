@@ -136,10 +136,13 @@ def createExpenseReportCH(expenses):
 from flask_wtf.csrf import generate_csrf
 
 def createEventReport(filter_option='all'):
+    current_app.logger.debug("Creating event report with filter: %s", filter_option)
     if filter_option == 'active':
         events = Event.query.filter_by(active=True).order_by(Event.showNumber).all()
     else:
         events = Event.query.order_by(Event.showNumber).all()
+
+    current_app.logger.debug("Events fetched: %s", events)
 
     data = {
         'Show Name': [],
@@ -151,6 +154,7 @@ def createEventReport(filter_option='all'):
     }
 
     for event in events:
+        current_app.logger.debug("Processing event: %s", event)
         data['Show Name'].append(event.showName)
         data['Show Number'].append(event.showNumber)
         data['Account Manager'].append(event.accountManager)
@@ -177,6 +181,7 @@ def createEventReport(filter_option='all'):
     report_html = event_report.to_html(index=False, classes='table table-bordered table-striped table-hover', escape=False)
 
     return report_html
+
 
 def get_pay_periods(start_date, num_periods):
     pay_periods = []
