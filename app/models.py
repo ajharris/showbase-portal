@@ -16,7 +16,7 @@ class Worker(db.Model, UserMixin):
     postal = db.Column(db.String)
     is_admin = db.Column(db.Boolean, default=False)
     is_account_manager = db.Column(db.Boolean, default=False)
-    password_hash = db.Column(db.String(256))  
+    password_hash = db.Column(db.String(128))
     theme = db.Column(db.String(10), default='light')
     active = db.Column(db.Boolean, default=True)
 
@@ -43,20 +43,29 @@ class Worker(db.Model, UserMixin):
             return None
         return Worker.query.get(user_id)
 
-
-
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    showName = db.Column(db.String(100))
-    showNumber = db.Column(db.String(100), unique=True, nullable=False)
-    accountManager = db.Column(db.String(120), db.ForeignKey('worker.email'), nullable=False)
-    location = db.Column(db.String(200))
+    showName = db.Column(db.String(128), nullable=False)
+    showNumber = db.Column(db.Integer, nullable=False, unique=True)
+    accountManager = db.Column(db.String(128), db.ForeignKey('worker.email'), nullable=False)
+    location = db.Column(db.String(256))
     sharepoint = db.Column(db.String, nullable=True)
     active = db.Column(db.Boolean, default=True)
 
     account_manager = db.relationship('Worker', backref='events', lazy=True)
     crews = db.relationship('Crew', backref='event', lazy=True, cascade="all, delete-orphan")
+    documents = db.relationship('Document', back_populates='event')
+    notes = db.relationship('Note', backref='event', lazy=True, cascade="all, delete-orphan")
+    expenses = db.relationship('Expense', backref='event', lazy=True, cascade="all, delete-orphan")
+    shifts = db.relationship('Shift', backref='event', lazy=True, cascade="all, delete-orphan")
 
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    path = db.Column(db.String(256), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+
+    event = db.relationship('Event', back_populates='documents')
 
 class Crew(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,8 +88,6 @@ class CrewAssignment(db.Model):
     
     worker = db.relationship('Worker', backref='assignments', lazy=True)
 
-
-
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     receiptNumber = db.Column(db.String(50))
@@ -94,9 +101,7 @@ class Expense(db.Model):
     receipt_filename = db.Column(db.String(100))
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
 
-    event = db.relationship('Event', backref='expenses', lazy=True)
     worker = db.relationship('Worker', backref='expenses', lazy=True)
-
 
 class Shift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -108,9 +113,7 @@ class Shift(db.Model):
     location = db.Column(db.String(200))
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
 
-    event = db.relationship('Event', backref='shifts', lazy=True)
     worker = db.relationship('Worker', backref='shifts', lazy=True)
-
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -121,5 +124,4 @@ class Note(db.Model):
     account_manager_only = db.Column(db.Boolean, default=False)
     account_manager_and_td_only = db.Column(db.Boolean, default=False)
 
-    event = db.relationship('Event', backref='notes', lazy=True)
     worker = db.relationship('Worker', backref='notes', lazy=True)

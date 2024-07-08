@@ -2,12 +2,12 @@ import os, json
 from datetime import datetime, timedelta
 import pandas as pd
 from flask import current_app, url_for
-from .models import Expense, Event, Shift, Worker
+from .models import Expense, Event, Shift, Worker, Crew, CrewAssignment
 from app import db
 
 ROLES = ['TD', 'Video', 'Audio', 'Lighting', 'Staging', 'Stagehand', 'Lift Op', 'Driver']
 
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif']
 
 from sqlalchemy.orm import class_mapper
 
@@ -206,5 +206,47 @@ def get_pay_periods(start_date, num_periods):
 
     return pay_periods
 
+def assign_past_crew_assignment(worker_id, event_id, start_time, end_time, role, description, shift_type='Show'):
+    """
+    Assign a crew assignment from the past to a worker.
+    
+    :param worker_id: The ID of the worker.
+    :param event_id: The ID of the event.
+    :param start_time: The start time of the crew assignment.
+    :param end_time: The end time of the crew assignment.
+    :param role: The role to assign to the worker.
+    :param description: A description of the crew assignment.
+    :param shift_type: The type of shift (default is 'Show').
+    :return: The created CrewAssignment object.
+    """
+    try:
+        crew = Crew(
+            event_id=event_id,
+            start_time=start_time,
+            end_time=end_time,
+            roles=json.dumps({role: 1}),  # Assuming roles are stored as JSON
+            shift_type=shift_type,
+            description=description
+        )
+        db.session.add(crew)
+        db.session.commit()
+
+        crew_assignment = CrewAssignment(
+            crew_id=crew.id,
+            worker_id=worker_id,
+            role=role,
+            status='completed',
+            assigned_time=datetime.utcnow()
+        )
+        db.session.add(crew_assignment)
+        db.session.commit()
+
+        current_app.logger.info(f"Assigned past crew assignment: {crew_assignment}")
+        return crew_assignment
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error assigning past crew assignment: {e}")
+        return None
 
 
