@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from flask import current_app
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from . import db
+import json
 
 class Worker(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -77,6 +78,10 @@ class Crew(db.Model):
     description = db.Column(db.String(500), nullable=True)
     
     crew_assignments = db.relationship('CrewAssignment', backref='crew', lazy=True, cascade="all, delete-orphan")
+
+    def get_roles(self):
+        return self.roles if isinstance(self.roles, dict) else json.loads(self.roles)
+
 
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
