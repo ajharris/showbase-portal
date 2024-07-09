@@ -12,7 +12,7 @@
         <p>Description: {{ crew.description }}</p>
         {% for role, count in crew.get_roles().items() if count > 0 %}
             {% set assigned_worker = None %}
-            {% for assignment in crew.assignments %}
+            {% for assignment in crew.crew_assignments %}
                 {% if assignment.role == role and assignment.status == 'offered' %}
                     {% set assigned_worker = assignment.worker %}
                 {% endif %}

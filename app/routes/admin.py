@@ -88,7 +88,7 @@ def unfulfilled_crew_requests():
             )
             db.session.add(crew_assignment)
             roles[role] -= 1
-            crew.roles = json.dumps(roles)
+            crew.roles = roles
             db.session.commit()
             flash(f'Worker assigned to role: {role}', 'success')
 
@@ -113,10 +113,10 @@ def unfulfilled_crew_requests():
         roles = crew.get_roles()
         for role in roles:
             roles[role] -= assigned_roles.get(role, 0)
-        crew.roles = json.dumps({role: count for role, count in roles.items() if count > 0})
+        crew.roles = {role: count for role, count in roles.items() if count > 0}
 
     # Filter out fully assigned crews
-    crews = [crew for crew in crews if json.loads(crew.roles)]
+    crews = [crew for crew in crews if crew.get_roles()]
 
     form.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in workers]
 
