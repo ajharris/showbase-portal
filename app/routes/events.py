@@ -1,11 +1,10 @@
-# app/routes/events.py
-
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from ..models import Event, Crew, Note, Document
 from ..forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm, EventForm
 from .. import db
 from ..utils import ROLES, createEventReport
+import json
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
@@ -76,7 +75,19 @@ def view_event(event_id):
     sharepoint_form = SharePointForm()
 
     if crew_request_form.validate_on_submit():
-        return redirect(url_for('events.request_crew', event_id=event.id))
+        roles = json.loads(crew_request_form.roles_json.data)
+        crew = Crew(
+            event_id=event.id,
+            description=crew_request_form.description.data,
+            start_time=crew_request_form.start_time.data,
+            end_time=crew_request_form.end_time.data,
+            shift_type=crew_request_form.shiftType.data,
+            roles=roles  # Assuming your Crew model can handle this JSON structure
+        )
+        db.session.add(crew)
+        db.session.commit()
+        flash('Crew request created successfully.', 'success')
+        return redirect(url_for('events.view_event', event_id=event.id))
 
     if note_form.validate_on_submit():
         note = Note(
@@ -105,6 +116,7 @@ def view_event(event_id):
     crew_assignments = []
     for crew in event.crews:
         assignments = {
+            "id": crew.id,  # Ensure the ID is available here
             "description": crew.description,
             "start_time": crew.start_time,
             "end_time": crew.end_time,
@@ -122,8 +134,6 @@ def view_event(event_id):
             })
         crew_assignments.append(assignments)
 
-    roles = {role: 0 for role in ROLES}  # Initialize roles with 0 counts
-
     return render_template('events/view_event.html', event=event, crew_request_form=crew_request_form,
                            note_form=note_form, document_form=document_form, sharepoint_form=sharepoint_form,
-                           crew_assignments=crew_assignments, roles=roles)
+                           crew_assignments=crew_assignments, ROLES=ROLES)
