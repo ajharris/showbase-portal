@@ -1,0 +1,38 @@
+<!-- app/templates/admin/add_location.html -->
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+<div class="container">
+    <h1>Add Location</h1>
+    <form method="POST" action="{{ url_for('admin.add_location') }}">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ wtf.form_field(form.name) }}
+        </div>
+        <div class="form-group">
+            {{ wtf.form_field(form.address) }}
+        </div>
+        <div class="form-group">
+            {{ wtf.form_field(form.loading_notes) }}
+        </div>
+        <div class="form-group">
+            {{ wtf.form_field(form.dress_code) }}
+        </div>
+        <div class="form-group">
+            {{ wtf.form_field(form.other_info) }}
+        </div>
+        <div class="form-group">
+            {{ wtf.form_field(form.submit) }}
+        </div>
+    </form>
+    <h2>Existing Locations</h2>
+    <ul>
+        {% for location in locations %}
+            <li>
+                {{ location.name }} - <a href="{{ url_for('admin.edit_location', location_id=location.id) }}">Edit</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

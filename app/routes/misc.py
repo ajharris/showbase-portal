@@ -1,5 +1,3 @@
-# routes/misc.py
-
 import os
 from datetime import datetime
 from flask import (
@@ -12,9 +10,14 @@ from app import db
 from app.models import Worker, Event, Shift, Expense
 from app.forms import ShiftForm, ExpenseForm
 from app.utils import (
-    createTimeReportCH, createExpenseReportCH, createEventReport, 
+    create_time_report_ch, create_expense_report_ch, create_event_report, 
     allowed_file
 )
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 misc_bp = Blueprint('misc', __name__)
 
@@ -39,11 +42,14 @@ def save_theme():
 @misc_bp.route('/save_view_mode', methods=['POST'])
 def save_view_mode():
     data = request.get_json()
-    view_as_employee = data.get('viewAsEmployee') == 'true'
-    view_as_manager = data.get('viewAsManager') == 'true'
+    view_as_employee = data.get('view_as_employee') == 'true'
+    view_as_manager = data.get('view_as_manager') == 'true'
     session['view_as_employee'] = view_as_employee
     session['view_as_account_manager'] = view_as_manager
     return jsonify(success=True)
+
+# Enable SQLAlchemy query logging
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 @misc_bp.route('/timesheet', methods=['GET', 'POST'])
 @login_required
@@ -52,21 +58,23 @@ def timesheet():
     shift_form.worker.choices = [(worker.id, f"{worker.first_name} {worker.last_name}") for worker in Worker.query.all()]
 
     if shift_form.validate_on_submit():
-        showNumber = shift_form.showNumber.data
-        event = Event.query.filter_by(showNumber=showNumber).first()
+        show_number = shift_form.show_number.data
+        event = Event.query.filter_by(show_number=show_number).first()
 
         if event:
             new_shift = Shift(
                 start=datetime.strptime(shift_form.start.data, '%m/%d/%Y %I:%M %p'),
                 end=datetime.strptime(shift_form.end.data, '%m/%d/%Y %I:%M %p'),
-                showName=event.showName,
-                showNumber=showNumber,
-                accountManager=event.accountManager,
+                show_name=event.show_name,
+                show_number=show_number,
+                account_manager=event.account_manager,
                 location=event.location,
                 worker_id=shift_form.worker.data
             )
+            logger.debug(f'New shift before adding: {new_shift}')
             db.session.add(new_shift)
             db.session.commit()
+            logger.debug(f'Shift committed to DB: {new_shift}')  # Log shift details after commit
             flash('Shift added successfully!', 'success')
             return redirect(url_for('misc.timesheet'))
         else:
@@ -74,13 +82,16 @@ def timesheet():
 
     if current_user.is_admin:
         shifts = Shift.query.order_by(Shift.start).all()
+        logger.debug(f'Admin shifts query result: {shifts}')
     elif current_user.is_account_manager:
-        shifts = Shift.query.join(Event).filter(Event.accountManager == current_user.email).order_by(Shift.start).all()
+        shifts = Shift.query.join(Event).filter(Event.account_manager == current_user.email).order_by(Shift.start).all()
+        logger.debug(f'Account manager shifts query result: {shifts}')
     else:
         shifts = Shift.query.filter_by(worker_id=current_user.id).order_by(Shift.start).all()
+        logger.debug(f'Worker shifts query result: {shifts}')
 
-    report = createTimeReportCH(shifts)
-    return render_template('misc/timesheet.html', shift=shift_form, report=report)
+    report = create_time_report_ch(shifts)
+    return render_template('misc/timesheet.html', shift=shift_form, report=report, shifts=shifts)
 
 @misc_bp.route('/expenses', methods=['GET', 'POST'])
 @login_required
@@ -89,8 +100,8 @@ def expenses():
     expense_form.worker.choices = [(worker.id, f"{worker.first_name} {worker.last_name}") for worker in Worker.query.all()]
 
     if expense_form.validate_on_submit():
-        show_number = expense_form.showNumber.data
-        event = Event.query.filter_by(showNumber=show_number).first()
+        show_number = expense_form.show_number.data
+        event = Event.query.filter_by(show_number=show_number).first()
 
         if event:
             receipt_file = expense_form.receipt.data
@@ -106,11 +117,11 @@ def expenses():
                     return render_template('misc/expenses.html', expense_form=expense_form, expenses=[])
 
                 new_expense = Expense(
-                    receiptNumber=expense_form.receiptNumber.data,
+                    receipt_number=expense_form.receipt_number.data,
                     date=date,
-                    accountManager=event.accountManager,
-                    showName=event.showName,
-                    showNumber=show_number,
+                    account_manager=event.account_manager,
+                    show_name=event.show_name,
+                    show_number=show_number,
                     details=expense_form.details.data,
                     net=expense_form.net.data,
                     hst=expense_form.hst.data,
@@ -131,43 +142,43 @@ def expenses():
     if current_user.is_admin:
         expenses = Expense.query.all()
     elif current_user.is_account_manager:
-        expenses = Expense.query.join(Event).filter(Event.accountManager == current_user.email).all()
+        expenses = Expense.query.join(Event).filter(Event.account_manager == current_user.email).all()
     else:
         expenses = Expense.query.filter_by(worker_id=current_user.id).all()
 
     return render_template('misc/expenses.html', expense_form=expense_form, expenses=expenses)
 
-@misc_bp.route('/refreshTimesheetDisplay')
+@misc_bp.route('/refresh_timesheet_display')
 @login_required
 def refresh_timesheet_display():
     if current_user.is_admin:
         shifts = Shift.query.order_by(Shift.start).all()
     elif current_user.is_account_manager:
-        shifts = Shift.query.join(Event).filter(Event.accountManager == current_user.email).order_by(Shift.start).all()
+        shifts = Shift.query.join(Event).filter(Event.account_manager == current_user.email).order_by(Shift.start).all()
     else:
         shifts = Shift.query.filter_by(worker_id=current_user.id).order_by(Shift.start).all()
 
-    report = createTimeReportCH(shifts)
+    report = create_time_report_ch(shifts)
     return report
 
-@misc_bp.route('/refreshExpenseDisplay')
+@misc_bp.route('/refresh_expense_display')
 @login_required
 def refresh_expense_display():
     if current_user.is_admin:
         expenses = Expense.query.all()
     elif current_user.is_account_manager:
-        expenses = Expense.query.join(Event).filter(Event.accountManager == current_user.email).all()
+        expenses = Expense.query.join(Event).filter(Event.account_manager == current_user.email).all()
     else:
         expenses = Expense.query.filter_by(worker_id=current_user.id).all()
 
-    report = createExpenseReportCH(expenses)
+    report = create_expense_report_ch(expenses)
     return render_template('misc/expense_report.html', report=report)
 
-@misc_bp.route('/refreshEventDisplay')
+@misc_bp.route('/refresh_event_display')
 @login_required
 def refresh_event_display():
     filter_option = request.args.get('filter', 'all')
-    event_report = createEventReport(filter_option)
+    event_report = create_event_report(filter_option)
     return event_report
 
 @misc_bp.route('/set_event_status/<int:event_id>/<status>', methods=['POST'])

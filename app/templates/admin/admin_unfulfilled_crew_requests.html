@@ -1,4 +1,3 @@
-<!-- admin/admin_unfulfilled_crew_requests.html -->
 {% extends "base.html" %}
 
 {% block page_content %}
@@ -6,7 +5,7 @@
 
 {% for crew in crews %}
     <div class="crew-request">
-        <h3>Show: {{ crew.event.showName }} ({{ crew.event.showNumber }})</h3>
+        <h3>Show: {{ crew.event.show_name }} ({{ crew.event.show_number }})</h3>
         <p>Start: {{ crew.start_time }}</p>
         <p>End: {{ crew.end_time }}</p>
         <p>Description: {{ crew.description }}</p>

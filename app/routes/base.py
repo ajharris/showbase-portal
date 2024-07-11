@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from ..models import CrewAssignment, Crew, Worker, Expense, Shift
 from .. import db
 from datetime import datetime, timedelta
-from ..utils import get_pay_periods, createTimeReportCH, createExpenseReportCH
+from ..utils import get_pay_periods, create_time_report_ch, create_expense_report_ch
 
 base_bp = Blueprint('base', __name__)
 
@@ -52,8 +52,8 @@ def home():
     ).all()
     
     # Generate reports
-    shift_report = createTimeReportCH(shifts)
-    expense_report = createExpenseReportCH(expenses)
+    shift_report = create_time_report_ch(shifts)
+    expense_report = create_expense_report_ch(expenses)
 
     return render_template('base/home.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report)
 

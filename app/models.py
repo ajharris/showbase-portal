@@ -3,26 +3,33 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from flask import current_app
 from itsdangerous import URLSafeTimedSerializer as Serializer
+from sqlalchemy.ext.hybrid import hybrid_property
 from . import db
 import json
 
 class Worker(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(64))
-    last_name = db.Column(db.String(64))
-    email = db.Column(db.String(120), unique=True, index=True)
+    first_name = db.Column(db.String(64), nullable=False)
+    last_name = db.Column(db.String(64), nullable=False)
+    email = db.Column(db.String(120), unique=True, index=True, nullable=False)
     phone_number = db.Column(db.String(20))
     street_address = db.Column(db.String)
     city = db.Column(db.String)
     postal = db.Column(db.String)
     is_admin = db.Column(db.Boolean, default=False)
     is_account_manager = db.Column(db.Boolean, default=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256), nullable=False)
     theme = db.Column(db.String(10), default='light')
     active = db.Column(db.Boolean, default=True)
+    password_is_temp = db.Column(db.Boolean, default=True)  # Field to track if the password is temporary
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password, method='scrypt')
+        self.password_is_temp = False
+
+    def set_temp_password(self, password):
+        self.password_hash = generate_password_hash(password, method='scrypt')
+        self.password_is_temp = True
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -32,7 +39,7 @@ class Worker(db.Model, UserMixin):
         return self.active
 
     def get_reset_token(self, expires_sec=1800):
-        s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
+        s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id}).decode('utf-8')
 
     @staticmethod
@@ -44,21 +51,36 @@ class Worker(db.Model, UserMixin):
             return None
         return Worker.query.get(user_id)
 
+class Location(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    address = db.Column(db.String(256), nullable=False)
+    loading_notes = db.Column(db.String(256))
+    dress_code = db.Column(db.String(128))
+    other_info = db.Column(db.String(256))
+
+    events = db.relationship('Event', backref='location', lazy=True)
+
+
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    showName = db.Column(db.String(128), nullable=False)
-    showNumber = db.Column(db.Integer, nullable=False, unique=True)
-    accountManager = db.Column(db.String(128), db.ForeignKey('worker.email'), nullable=False)
-    location = db.Column(db.String(256))
+    show_name = db.Column(db.String(128), nullable=False)
+    show_number = db.Column(db.Integer, nullable=False, unique=True)
+    account_manager_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
+    location_id = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
     sharepoint = db.Column(db.String, nullable=True)
     active = db.Column(db.Boolean, default=True)
 
-    account_manager = db.relationship('Worker', backref='events', lazy=True)
+    account_manager = db.relationship('Worker', foreign_keys=[account_manager_id], backref='events')
     crews = db.relationship('Crew', backref='event', lazy=True, cascade="all, delete-orphan")
-    documents = db.relationship('Document', back_populates='event')
+    documents = db.relationship('Document', back_populates='event', lazy=True)
     notes = db.relationship('Note', backref='event', lazy=True, cascade="all, delete-orphan")
-    expenses = db.relationship('Expense', backref='event', lazy=True, cascade="all, delete-orphan")
-    shifts = db.relationship('Shift', backref='event', lazy=True, cascade="all, delete-orphan")
+    expenses = db.relationship('Expense', backref='event_expense', lazy=True, cascade="all, delete-orphan")
+    shifts = db.relationship('Shift', backref='event_shift', lazy=True, cascade="all, delete-orphan")
+
+    @hybrid_property
+    def account_manager_name(self):
+        return f"{self.account_manager.first_name} {self.account_manager.last_name}"
 
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,17 +93,16 @@ class Document(db.Model):
 class Crew(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    end_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    roles = db.Column(db.JSON, nullable=False)
-    shift_type = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.String(500), nullable=True)
-    
-    crew_assignments = db.relationship('CrewAssignment', backref='crew', lazy=True, cascade="all, delete-orphan")
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
+    roles = db.Column(db.String, nullable=False)
+    shift_type = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=False)
+
+    crew_assignments = db.relationship('CrewAssignment', backref='crew', lazy=True)
 
     def get_roles(self):
-        return self.roles if isinstance(self.roles, dict) else json.loads(self.roles)
-
+        return json.loads(self.roles)
 
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -89,36 +110,60 @@ class CrewAssignment(db.Model):
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
     role = db.Column(db.String(64), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='offered')
-    assigned_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    
+
     worker = db.relationship('Worker', backref='assignments', lazy=True)
+    shift = db.relationship('Shift', uselist=False, backref='crew_assignment')
+
+    def accept(self):
+        if self.status != 'accepted':
+            self.status = 'accepted'
+            shift = Shift(
+                start=self.crew.start_time,
+                end=self.crew.end_time,
+                show_name=self.crew.event.show_name,
+                show_number=self.crew.event.show_number,
+                account_manager_id=self.crew.event.account_manager_id,
+                location=self.crew.event.location.name,
+                worker_id=self.worker_id,
+                crew_assignment=self
+            )
+            db.session.add(shift)
+            db.session.commit()
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    receiptNumber = db.Column(db.String(50))
+    receipt_number = db.Column(db.String(50))
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
-    accountManager = db.Column(db.String(120))
-    showName = db.Column(db.String(100))
-    showNumber = db.Column(db.String(100), db.ForeignKey('event.showNumber'), nullable=False)
+    account_manager_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
+    show_name = db.Column(db.String(100))
+    show_number = db.Column(db.Integer, db.ForeignKey('event.show_number'), nullable=False)
     details = db.Column(db.String(200))
     net = db.Column(db.Float)
     hst = db.Column(db.Float)
     receipt_filename = db.Column(db.String(100))
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
 
-    worker = db.relationship('Worker', backref='expenses', lazy=True)
+    worker = db.relationship('Worker', foreign_keys=[worker_id], backref='expenses')
 
 class Shift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     end = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    showName = db.Column(db.String(100))
-    showNumber = db.Column(db.String(100), db.ForeignKey('event.showNumber'), nullable=False)
-    accountManager = db.Column(db.String(120))
+    show_name = db.Column(db.String(100))
+    show_number = db.Column(db.Integer, db.ForeignKey('event.show_number'), nullable=False)
+    account_manager_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
     location = db.Column(db.String(200))
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
+    crew_assignment_id = db.Column(db.Integer, db.ForeignKey('crew_assignment.id'), nullable=False)
 
-    worker = db.relationship('Worker', backref='shifts', lazy=True)
+    worker = db.relationship('Worker', foreign_keys=[worker_id], backref='shifts')
+
+    def unassign(self):
+        crew_assignment = self.crew_assignment
+        if crew_assignment:
+            crew_assignment.status = 'offered'
+            db.session.delete(self)
+            db.session.commit()
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
