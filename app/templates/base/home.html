@@ -13,24 +13,24 @@
                 {% for shift in upcoming_shifts %}
                     <div class="shift-item">
                         <div class="shift-info">
-                            <strong>Show:</strong> {{ shift.crew.event.showName }} ({{ shift.crew.event.showNumber }}) | 
+                            <strong>Show:</strong> {{ shift.crew.event.show_name }} ({{ shift.crew.event.show_number }}) | 
                             <strong>Role:</strong> {{ shift.role }} | 
-                            <strong>Location:</strong> {{ shift.crew.event.location }} | 
+                            <strong>Location:</strong> {{ shift.crew.event.location.name }} | 
                             <strong>Start:</strong> {{ shift.crew.start_time }} | 
                             <strong>End:</strong> {{ shift.crew.end_time }}
                         </div>
                         <div class="shift-actions">
                             {% if shift.status == 'offered' %}
-                                <form method="POST" action="{{ url_for('base.accept_offer') }}">
+                                <form method="POST" action="{{ url_for('base.accept_offer') }}" class="d-inline">
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-success">Accept</button>
                                 </form>
-                                <form method="POST" action="{{ url_for('base.reject_offer') }}">
+                                <form method="POST" action="{{ url_for('base.reject_offer') }}" class="d-inline">
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-danger">Reject</button>
                                 </form>
                             {% endif %}
-                            <form method="GET" action="{{ url_for('events.view_event', event_id=shift.crew.event_id) }}">
+                            <form method="GET" action="{{ url_for('events.view_event', event_id=shift.crew.event_id) }}" class="d-inline">
                                 <button type="submit" class="btn btn-info">View Details</button>
                             </form>
                         </div>

@@ -10,36 +10,39 @@
         <p>End: {{ crew.end_time }}</p>
         <p>Description: {{ crew.description }}</p>
         {% for role, count in crew.get_roles().items() if count > 0 %}
-            {% set assigned_worker = None %}
-            {% for assignment in crew.crew_assignments %}
-                {% if assignment.role == role and assignment.status == 'offered' %}
-                    {% set assigned_worker = assignment.worker %}
-                {% endif %}
-            {% endfor %}
-            {% if assigned_worker %}
-                <div class="form-group">
-                    <label>{{ role }}</label>
-                    <p>{{ assigned_worker.first_name }} {{ assigned_worker.last_name }} (offered)</p>
-                </div>
-            {% else %}
-                <form method="POST" action="{{ url_for('admin.unfulfilled_crew_requests') }}" id="form_{{ crew.id }}_{{ role }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="crew_id" id="crew_id_{{ crew.id }}_{{ role }}" value="{{ crew.id }}">
-                    <input type="hidden" name="role" id="role_{{ crew.id }}_{{ role }}" value="{{ role }}">
+            {% set offered_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'offered')|list %}
+            {% set assigned_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'accepted')|list %}
+            {% for _ in range(count) %}
+                {% if assigned_workers %}
                     <div class="form-group">
                         <label>{{ role }}</label>
-                        <select name="worker" id="worker_{{ crew.id }}_{{ role }}" class="form-control">
-                            <option value="">Select Worker</option>
-                            {% for worker_id, worker_name in form.worker.choices %}
-                                <option value="{{ worker_id }}">{{ worker_name }}</option>
-                            {% endfor %}
-                        </select>
+                        <p>{{ assigned_workers.pop(0).worker.first_name }} {{ assigned_workers.pop(0).worker.last_name }} (accepted)</p>
                     </div>
+                {% elif offered_workers %}
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Assign Worker</button>
+                        <label>{{ role }}</label>
+                        <p>{{ offered_workers.pop(0).worker.first_name }} {{ offered_workers.pop(0).worker.last_name }} (offered)</p>
                     </div>
-                </form>
-            {% endif %}
+                {% else %}
+                    <form method="POST" action="{{ url_for('admin.unfulfilled_crew_requests') }}" id="form_{{ crew.id }}_{{ role }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="crew_id" id="crew_id_{{ crew.id }}_{{ role }}" value="{{ crew.id }}">
+                        <input type="hidden" name="role" id="role_{{ crew.id }}_{{ role }}" value="{{ role }}">
+                        <div class="form-group">
+                            <label>{{ role }}</label>
+                            <select name="worker" id="worker_{{ crew.id }}_{{ role }}" class="form-control">
+                                <option value="">Select Worker</option>
+                                {% for worker_id, worker_name in form.worker.choices %}
+                                    <option value="{{ worker_id }}">{{ worker_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Assign Worker</button>
+                        </div>
+                    </form>
+                {% endif %}
+            {% endfor %}
         {% endfor %}
     </div>
 {% endfor %}
