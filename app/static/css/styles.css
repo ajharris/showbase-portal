@@ -177,10 +177,12 @@ body.dark-mode a:hover {
 
 body.light-mode .dropdown-menu {
     background-color: #e0e0e0; /* Slightly darker than light background */
+    color: #000000; /* Black text for better contrast */
 }
 
 body.dark-mode .dropdown-menu {
     background-color: #444444; /* Slightly lighter than dark background */
+    color: #ffffff; /* White text for better contrast */
 }
 
 /* Adjust button styles for better contrast */
@@ -344,6 +346,16 @@ body.dark-mode .shift-item:hover {
     background-color: #4a5059;
 }
 
+.shift-within-48-hours {
+    background-color: #4caf50; /* Green background */
+    color: #ffffff; /* White text */
+}
+
+.shift-within-48-hours-offered {
+    background-color: #f44336; /* Red background */
+    color: #ffffff; /* White text */
+}
+
 /* Styles for the upcoming shifts list */
 .shift-details {
     display: flex;
@@ -411,9 +423,3 @@ body.dark-mode .shift-item:hover {
 .admin-account-manager-group .form-group:last-child {
     margin-right: 0;
 }
-
-/* Green text for shifts within the next 48 hours */
-.shift-item.shift-within-48-hours {
-    background-color: green !important; /* Temporary background color for debugging */
-}
-

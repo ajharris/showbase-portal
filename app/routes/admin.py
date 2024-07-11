@@ -1,3 +1,5 @@
+# admin.py
+
 from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
@@ -44,6 +46,7 @@ def unfulfilled_crew_requests():
     
     crews = Crew.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, crews=crews)
+
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
 @login_required
 def create_worker():
