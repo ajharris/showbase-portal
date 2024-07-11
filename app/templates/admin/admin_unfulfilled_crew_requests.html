@@ -1,71 +1,67 @@
 {% extends "base.html" %}
 
+{% block title %}Home{% endblock %}
+
 {% block page_content %}
-<h1>Unfulfilled Crew Requests</h1>
-
-{% for crew in crews %}
-    <div class="crew-request">
-        <h3>Show: {{ crew.event.show_name }} ({{ crew.event.show_number }})</h3>
-        <p>Start: {{ crew.start_time }}</p>
-        <p>End: {{ crew.end_time }}</p>
-        <p>Description: {{ crew.description }}</p>
-        {% for role, count in crew.get_roles().items() if count > 0 %}
-            {% set offered_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'offered')|list %}
-            {% set assigned_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'accepted')|list %}
-            {% for _ in range(count) %}
-                {% if assigned_workers %}
-                    <div class="form-group">
-                        <label>{{ role }}</label>
-                        <p>{{ assigned_workers.pop(0).worker.first_name }} {{ assigned_workers.pop(0).worker.last_name }} (accepted)</p>
-                    </div>
-                {% elif offered_workers %}
-                    <div class="form-group">
-                        <label>{{ role }}</label>
-                        <p>{{ offered_workers.pop(0).worker.first_name }} {{ offered_workers.pop(0).worker.last_name }} (offered)</p>
-                    </div>
-                {% else %}
-                    <form method="POST" action="{{ url_for('admin.unfulfilled_crew_requests') }}" id="form_{{ crew.id }}_{{ role }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="crew_id" id="crew_id_{{ crew.id }}_{{ role }}" value="{{ crew.id }}">
-                        <input type="hidden" name="role" id="role_{{ crew.id }}_{{ role }}" value="{{ role }}">
-                        <div class="form-group">
-                            <label>{{ role }}</label>
-                            <select name="worker" id="worker_{{ crew.id }}_{{ role }}" class="form-control">
-                                <option value="">Select Worker</option>
-                                {% for worker_id, worker_name in form.worker.choices %}
-                                    <option value="{{ worker_id }}">{{ worker_name }}</option>
-                                {% endfor %}
-                            </select>
+<div class="container">
+    <h1>Welcome to the NSS Portal</h1>
+    {% if current_user.is_authenticated %}
+        <p>Hello, {{ current_user.first_name }}!</p>
+        <div id="upcoming-shifts">
+            <h2>Upcoming Shifts</h2>
+            <div class="shift-container">
+                {% for shift in upcoming_shifts %}
+                    {% set is_within_48_hours = (shift.crew.start_time - now).total_seconds() <= 172800 %}
+                    <div class="shift-item {% if is_within_48_hours %}shift-within-48-hours{% endif %}">
+                        <div class="shift-info">
+                            <strong>Show:</strong> {{ shift.crew.event.show_name }} ({{ shift.crew.event.show_number }}) | 
+                            <strong>Role:</strong> {{ shift.role }} | 
+                            <strong>Location:</strong> {{ shift.crew.event.location.name }} | 
+                            <strong>Start:</strong> {{ shift.crew.start_time }} | 
+                            <strong>End:</strong> {{ shift.crew.end_time }}
                         </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Assign Worker</button>
+                        <div class="shift-actions">
+                            {% if shift.status == 'offered' %}
+                                <form method="POST" action="{{ url_for('base.accept_offer') }}">
+                                    {{ csrf_form.hidden_tag() }}
+                                    <input type="hidden" name="assignment_id" value="{{ shift.id }}">
+                                    <button type="submit" class="btn btn-success">Accept</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('base.reject_offer') }}">
+                                    {{ csrf_form.hidden_tag() }}
+                                    <input type="hidden" name="assignment_id" value="{{ shift.id }}">
+                                    <button type="submit" class="btn btn-danger">Reject</button>
+                                </form>
+                            {% endif %}
+                            <form method="GET" action="{{ url_for('events.view_event', event_id=shift.crew.event_id) }}">
+                                <button type="submit" class="btn btn-info">View Details</button>
+                            </form>
                         </div>
-                    </form>
-                {% endif %}
-            {% endfor %}
-        {% endfor %}
-    </div>
-{% endfor %}
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-document.addEventListener('DOMContentLoaded', (event) => {
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', (e) => {
-            const formData = new FormData(form);
-            console.log('Submitting form with data:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-            const crewId = formData.get('crew_id');
-            if (!crewId || crewId === '') {
-                alert('Crew ID is missing!');
-                e.preventDefault();
-            }
-        });
-    });
-});
-</script>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="form-group mt-3">
+            <h2>Reports</h2>
+            <label for="pay-period">Pay Period</label>
+            <form method="get" action="{{ url_for('base.home') }}">
+                <select id="pay-period" name="pay_period" class="form-control" onchange="this.form.submit()">
+                    {% for start, end in pay_periods %}
+                        <option value="{{ start }}" {% if start == selected_period_start %}selected{% endif %}>
+                            Pay Period: {{ start.strftime('%Y-%m-%d') }} - {{ end.strftime('%Y-%m-%d') }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        <div id="shift-report" class="mt-3">
+            <h3>Shift Report</h3>
+            {{ shift_report|safe }}
+        </div>
+        <div id="expense-report" class="mt-3">
+            <h3>Expense Report</h3>
+            {{ expense_report|safe }}
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

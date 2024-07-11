@@ -1,22 +1,21 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
-from ..models import CrewAssignment, Crew, Worker, Expense, Shift
-from .. import db
 from datetime import datetime, timedelta
+from ..models import CrewAssignment, Crew, Expense
 from ..utils import get_pay_periods, create_time_report_ch, create_expense_report_ch
+from .. import db
 
 base_bp = Blueprint('base', __name__)
 
 @base_bp.route('/')
 @login_required
 def home():
-    # Fetch upcoming shifts for the current user
     now = datetime.utcnow()
     upcoming_shifts = CrewAssignment.query.join(Crew).filter(
         CrewAssignment.worker_id == current_user.id,
         CrewAssignment.status.in_(['offered', 'accepted']),
         Crew.start_time >= now
-    ).all()
+    ).order_by(Crew.start_time).all()  # Sort the shifts by start time
     
     # Debugging: Log the upcoming shifts
     for shift in upcoming_shifts:
@@ -27,9 +26,9 @@ def home():
     num_periods = 5  # Adjust as needed
     pay_periods = get_pay_periods(start_date, num_periods)
 
-    selected_period_start_str = request.args.get('pay_period', default=None)
-    if selected_period_start_str:
-        selected_period_start = datetime.strptime(selected_period_start_str, '%Y-%m-%d %H:%M:%S')
+    selected_period_start = request.args.get('pay_period', default=None)
+    if selected_period_start:
+        selected_period_start = datetime.strptime(selected_period_start, '%Y-%m-%d')
         selected_period_end = selected_period_start + timedelta(weeks=2) - timedelta(seconds=1)
     else:
         selected_period_start, selected_period_end = pay_periods[-1]  # Default to the most recent completed period
@@ -55,7 +54,13 @@ def home():
     shift_report = create_time_report_ch(shifts)
     expense_report = create_expense_report_ch(expenses)
 
-    return render_template('base/home.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report)
+    return render_template('base/home.html', 
+                           upcoming_shifts=upcoming_shifts, 
+                           pay_periods=pay_periods, 
+                           selected_period_start=selected_period_start, 
+                           shift_report=shift_report, 
+                           expense_report=expense_report, 
+                           now=now)  # Pass 'now' to the template context
 
 @base_bp.route('/accept_offer', methods=['POST'])
 @login_required

@@ -411,3 +411,9 @@ body.dark-mode .shift-item:hover {
 .admin-account-manager-group .form-group:last-child {
     margin-right: 0;
 }
+
+/* Green text for shifts within the next 48 hours */
+.shift-item.shift-within-48-hours {
+    background-color: green !important; /* Temporary background color for debugging */
+}
+
