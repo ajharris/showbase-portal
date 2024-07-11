@@ -23,39 +23,27 @@ def save_view_mode():
 @login_required
 def unfulfilled_crew_requests():
     form = AssignWorkerForm()
-
-    if request.method == 'POST':
-        crew_id = request.form.get('crew_id')
-        role = request.form.get('role')
-        worker_id = request.form.get('worker')
-
-        # Find the crew and worker
-        crew = Crew.query.get(crew_id)
-        worker = Worker.query.get(worker_id)
-
-        if crew and worker:
-            # Create a new assignment
+    if form.validate_on_submit():
+        crew_id = form.crew_id.data
+        worker_id = form.worker.data
+        role = form.role.data
+        try:
             assignment = CrewAssignment(
-                crew_id=crew.id,
-                worker_id=worker.id,
+                crew_id=crew_id,
+                worker_id=worker_id,
                 role=role,
                 status='offered'
             )
             db.session.add(assignment)
             db.session.commit()
-            flash('Worker assigned successfully.', 'success')
-        else:
-            flash('Invalid crew or worker.', 'danger')
-
+            flash('Worker assigned successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('admin.unfulfilled_crew_requests'))
-
-    crews = Crew.query.filter(Crew.id.notin_(db.session.query(CrewAssignment.crew_id))).all()
-
-    workers = Worker.query.all()
-    form.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in workers]
-
+    
+    crews = Crew.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, crews=crews)
-
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
 @login_required
 def create_worker():

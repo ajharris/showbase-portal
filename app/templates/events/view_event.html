@@ -3,7 +3,7 @@
 
 {% block page_content %}
 <div class="container">
-    <h2>Event: {{event.show_number}}, {{ event.show_name }}</h2>
+    <h2>Event: {{ event.show_number }}, {{ event.show_name }}</h2>
 
     {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
     <div id="request-crew-section">

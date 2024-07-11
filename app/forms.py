@@ -17,6 +17,9 @@ from app import db
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+class CSRFForm(FlaskForm):
+    pass
+
 class DynamicChoicesForm(FlaskForm):
     def update_choices(self, field_name, choices):
         getattr(self, field_name).choices = choices
