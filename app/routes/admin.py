@@ -44,8 +44,20 @@ def unfulfilled_crew_requests():
             flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('admin.unfulfilled_crew_requests'))
     
+    # Fetch all crews and filter out those that have all roles fulfilled
     crews = Crew.query.all()
-    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, crews=crews)
+    unfulfilled_crews = []
+    for crew in crews:
+        roles = crew.get_roles()
+        fulfilled_roles = {
+            assignment.role: sum(1 for a in crew.crew_assignments if a.role == assignment.role and a.status == 'accepted')
+            for assignment in crew.crew_assignments
+        }
+        has_unfulfilled_roles = any(count > fulfilled_roles.get(role, 0) for role, count in roles.items())
+        if has_unfulfilled_roles:
+            unfulfilled_crews.append(crew)
+
+    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, crews=unfulfilled_crews)
 
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
 @login_required
