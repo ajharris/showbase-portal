@@ -53,18 +53,18 @@
 
     <div id="crew-assignments-section">
         <h3>Crew Assignments</h3>
-        {% for crew in crew_assignments %}
+        {% for crew_info in crew_assignments %}
         <div class="crew-report">
-            <h4>{{ crew.description }}</h4>
+            <h4>{{ crew_info.crew.description }}</h4>
             <div class="form-row">
                 <div class="form-group col-md-4">
-                    <p><strong>Start Time:</strong> {{ crew.start_time }}</p>
+                    <p><strong>Start Time:</strong> {{ crew_info.crew.start_time }}</p>
                 </div>
                 <div class="form-group col-md-4">
-                    <p><strong>End Time:</strong> {{ crew.end_time }}</p>
+                    <p><strong>End Time:</strong> {{ crew_info.crew.end_time }}</p>
                 </div>
                 <div class="form-group col-md-4">
-                    <p><strong>Shift Type:</strong> {{ crew.shift_type | capitalize }}</p>
+                    <p><strong>Shift Type:</strong> {{ crew_info.crew.shift_type | capitalize }}</p>
                 </div>
             </div>
             <table class="table">
@@ -77,24 +77,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% if crew.assignments %}
-                        {% for assignment in crew.assignments %}
+                    {% for role, count in crew_info.crew.get_roles().items() %}
+                        {% for i in range(count) %}
                         <tr>
-                            <td>{{ assignment.role }}</td>
-                            <td>{{ assignment.worker.first_name }} {{ assignment.worker.last_name }}</td>
-                            <td>{{ assignment.worker.phone_number }}</td>
-                            <td>{{ assignment.worker.email }}</td>
+                            <td>{{ role }}</td>
+                            {% if crew_info.assignments[i] %}
+                                <td>{{ crew_info.assignments[i].worker.first_name }} {{ crew_info.assignments[i].worker.last_name }}</td>
+                                <td>{{ crew_info.assignments[i].worker.phone_number }}</td>
+                                <td>{{ crew_info.assignments[i].worker.email }}</td>
+                            {% else %}
+                                <td colspan="3">Not Yet Assigned</td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="4">Not Yet Assigned</td>
-                        </tr>
-                    {% endif %}
+                    {% endfor %}
                 </tbody>
             </table>
             {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
-            <form method="POST" action="{{ url_for('events.delete_crew', crew_id=crew.id) }}">
+            <form method="POST" action="{{ url_for('events.delete_crew', crew_id=crew_info.crew.id) }}">
                 {{ crew_request_form.hidden_tag() }}
                 <button type="submit" class="btn btn-danger">Delete</button>
             </form>
