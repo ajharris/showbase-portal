@@ -1,74 +1,52 @@
-<!-- templates/admin/admin_unfulfilled_crew_requests.html -->
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Unfulfilled Crew Requests{% endblock %}
 
 {% block page_content %}
-<h1>Unfulfilled Crew Requests</h1>
-
-{% for crew in crews %}
-    <div class="crew-request">
-        <h3>Show: {{ crew.event.show_name }} ({{ crew.event.show_number }})</h3>
-        <p>Start: {{ crew.start_time }}</p>
-        <p>End: {{ crew.end_time }}</p>
-        <p>Description: {{ crew.description }}</p>
-        {% for role, count in crew.get_roles().items() if count > 0 %}
-            {% set offered_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'offered')|list %}
-            {% set assigned_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'accepted')|list %}
-            {% for _ in range(count) %}
-                {% if assigned_workers %}
-                    <div class="form-group">
-                        <label>{{ role }}</label>
-                        {% set assigned_worker = assigned_workers.pop(0) %}
-                        <p>{{ assigned_worker.worker.first_name }} {{ assigned_worker.worker.last_name }} (accepted)</p>
-                    </div>
-                {% elif offered_workers %}
-                    <div class="form-group">
-                        <label>{{ role }}</label>
-                        {% set offered_worker = offered_workers.pop(0) %}
-                        <p>{{ offered_worker.worker.first_name }} {{ offered_worker.worker.last_name }} (offered)</p>
-                    </div>
-                {% else %}
-                    <form method="POST" action="{{ url_for('admin.unfulfilled_crew_requests') }}" id="form_{{ crew.id }}_{{ role }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="crew_id" id="crew_id_{{ crew.id }}_{{ role }}" value="{{ crew.id }}">
-                        <input type="hidden" name="role" id="role_{{ crew.id }}_{{ role }}" value="{{ role }}">
-                        <div class="form-group">
-                            <label>{{ role }}</label>
-                            <select name="worker" id="worker_{{ crew.id }}_{{ role }}" class="form-control">
-                                <option value="">Select Worker</option>
-                                {% for worker_id, worker_name in form.worker.choices %}
-                                    <option value="{{ worker_id }}">{{ worker_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Assign Worker</button>
-                        </div>
-                    </form>
-                {% endif %}
-            {% endfor %}
+<div class="container">
+    <h1>Unfulfilled Crew Requests</h1>
+    <div class="shift-container">
+        {% for crew in crews %}
+            <div class="crew-request">
+                <h3>Show: {{ crew.event.show_name }} ({{ crew.event.show_number }})</h3>
+                <p>Start: {{ crew.start_time }}</p>
+                <p>End: {{ crew.end_time }}</p>
+                <p>Description: {{ crew.description }}</p>
+                {% for role, count in crew.get_roles().items() if count > 0 %}
+                    {% set offered_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'offered')|list %}
+                    {% set assigned_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'accepted')|list %}
+                    {% for _ in range(count) %}
+                        {% if assigned_workers %}
+                            <div class="form-group">
+                                <label>{{ role }}</label>
+                                <p>{{ assigned_workers[0].worker.first_name }} {{ assigned_workers[0].worker.last_name }} (accepted)</p>
+                                {% set assigned_workers = assigned_workers[1:] %}
+                            </div>
+                        {% elif offered_workers %}
+                            <div class="form-group">
+                                <label>{{ role }}</label>
+                                <p>{{ offered_workers[0].worker.first_name }} {{ offered_workers[0].worker.last_name }} (offered)</p>
+                                {% set offered_workers = offered_workers[1:] %}
+                            </div>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('admin.unfulfilled_crew_requests') }}" id="form_{{ crew.id }}_{{ role }}">
+                                {{ wtf.hidden_tag(form) }}
+                                <input type="hidden" name="crew_id" id="crew_id_{{ crew.id }}_{{ role }}" value="{{ crew.id }}">
+                                <input type="hidden" name="role" id="role_{{ crew.id }}_{{ role }}" value="{{ role }}">
+                                <div class="form-group">
+                                    <label>{{ role }}</label>
+                                    {{ form.worker(class="form-control", id="worker_#{crew.id}_#{role}") }}
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">Assign Worker</button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </div>
         {% endfor %}
     </div>
-{% endfor %}
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-document.addEventListener('DOMContentLoaded', (event) => {
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', (e) => {
-            const formData = new FormData(form);
-            console.log('Submitting form with data:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-            const crewId = formData.get('crew_id');
-            if (!crewId || crewId === '') {
-                alert('Crew ID is missing!');
-                e.preventDefault();
-            }
-        });
-    });
-});
-</script>
+</div>
 {% endblock %}

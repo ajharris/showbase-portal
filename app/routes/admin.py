@@ -1,8 +1,7 @@
-# admin.py
-
 from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
+from datetime import datetime
 from ..models import Crew, Location, Worker, CrewAssignment, Event
 from ..forms import AssignWorkerForm, AdminCreateWorkerForm, LocationForm
 from .. import db
@@ -43,18 +42,17 @@ def unfulfilled_crew_requests():
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('admin.unfulfilled_crew_requests'))
-    
-    # Fetch all crews and filter out those that have all roles fulfilled
-    crews = Crew.query.all()
+
+    now = datetime.utcnow()
+    crews = Crew.query.filter(Crew.start_time >= now).all()
+
+    # Filter out fully accepted crew requests
     unfulfilled_crews = []
     for crew in crews:
         roles = crew.get_roles()
-        fulfilled_roles = {
-            assignment.role: sum(1 for a in crew.crew_assignments if a.role == assignment.role and a.status == 'accepted')
-            for assignment in crew.crew_assignments
-        }
-        has_unfulfilled_roles = any(count > fulfilled_roles.get(role, 0) for role, count in roles.items())
-        if has_unfulfilled_roles:
+        total_needed = sum(roles.values())
+        accepted_assignments = CrewAssignment.query.filter_by(crew_id=crew.id, status='accepted').count()
+        if accepted_assignments < total_needed:
             unfulfilled_crews.append(crew)
 
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, crews=unfulfilled_crews)
@@ -136,3 +134,18 @@ def delete_event(event_id):
 def list_events():
     events = Event.query.all()
     return render_template('admin/list_events.html', events=events)
+
+@admin_bp.route('/view_all_shifts')
+@login_required
+def view_all_shifts():
+    shifts = CrewAssignment.query.all()
+    return render_template('admin/view_all_shifts.html', shifts=shifts)
+
+@admin_bp.route('/delete_shift/<int:shift_id>', methods=['POST'])
+@login_required
+def delete_shift(shift_id):
+    shift = CrewAssignment.query.get_or_404(shift_id)
+    db.session.delete(shift)
+    db.session.commit()
+    flash('Shift deleted successfully.', 'success')
+    return redirect(url_for('admin.view_all_shifts'))
