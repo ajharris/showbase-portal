@@ -171,3 +171,20 @@ function confirmDelete(eventId) {
         document.getElementById('delete-event-form-' + eventId).submit();
     }
 }
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            const formData = new FormData(form);
+            console.log('Submitting form with data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            const crewId = formData.get('crew_id');
+            if (!crewId || crewId === '') {
+                alert('Crew ID is missing!');
+                e.preventDefault();
+            }
+        });
+    });
+});
