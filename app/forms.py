@@ -25,9 +25,10 @@ class CrewRequestForm(DynamicChoicesForm):
     start_time = DateTimeField('Start Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     end_time = DateTimeField('End Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     description = StringField('Description', validators=[DataRequired()])
-    roles_json = StringField('Roles JSON', validators=[DataRequired()])
+    roles_json = HiddenField('Roles JSON', validators=[DataRequired()])
     shift_type = SelectMultipleField('Shift Type', choices=[('Setup', 'Setup'), ('Show', 'Show'), ('Strike', 'Strike')], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
     submit = SubmitField('Add Crew Request')
+
 
 class EventForm(DynamicChoicesForm):
     show_name = StringField('Show Name:', validators=[InputRequired(), DataRequired()])

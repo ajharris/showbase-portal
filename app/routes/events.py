@@ -68,7 +68,23 @@ def view_event(event_id):
     if request.method == 'POST':
         if crew_request_form.submit.data and crew_request_form.validate():
             # Handle crew request form submission
-            pass
+            roles_json = crew_request_form.roles_json.data
+            try:
+                crew = Crew(
+                    event_id=event_id,
+                    start_time=crew_request_form.start_time.data,
+                    end_time=crew_request_form.end_time.data,
+                    description=crew_request_form.description.data,
+                    roles=roles_json,
+                    shift_type=','.join(crew_request_form.shift_type.data)
+                )
+                db.session.add(crew)
+                db.session.commit()
+                flash('Crew request added successfully!', 'success')
+                return redirect(url_for('events.view_event', event_id=event_id))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error: {str(e)}', 'danger')
         elif note_form.submit.data and note_form.validate():
             # Handle note form submission
             pass
@@ -82,7 +98,14 @@ def view_event(event_id):
             return redirect(url_for('events.view_event', event_id=event_id))
     
     # Fetch crew assignments by joining Crew and filtering by event_id
-    crew_assignments = db.session.query(CrewAssignment).join(Crew).filter(Crew.event_id == event_id).all()
+    crews = Crew.query.filter_by(event_id=event_id).all()
+    crew_assignments = []
+    for crew in crews:
+        assignments = CrewAssignment.query.filter_by(crew_id=crew.id).all()
+        crew_assignments.append({
+            'crew': crew,
+            'assignments': assignments
+        })
 
     return render_template(
         'events/view_event.html', 
@@ -103,3 +126,13 @@ def delete_event(event_id):
     db.session.commit()
     flash('Event deleted successfully.', 'success')
     return redirect(url_for('events.list_events'))
+
+@events_bp.route('/delete_crew/<int:crew_id>', methods=['POST'])
+@login_required
+def delete_crew(crew_id):
+    crew = Crew.query.get_or_404(crew_id)
+    event_id = crew.event_id
+    db.session.delete(crew)
+    db.session.commit()
+    flash('Crew deleted successfully.', 'success')
+    return redirect(url_for('events.view_event', event_id=event_id))
