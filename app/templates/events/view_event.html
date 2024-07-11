@@ -3,7 +3,7 @@
 
 {% block page_content %}
 <div class="container">
-    <h2>Event: {{ event.showName }}</h2>
+    <h2>Event: {{event.show_number}}, {{ event.show_name }}</h2>
 
     {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
     <div id="request-crew-section">
@@ -23,7 +23,7 @@
                 <div class="form-group col-md-4">
                     <label>Shift Type</label>
                     <div class="horizontal-checkbox-group">
-                        {% for shift in crew_request_form.shiftType %}
+                        {% for shift in crew_request_form.shift_type %}
                             <div class="form-check form-check-inline">
                                 {{ shift(class="form-check-input") }}
                                 <label class="form-check-label">{{ shift.label }}</label>
@@ -34,9 +34,9 @@
             </div>
             <div class="form-group">
                 <label>Roles</label>
-                <div class="horizontal-role-group">
+                <div class="row">
                     {% for role in ROLES %}
-                        <div class="form-group role-entry">
+                        <div class="form-group col-md-3">
                             <label>{{ role }}</label>
                             <input type="number" name="{{ role }}" value="0" class="form-control role-count">
                         </div>
@@ -81,9 +81,9 @@
                         {% for assignment in crew.assignments %}
                         <tr>
                             <td>{{ assignment.role }}</td>
-                            <td>{{ assignment.worker_name }}</td>
-                            <td>{{ assignment.worker_phone }}</td>
-                            <td>{{ assignment.worker_email }}</td>
+                            <td>{{ assignment.worker.first_name }} {{ assignment.worker.last_name }}</td>
+                            <td>{{ assignment.worker.phone_number }}</td>
+                            <td>{{ assignment.worker.email }}</td>
                         </tr>
                         {% endfor %}
                     {% else %}

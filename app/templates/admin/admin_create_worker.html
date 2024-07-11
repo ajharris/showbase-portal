@@ -1,3 +1,4 @@
+<!-- templates/admin/admin_create_worker.html -->
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% block title %}Admin Create Worker{% endblock %}
@@ -9,18 +10,58 @@
             <div class="form-group">
                 {{ form.first_name.label(class="form-control-label") }}
                 {{ form.first_name(class="form-control") }}
+                {% if form.first_name.errors %}
+                    <div class="alert alert-danger">{{ form.first_name.errors[0] }}</div>
+                {% endif %}
             </div>
             <div class="form-group">
                 {{ form.last_name.label(class="form-control-label") }}
                 {{ form.last_name(class="form-control") }}
+                {% if form.last_name.errors %}
+                    <div class="alert alert-danger">{{ form.last_name.errors[0] }}</div>
+                {% endif %}
             </div>
             <div class="form-group">
-                {{ form.is_admin.label(class="form-control-label") }}
-                {{ form.is_admin(class="form-control") }}
+                {{ form.phone_number.label(class="form-control-label") }}
+                {{ form.phone_number(class="form-control") }}
+                {% if form.phone_number.errors %}
+                    <div class="alert alert-danger">{{ form.phone_number.errors[0] }}</div>
+                {% endif %}
             </div>
             <div class="form-group">
-                {{ form.is_account_manager.label(class="form-control-label") }}
-                {{ form.is_account_manager(class="form-control") }}
+                {{ form.email.label(class="form-control-label") }}
+                {{ form.email(class="form-control") }}
+                {% if form.email.errors %}
+                    <div class="alert alert-danger">{{ form.email.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.temp_password.label(class="form-control-label") }}
+                {{ form.temp_password(class="form-control") }}
+                {% if form.temp_password.errors %}
+                    <div class="alert alert-danger">{{ form.temp_password.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.confirm_temp_password.label(class="form-control-label") }}
+                {{ form.confirm_temp_password(class="form-control") }}
+                {% if form.confirm_temp_password.errors %}
+                    <div class="alert alert-danger">{{ form.confirm_temp_password.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group form-check">
+                {{ form.is_admin(class="form-check-input") }}
+                {{ form.is_admin.label(class="form-check-label") }}
+                {% if form.is_admin.errors %}
+                    <div class="alert alert-danger">{{ form.is_admin.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group form-check">
+                {{ form.is_account_manager(class="form-check-input") }}
+                {{ form.is_account_manager.label(class="form-check-label") }}
+                {% if form.is_account_manager.errors %}
+                    <div class="alert alert-danger">{{ form.is_account_manager.errors[0] }}</div>
+                {% endif %}
             </div>
             <div class="form-group">
                 {{ form.submit(class="btn btn-primary") }}
@@ -41,10 +82,10 @@
             <tbody>
                 {% for worker in workers %}
                     <tr>
-                        <td{% if worker.first_name == 'TempFirstName' %} class="bg-warning"{% endif %}>{{ worker.first_name }}</td>
-                        <td{% if worker.last_name == 'TempLastName' %} class="bg-warning"{% endif %}>{{ worker.last_name }}</td>
-                        <td{% if worker.email.endswith('@example.com') %} class="bg-warning"{% endif %}>{{ worker.email }}</td>
-                        <td{% if not worker.phone_number %} class="bg-warning"{% endif %}>{{ worker.phone_number or 'Not Updated' }}</td>
+                        <td>{{ worker.first_name }}</td>
+                        <td>{{ worker.last_name }}</td>
+                        <td>{{ worker.email }}</td>
+                        <td>{{ worker.phone_number or 'Not Updated' }}</td>
                         <td>{{ worker.is_admin and 'Yes' or 'No' }}</td>
                         <td>{{ worker.is_account_manager and 'Yes' or 'No' }}</td>
                     </tr>
@@ -53,4 +94,3 @@
         </table>
     </div>
 {% endblock %}
-

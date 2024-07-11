@@ -1,139 +1,82 @@
+import logging
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from ..models import Event, Crew, Note, Document
-from ..forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm, EventForm
+from ..models import Event, Location, Crew, Note, Document, Worker
+from ..forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm, EventForm, LocationForm
 from .. import db
-from ..utils import ROLES, createEventReport
-import json
+from ..utils import get_account_managers, get_locations
+
+logger = logging.getLogger(__name__)
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
+
+@events_bp.route('/events', methods=['GET'])
+@login_required
+def list_events():
+    events = Event.query.all()
+    return render_template('events/events.html', events=events)
 
 @events_bp.route('/create_event', methods=['GET', 'POST'])
 @login_required
 def create_event():
-    event_form = EventForm()
-    if event_form.validate_on_submit():
+    form = EventForm()
+    if form.validate_on_submit():
+        show_name = form.show_name.data
+        show_number = form.show_number.data
+        account_manager_id = form.account_manager.data
+        location_id = form.location.data
+        sharepoint = form.sharepoint.data
+        active = form.active.data
+
         event = Event(
-            showName=event_form.showName.data,
-            showNumber=event_form.showNumber.data,
-            accountManager=event_form.accountManager.data,
-            location=event_form.location.data,
-            active=True
+            show_name=show_name,
+            show_number=show_number,
+            account_manager_id=account_manager_id,
+            location_id=location_id,
+            sharepoint=sharepoint,
+            active=active
         )
+
         db.session.add(event)
         db.session.commit()
-        flash('Event created successfully!', 'success')
-        return redirect(url_for('events.create_event'))  # Redirect to the same view to refresh the form
+        flash('Event created successfully', 'success')
+        return redirect(url_for('events.create_event'))
 
-    event_report = createEventReport()  # Generate the event report
-    return render_template('events/create_event.html', event_form=event_form, event_report=event_report)
+    return render_template('events/create_event.html', form=form)
 
-@events_bp.route('/')
+@events_bp.route('/locations/add', methods=['GET', 'POST'])
 @login_required
-def events():
-    event_report = createEventReport()
-    return render_template('events/events.html', event_report=event_report)
-
-@events_bp.route('/delete_crew/<int:crew_id>', methods=['POST'])
-@login_required
-def delete_crew(crew_id):
-    crew = Crew.query.get_or_404(crew_id)
-    db.session.delete(crew)
-    db.session.commit()
-    flash('Crew assignment deleted successfully.', 'success')
-    return redirect(url_for('events.view_event', event_id=crew.event_id))
-
-@events_bp.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
-def edit_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    form = EventForm(obj=event)
-
+def add_location():
+    form = LocationForm()
     if form.validate_on_submit():
-        form.populate_obj(event)
-        db.session.commit()
-        flash('Event updated successfully!', 'success')
-        return redirect(url_for('events.view_event', event_id=event.id))
-
-    return render_template('events/edit_event.html', form=form, event=event)
-
-@events_bp.route('/delete_event/<int:event_id>', methods=['POST'])
-@login_required
-def delete_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    db.session.delete(event)
-    db.session.commit()
-    flash('Event deleted successfully.', 'success')
-    return redirect(url_for('events.index'))
-
-@events_bp.route('/view_event/<int:event_id>', methods=['GET', 'POST'])
-@login_required
-def view_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    crew_request_form = CrewRequestForm()
-    note_form = NoteForm()
-    document_form = DocumentForm()
-    sharepoint_form = SharePointForm()
-
-    if crew_request_form.validate_on_submit():
-        roles = json.loads(crew_request_form.roles_json.data)
-        crew = Crew(
-            event_id=event.id,
-            description=crew_request_form.description.data,
-            start_time=crew_request_form.start_time.data,
-            end_time=crew_request_form.end_time.data,
-            shift_type=crew_request_form.shiftType.data,
-            roles=roles  # Assuming your Crew model can handle this JSON structure
+        location = Location(
+            name=form.name.data,
+            address=form.address.data,
+            loading_notes=form.loading_notes.data,
+            dress_code=form.dress_code.data,
+            other_info=form.other_info.data
         )
-        db.session.add(crew)
+
+        db.session.add(location)
         db.session.commit()
-        flash('Crew request created successfully.', 'success')
-        return redirect(url_for('events.view_event', event_id=event.id))
+        flash('Location added successfully', 'success')
+        return redirect(url_for('events.add_location'))
 
-    if note_form.validate_on_submit():
-        note = Note(
-            content=note_form.notes.data,
-            event_id=event.id,
-            worker_id=current_user.id,
-            account_manager_only=note_form.account_manager_only.data,
-            account_manager_and_td_only=note_form.account_manager_and_td_only.data
-        )
-        db.session.add(note)
+    return render_template('events/add_location.html', form=form)
+
+@events_bp.route('/locations/edit/<int:location_id>', methods=['GET', 'POST'])
+@login_required
+def edit_location(location_id):
+    location = Location.query.get_or_404(location_id)
+    form = LocationForm(obj=location)
+    
+    if form.validate_on_submit():
+        form.populate_obj(location)
         db.session.commit()
-        flash('Note added successfully.', 'success')
-        return redirect(url_for('events.view_event', event_id=event.id))
+        flash('Location updated successfully.', 'success')
+        return redirect(url_for('events.edit_location', location_id=location_id))
 
-    if document_form.validate_on_submit():
-        # Handle document form submission
-        flash('Document uploaded successfully.', 'success')
-        return redirect(url_for('events.view_event', event_id=event.id))
+    return render_template('events/edit_location.html', form=form, location=location)
 
-    if sharepoint_form.validate_on_submit():
-        # Handle SharePoint form submission
-        flash('SharePoint link added successfully.', 'success')
-        return redirect(url_for('events.view_event', event_id=event.id))
 
-    # Fetch crew assignments related to the event
-    crew_assignments = []
-    for crew in event.crews:
-        assignments = {
-            "id": crew.id,  # Ensure the ID is available here
-            "description": crew.description,
-            "start_time": crew.start_time,
-            "end_time": crew.end_time,
-            "shift_type": crew.shift_type,
-            "assignments": []
-        }
-        for assignment in crew.crew_assignments:
-            worker = assignment.worker if assignment.worker else None
-            assignments["assignments"].append({
-                "role": assignment.role,
-                "worker": worker,
-                "worker_name": f"{worker.first_name} {worker.last_name}" if worker else "Not Yet Assigned",
-                "worker_phone": worker.phone_number if worker else "N/A",
-                "worker_email": worker.email if worker else "N/A"
-            })
-        crew_assignments.append(assignments)
 
-    return render_template('events/view_event.html', event=event, crew_request_form=crew_request_form,
-                           note_form=note_form, document_form=document_form, sharepoint_form=sharepoint_form,
-                           crew_assignments=crew_assignments, ROLES=ROLES)

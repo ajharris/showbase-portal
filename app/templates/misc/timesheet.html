@@ -7,7 +7,19 @@
 <h1>Timesheet</h1>
 <div style="position: relative">
     {{ wtf.quick_form(shift) }}
-    
+</div>
+
+<h2>Shifts</h2>
+<div id="shifts-list">
+    {% if shifts %}
+        <ul>
+            {% for shift in shifts %}
+                <li>{{ shift.show_name }}: {{ shift.start }} - {{ shift.end }} ({{ shift.location }})</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No shifts found.</p>
+    {% endif %}
 </div>
 
 <h2>Report</h2>
