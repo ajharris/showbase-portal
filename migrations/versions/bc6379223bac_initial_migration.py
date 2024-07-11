@@ -1,8 +1,8 @@
-"""empty message
+"""Initial Migration
 
-Revision ID: 21c74c2e0b25
+Revision ID: bc6379223bac
 Revises: 
-Create Date: 2024-07-10 19:53:36.548838
+Create Date: 2024-07-10 22:26:08.409974
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '21c74c2e0b25'
+revision = 'bc6379223bac'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,10 +21,10 @@ def upgrade():
     op.create_table('location',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=False),
-    sa.Column('address', sa.String(length=256), nullable=True),
-    sa.Column('loading_notes', sa.String(length=512), nullable=True),
+    sa.Column('address', sa.String(length=256), nullable=False),
+    sa.Column('loading_notes', sa.String(length=256), nullable=True),
     sa.Column('dress_code', sa.String(length=128), nullable=True),
-    sa.Column('other_info', sa.String(length=512), nullable=True),
+    sa.Column('other_info', sa.String(length=256), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('worker',
@@ -33,20 +33,15 @@ def upgrade():
     sa.Column('last_name', sa.String(length=64), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('phone_number', sa.String(length=20), nullable=True),
-    sa.Column('street_address', sa.String(), nullable=True),
-    sa.Column('city', sa.String(), nullable=True),
-    sa.Column('postal', sa.String(), nullable=True),
     sa.Column('is_admin', sa.Boolean(), nullable=True),
     sa.Column('is_account_manager', sa.Boolean(), nullable=True),
-    sa.Column('password_hash', sa.String(length=256), nullable=False),
+    sa.Column('password_hash', sa.String(length=256), nullable=True),
     sa.Column('theme', sa.String(length=10), nullable=True),
     sa.Column('active', sa.Boolean(), nullable=True),
     sa.Column('password_is_temp', sa.Boolean(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email')
     )
-    with op.batch_alter_table('worker', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_worker_email'), ['email'], unique=True)
-
     op.create_table('event',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('show_name', sa.String(length=128), nullable=False),
@@ -146,9 +141,6 @@ def downgrade():
     op.drop_table('document')
     op.drop_table('crew')
     op.drop_table('event')
-    with op.batch_alter_table('worker', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_worker_email'))
-
     op.drop_table('worker')
     op.drop_table('location')
     # ### end Alembic commands ###

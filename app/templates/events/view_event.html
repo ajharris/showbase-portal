@@ -148,9 +148,9 @@
 <script>
   document.getElementById('crewRequestForm').addEventListener('submit', function(e) {
     var roles = {};
-    document.querySelectorAll('.role-entry').forEach(function(entry) {
-      var roleTitle = entry.querySelector('label').textContent;
-      var roleCount = entry.querySelector('.role-count').value;
+    document.querySelectorAll('.role-count').forEach(function(entry) {
+      var roleTitle = entry.name;
+      var roleCount = entry.value;
       roles[roleTitle.trim()] = parseInt(roleCount.trim());
     });
 
