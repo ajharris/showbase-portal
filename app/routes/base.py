@@ -27,9 +27,9 @@ def home():
     num_periods = 5  # Adjust as needed
     pay_periods = get_pay_periods(start_date, num_periods)
 
-    selected_period_start = request.args.get('pay_period', default=None)
-    if selected_period_start:
-        selected_period_start = datetime.strptime(selected_period_start, '%Y-%m-%d %H:%M:%S')
+    selected_period_start_str = request.args.get('pay_period', default=None)
+    if selected_period_start_str:
+        selected_period_start = datetime.strptime(selected_period_start_str, '%Y-%m-%d %H:%M:%S')
         selected_period_end = selected_period_start + timedelta(weeks=2) - timedelta(seconds=1)
     else:
         selected_period_start, selected_period_end = pay_periods[-1]  # Default to the most recent completed period

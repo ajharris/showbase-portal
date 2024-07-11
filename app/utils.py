@@ -80,7 +80,6 @@ def get_account_managers():
 def get_locations():
     return Location.query.all()
 
-
 def create_time_report_ch(shifts):
     data = {
         'Date': [],
@@ -91,11 +90,11 @@ def create_time_report_ch(shifts):
     }
 
     for shift in shifts:
-        data['Date'].append(shift.start.date())
-        data['Show'].append(f'{shift.show_name}/{shift.show_number}/{shift.account_manager}')
-        data['Location'].append(shift.location)
-        data['Times'].append(f'{shift.start.time()} - {shift.end.time()}')
-        data['Hours'].append((shift.end - shift.start).total_seconds() / 3600)
+        data['Date'].append(shift.crew.start_time.date())
+        data['Show'].append(f'{shift.crew.event.show_name}/{shift.crew.event.show_number}/{shift.crew.event.account_manager_name}')
+        data['Location'].append(shift.crew.event.location.name)
+        data['Times'].append(f'{shift.crew.start_time.time()} - {shift.crew.end_time.time()}')
+        data['Hours'].append((shift.crew.end_time - shift.crew.start_time).total_seconds() / 3600)
 
     timesheet = pd.DataFrame(data)
     timesheet['Date'] = pd.to_datetime(timesheet['Date'])
