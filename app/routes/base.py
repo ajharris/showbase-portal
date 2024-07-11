@@ -10,12 +10,13 @@ base_bp = Blueprint('base', __name__)
 @base_bp.route('/')
 @login_required
 def home():
+    # Fetch upcoming shifts for the current user
     now = datetime.utcnow()
     upcoming_shifts = CrewAssignment.query.join(Crew).filter(
         CrewAssignment.worker_id == current_user.id,
         CrewAssignment.status.in_(['offered', 'accepted']),
         Crew.start_time >= now
-    ).order_by(Crew.start_time).all()  # Sort the shifts by start time
+    ).order_by(Crew.start_time).all()
     
     # Debugging: Log the upcoming shifts
     for shift in upcoming_shifts:
@@ -28,7 +29,7 @@ def home():
 
     selected_period_start = request.args.get('pay_period', default=None)
     if selected_period_start:
-        selected_period_start = datetime.strptime(selected_period_start, '%Y-%m-%d')
+        selected_period_start = datetime.strptime(selected_period_start, '%Y-%m-%d %H:%M:%S')
         selected_period_end = selected_period_start + timedelta(weeks=2) - timedelta(seconds=1)
     else:
         selected_period_start, selected_period_end = pay_periods[-1]  # Default to the most recent completed period
@@ -54,13 +55,7 @@ def home():
     shift_report = create_time_report_ch(shifts)
     expense_report = create_expense_report_ch(expenses)
 
-    return render_template('base/home.html', 
-                           upcoming_shifts=upcoming_shifts, 
-                           pay_periods=pay_periods, 
-                           selected_period_start=selected_period_start, 
-                           shift_report=shift_report, 
-                           expense_report=expense_report, 
-                           now=now)  # Pass 'now' to the template context
+    return render_template('base/home.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report, now=now)
 
 @base_bp.route('/accept_offer', methods=['POST'])
 @login_required

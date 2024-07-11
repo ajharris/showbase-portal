@@ -12,7 +12,7 @@
             <div class="shift-container">
                 {% for shift in upcoming_shifts %}
                     {% set is_within_48_hours = (shift.crew.start_time - now).total_seconds() <= 172800 %}
-                    <div class="shift-item {% if is_within_48_hours %}shift-within-48-hours{% endif %}">
+                    <div class="shift-item {% if is_within_48_hours and shift.status != 'accepted' %}shift-within-48-hours-offered{% elif is_within_48_hours %}shift-within-48-hours{% endif %}">
                         <div class="shift-info">
                             <strong>Show:</strong> {{ shift.crew.event.show_name }} ({{ shift.crew.event.show_number }}) | 
                             <strong>Role:</strong> {{ shift.role }} | 
@@ -23,12 +23,12 @@
                         <div class="shift-actions">
                             {% if shift.status == 'offered' %}
                                 <form method="POST" action="{{ url_for('base.accept_offer') }}">
-                                    {{ csrf_form.hidden_tag() }}
+                                    {{ form.hidden_tag() }}
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-success">Accept</button>
                                 </form>
                                 <form method="POST" action="{{ url_for('base.reject_offer') }}">
-                                    {{ csrf_form.hidden_tag() }}
+                                    {{ form.hidden_tag() }}
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-danger">Reject</button>
                                 </form>
