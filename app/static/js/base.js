@@ -11,15 +11,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
     if (themeCheckbox) {
         const currentTheme = localStorage.getItem('theme') || 'light';
         document.body.classList.add(currentTheme + '-mode');
-        document.querySelector('.navbar-inverse').classList.add(currentTheme + '-mode');
+        const navbar = document.querySelector('.navbar-inverse');
+        if (navbar) {
+            navbar.classList.add(currentTheme + '-mode');
+        }
         themeCheckbox.checked = currentTheme === 'dark';
 
         themeCheckbox.addEventListener('change', function() {
             const newTheme = this.checked ? 'dark' : 'light';
             document.body.classList.toggle('light-mode', newTheme === 'light');
             document.body.classList.toggle('dark-mode', newTheme === 'dark');
-            document.querySelector('.navbar-inverse').classList.toggle('light-mode', newTheme === 'light');
-            document.querySelector('.navbar-inverse').classList.toggle('dark-mode', newTheme === 'dark');
+            if (navbar) {
+                navbar.classList.toggle('light-mode', newTheme === 'light');
+                navbar.classList.toggle('dark-mode', newTheme === 'dark');
+            }
             localStorage.setItem('theme', newTheme);
 
             fetch("/save_theme", {
