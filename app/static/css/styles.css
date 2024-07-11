@@ -346,15 +346,19 @@ body.dark-mode .shift-item:hover {
     background-color: #4a5059;
 }
 
+/* Styles for shifts within 48 hours */
 .shift-within-48-hours {
-    background-color: #4caf50; /* Green background */
-    color: #ffffff; /* White text */
+    background-color: #4caf50 !important; /* Green background */
+    color: #ffffff !important; /* White text */
 }
 
 .shift-within-48-hours-offered {
-    background-color: #f44336; /* Red background */
-    color: #ffffff; /* White text */
+    background-color: #f44336 !important; /* Red background */
+    color: #ffffff !important; /* White text */
 }
+
+/* Other styles... */
+
 
 /* Styles for the upcoming shifts list */
 .shift-details {
