@@ -6,7 +6,7 @@ from wtforms import (
     PasswordField, DateTimeField, BooleanField, SelectMultipleField, TextAreaField, 
     HiddenField
 )
-from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo
+from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo, URL
 from flask_wtf.file import FileAllowed
 from wtforms.widgets import ListWidget, CheckboxInput
 from .models import Worker
@@ -45,11 +45,11 @@ class EventForm(DynamicChoicesForm):
 
 class LocationForm(FlaskForm):
     name = StringField('Location Name', validators=[DataRequired()])
-    address = StringField('Address', validators=[DataRequired()])
-    loading_notes = StringField('Loading Notes')
-    dress_code = StringField('Dress Code')
-    other_info = StringField('Other Information')
-    submit = SubmitField('Add Location')
+    address = TextAreaField('Address', validators=[DataRequired()])
+    loading_notes = TextAreaField('Loading Notes')
+    dress_code = TextAreaField('Dress Code')
+    other_info = TextAreaField('Other Information')
+    submit = SubmitField('Save')
 
 class AdminCreateWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -155,8 +155,8 @@ class DocumentForm(FlaskForm):
     submit = SubmitField('Upload Document')
 
 class SharePointForm(FlaskForm):
-    sharepoint_link = StringField('SharePoint Link', validators=[DataRequired()])
-    submit = SubmitField('Add Link')
+    sharepoint_link = StringField('SharePoint Link', validators=[DataRequired(), URL()])
+    submit = SubmitField('Update Link')
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), DataRequired(), Email()])

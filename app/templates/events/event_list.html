@@ -1,0 +1,35 @@
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Show Name</th>
+            <th>Show Number</th>
+            <th>Account Manager</th>
+            <th>Location</th>
+            <th>Active</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in events %}
+            <tr>
+                <td>{{ event.show_name }}</td>
+                <td>{{ event.show_number }}</td>
+                <td>{{ event.account_manager.first_name }} {{ event.account_manager.last_name }}</td>
+                <td>{{ event.location.name }}</td>
+                <td>{{ 'Yes' if event.active else 'No' }}</td>
+                <td>
+                    {% if event.active %}
+                        <a href="{{ url_for('events.inactivate_event', event_id=event.id) }}" class="btn btn-warning btn-sm">Inactivate</a>
+                    {% else %}
+                        <a href="{{ url_for('events.activate_event', event_id=event.id) }}" class="btn btn-success btn-sm">Activate</a>
+                    {% endif %}
+                    <a href="{{ url_for('events.view_event', event_id=event.id) }}" class="btn btn-info btn-sm">View</a>
+                    <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,8 +1,7 @@
-# routes/admin.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
-from ..models import Crew, Location, Worker, CrewAssignment
+from ..models import Crew, Location, Worker, CrewAssignment, Event
 from ..forms import AssignWorkerForm, AdminCreateWorkerForm, LocationForm
 from .. import db
 
@@ -70,7 +69,7 @@ def create_worker():
             is_admin=form.is_admin.data,
             is_account_manager=form.is_account_manager.data
         )
-        worker.set_temp_password(form.temp_password.data)
+        worker.set_password(form.temp_password.data)
         try:
             db.session.add(worker)
             db.session.commit()
@@ -84,7 +83,6 @@ def create_worker():
 
     workers = Worker.query.all()
     return render_template('admin/admin_create_worker.html', form=form, workers=workers)
-
 
 @admin_bp.route('/add_location', methods=['GET', 'POST'])
 @login_required
@@ -105,3 +103,33 @@ def add_location():
         return redirect(url_for('admin.add_location'))
 
     return render_template('admin/add_location.html', form=form)
+
+@admin_bp.route('/inactivate_event/<int:event_id>')
+@login_required
+def inactivate_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    event.active = False
+    db.session.commit()
+    flash('Event inactivated successfully.', 'success')
+    return redirect(url_for('admin.list_events'))
+
+@admin_bp.route('/view_event/<int:event_id>')
+@login_required
+def view_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    return render_template('admin/view_event.html', event=event)
+
+@admin_bp.route('/delete_event/<int:event_id>', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    db.session.delete(event)
+    db.session.commit()
+    flash('Event deleted successfully.', 'success')
+    return redirect(url_for('admin.list_events'))
+
+@admin_bp.route('/list_events')
+@login_required
+def list_events():
+    events = Event.query.all()
+    return render_template('admin/list_events.html', events=events)

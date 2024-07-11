@@ -1,82 +1,105 @@
-import logging
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from ..models import Event, Location, Crew, Note, Document, Worker
-from ..forms import NoteForm, DocumentForm, SharePointForm, CrewRequestForm, EventForm, LocationForm
+from sqlalchemy.exc import IntegrityError
+from ..models import Event, Crew, CrewAssignment, Note, Document
+from ..forms import EventForm, CrewRequestForm, NoteForm, DocumentForm, SharePointForm
 from .. import db
-from ..utils import get_account_managers, get_locations
-
-logger = logging.getLogger(__name__)
+from .. utils import ROLES
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
-
-@events_bp.route('/events', methods=['GET'])
-@login_required
-def list_events():
-    events = Event.query.all()
-    return render_template('events/events.html', events=events)
 
 @events_bp.route('/create_event', methods=['GET', 'POST'])
 @login_required
 def create_event():
     form = EventForm()
     if form.validate_on_submit():
-        show_name = form.show_name.data
-        show_number = form.show_number.data
-        account_manager_id = form.account_manager.data
-        location_id = form.location.data
-        sharepoint = form.sharepoint.data
-        active = form.active.data
-
         event = Event(
-            show_name=show_name,
-            show_number=show_number,
-            account_manager_id=account_manager_id,
-            location_id=location_id,
-            sharepoint=sharepoint,
-            active=active
+            show_name=form.show_name.data,
+            show_number=form.show_number.data,
+            account_manager_id=form.account_manager.data,
+            location_id=form.location.data,
+            sharepoint=form.sharepoint.data,
+            active=form.active.data
         )
+        try:
+            db.session.add(event)
+            db.session.commit()
+            flash('Event created successfully!', 'success')
+            return redirect(url_for('events.create_event'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('Show number already exists. Please use a different show number.', 'danger')
+    events = Event.query.all()
+    return render_template('events/create_event.html', form=form, events=events)
 
-        db.session.add(event)
-        db.session.commit()
-        flash('Event created successfully', 'success')
-        return redirect(url_for('events.create_event'))
-
-    return render_template('events/create_event.html', form=form)
-
-@events_bp.route('/locations/add', methods=['GET', 'POST'])
+@events_bp.route('/list_events')
 @login_required
-def add_location():
-    form = LocationForm()
-    if form.validate_on_submit():
-        location = Location(
-            name=form.name.data,
-            address=form.address.data,
-            loading_notes=form.loading_notes.data,
-            dress_code=form.dress_code.data,
-            other_info=form.other_info.data
-        )
+def list_events():
+    events = Event.query.all()
+    return render_template('events/events.html', events=events)
 
-        db.session.add(location)
-        db.session.commit()
-        flash('Location added successfully', 'success')
-        return redirect(url_for('events.add_location'))
-
-    return render_template('events/add_location.html', form=form)
-
-@events_bp.route('/locations/edit/<int:location_id>', methods=['GET', 'POST'])
+@events_bp.route('/activate_event/<int:event_id>')
 @login_required
-def edit_location(location_id):
-    location = Location.query.get_or_404(location_id)
-    form = LocationForm(obj=location)
+def activate_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    event.active = True
+    db.session.commit()
+    flash('Event activated successfully.', 'success')
+    return redirect(url_for('events.list_events'))
+
+@events_bp.route('/inactivate_event/<int:event_id>')
+@login_required
+def inactivate_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    event.active = False
+    db.session.commit()
+    flash('Event inactivated successfully.', 'success')
+    return redirect(url_for('events.list_events'))
+
+@events_bp.route('/view_event/<int:event_id>', methods=['GET', 'POST'])
+@login_required
+def view_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    crew_request_form = CrewRequestForm()
+    note_form = NoteForm()
+    document_form = DocumentForm()
+    sharepoint_form = SharePointForm()
+
+    if request.method == 'POST':
+        if crew_request_form.submit.data and crew_request_form.validate():
+            # Handle crew request form submission
+            pass
+        elif note_form.submit.data and note_form.validate():
+            # Handle note form submission
+            pass
+        elif document_form.submit.data and document_form.validate():
+            # Handle document form submission
+            pass
+        elif sharepoint_form.submit.data and sharepoint_form.validate():
+            event.sharepoint = sharepoint_form.sharepoint_link.data
+            db.session.commit()
+            flash('SharePoint link updated.', 'success')
+            return redirect(url_for('events.view_event', event_id=event_id))
     
-    if form.validate_on_submit():
-        form.populate_obj(location)
-        db.session.commit()
-        flash('Location updated successfully.', 'success')
-        return redirect(url_for('events.edit_location', location_id=location_id))
+    # Fetch crew assignments by joining Crew and filtering by event_id
+    crew_assignments = db.session.query(CrewAssignment).join(Crew).filter(Crew.event_id == event_id).all()
 
-    return render_template('events/edit_location.html', form=form, location=location)
+    return render_template(
+        'events/view_event.html', 
+        event=event, 
+        crew_request_form=crew_request_form, 
+        note_form=note_form, 
+        document_form=document_form, 
+        sharepoint_form=sharepoint_form, 
+        crew_assignments=crew_assignments, 
+        ROLES=ROLES
+    )
 
-
-
+@events_bp.route('/delete_event/<int:event_id>', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    db.session.delete(event)
+    db.session.commit()
+    flash('Event deleted successfully.', 'success')
+    return redirect(url_for('events.list_events'))

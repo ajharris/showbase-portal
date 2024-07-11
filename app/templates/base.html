@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 {% endblock %}
 
-
 {% block navbar %}
 <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
     <div class="container-fluid">
@@ -42,18 +41,19 @@
                                     <li><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
                                     <li><a href="{{ url_for('admin.unfulfilled_crew_requests') }}">Crew Requests</a></li>
                                     <li><a href="{{ url_for('backup.show_backup_restore') }}">Backup/Restore Database</a></li>
+                                    <li><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
                                 </ul>
                             </li>
                         {% endif %}
                         {% if current_user.is_admin or current_user.is_account_manager %}
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
-                                <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
-                                    <li><a href="{{ url_for('events.list_events') }}">List Events</a></li>
-                                    <li><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
-                                </ul>
-                            </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                <li><a href="{{ url_for('events.list_events') }}">List Events</a></li>
+                                <li><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
+                            </ul>
+                        </li>
                         {% endif %}
                     {% endif %}
                     <li><a href="{{ url_for('profile.update_profile', worker_id=current_user.id) }}">Update Profile</a></li>
@@ -92,8 +92,6 @@
     </div>
 </nav>
 {% endblock %}
-
-
 
 {% block content %}
 <div class="container">

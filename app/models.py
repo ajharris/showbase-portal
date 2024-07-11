@@ -7,59 +7,36 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from . import db
 import json
 
-class Worker(db.Model, UserMixin):
+class Worker(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(120), unique=True, index=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
     phone_number = db.Column(db.String(20))
-    street_address = db.Column(db.String)
-    city = db.Column(db.String)
-    postal = db.Column(db.String)
     is_admin = db.Column(db.Boolean, default=False)
     is_account_manager = db.Column(db.Boolean, default=False)
-    password_hash = db.Column(db.String(256), nullable=False)
+    password_hash = db.Column(db.String(256))
     theme = db.Column(db.String(10), default='light')
     active = db.Column(db.Boolean, default=True)
-    password_is_temp = db.Column(db.Boolean, default=True)  # Field to track if the password is temporary
-
+    password_is_temp = db.Column(db.Boolean, default=True)
+    
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password, method='scrypt')
-        self.password_is_temp = False
-
-    def set_temp_password(self, password):
-        self.password_hash = generate_password_hash(password, method='scrypt')
-        self.password_is_temp = True
+        self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    @property
-    def is_active(self):
-        return self.active
-
-    def get_reset_token(self, expires_sec=1800):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        return s.dumps({'user_id': self.id}).decode('utf-8')
-
-    @staticmethod
-    def verify_reset_token(token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            user_id = s.loads(token)['user_id']
-        except:
-            return None
-        return Worker.query.get(user_id)
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     address = db.Column(db.String(256), nullable=False)
-    loading_notes = db.Column(db.String(256))
-    dress_code = db.Column(db.String(128))
-    other_info = db.Column(db.String(256))
+    loading_notes = db.Column(db.String(1024))  # Increase the length to 1024
+    dress_code = db.Column(db.String(256))  # Increase the length to 256
+    other_info = db.Column(db.String(1024))  # Increase the length to 1024
 
     events = db.relationship('Event', backref='location', lazy=True)
+
 
 
 class Event(db.Model):
@@ -82,6 +59,7 @@ class Event(db.Model):
     def account_manager_name(self):
         return f"{self.account_manager.first_name} {self.account_manager.last_name}"
 
+
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
@@ -89,6 +67,7 @@ class Document(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
 
     event = db.relationship('Event', back_populates='documents')
+
 
 class Crew(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,6 +82,7 @@ class Crew(db.Model):
 
     def get_roles(self):
         return json.loads(self.roles)
+
 
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -130,6 +110,7 @@ class CrewAssignment(db.Model):
             db.session.add(shift)
             db.session.commit()
 
+
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     receipt_number = db.Column(db.String(50))
@@ -144,6 +125,7 @@ class Expense(db.Model):
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
 
     worker = db.relationship('Worker', foreign_keys=[worker_id], backref='expenses')
+
 
 class Shift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -164,6 +146,7 @@ class Shift(db.Model):
             crew_assignment.status = 'offered'
             db.session.delete(self)
             db.session.commit()
+
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
