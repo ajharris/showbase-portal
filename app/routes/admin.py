@@ -1,12 +1,18 @@
+from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
 from ..models import Crew, Location, Worker, CrewAssignment, Event
 from ..forms import AssignWorkerForm, AdminCreateWorkerForm, LocationForm
 from .. import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+@admin_bp.route('/view_all_shifts')
+@login_required
+def view_all_shifts():
+    shifts = []  # Replace with actual data retrieval logic
+    return render_template('admin/view_all_shifts.html', shifts=shifts)
 
 @admin_bp.route('/save_view_mode', methods=['POST'])
 @login_required
@@ -43,19 +49,9 @@ def unfulfilled_crew_requests():
             flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('admin.unfulfilled_crew_requests'))
 
-    now = datetime.utcnow()
-    crews = Crew.query.filter(Crew.start_time >= now).all()
-
-    # Filter out fully accepted crew requests
-    unfulfilled_crews = []
-    for crew in crews:
-        roles = crew.get_roles()
-        total_needed = sum(roles.values())
-        accepted_assignments = CrewAssignment.query.filter_by(crew_id=crew.id, status='accepted').count()
-        if accepted_assignments < total_needed:
-            unfulfilled_crews.append(crew)
-
-    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, crews=unfulfilled_crews)
+    unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
+    workers = Worker.query.all()
+    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
 
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
 @login_required
@@ -80,7 +76,7 @@ def create_worker():
             db.session.rollback()
             flash('Email already registered. Please use a different email.', 'danger')
     else:
-        print(f"Form errors: {form.errors}")  # Debug statement to help identify errors
+        print(f"Form errors: {form.errors}")
 
     workers = Worker.query.all()
     return render_template('admin/admin_create_worker.html', form=form, workers=workers)
@@ -135,17 +131,31 @@ def list_events():
     events = Event.query.all()
     return render_template('admin/list_events.html', events=events)
 
-@admin_bp.route('/view_all_shifts')
+@admin_bp.route('/assign_worker', methods=['POST'])
 @login_required
-def view_all_shifts():
-    shifts = CrewAssignment.query.all()
-    return render_template('admin/view_all_shifts.html', shifts=shifts)
+def assign_worker():
+    worker_id = request.form.get('worker_id')
+    crew_id = request.form.get('crew_id')
 
-@admin_bp.route('/delete_shift/<int:shift_id>', methods=['POST'])
-@login_required
-def delete_shift(shift_id):
-    shift = CrewAssignment.query.get_or_404(shift_id)
-    db.session.delete(shift)
+    if not worker_id or not crew_id:
+        flash('Worker ID and Crew ID are required.', 'error')
+        return redirect(url_for('admin.unfulfilled_crew_requests'))
+
+    worker = Worker.query.get(worker_id)
+    crew = Crew.query.get(crew_id)
+    
+    if not worker or not crew:
+        flash('Invalid Worker ID or Crew ID.', 'error')
+        return redirect(url_for('admin.unfulfilled_crew_requests'))
+
+    existing_assignment = CrewAssignment.query.filter_by(worker_id=worker_id, crew_id=crew_id).first()
+    if existing_assignment:
+        flash('Worker is already assigned to this crew.', 'error')
+        return redirect(url_for('admin.unfulfilled_crew_requests'))
+
+    crew_assignment = CrewAssignment(worker_id=worker_id, crew_id=crew_id, status='offered')
+    db.session.add(crew_assignment)
     db.session.commit()
-    flash('Shift deleted successfully.', 'success')
-    return redirect(url_for('admin.view_all_shifts'))
+    flash('Worker assigned successfully.', 'success')
+    return redirect(url_for('admin.unfulfilled_crew_requests'))
+

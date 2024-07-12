@@ -10,21 +10,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
     // Theme toggle functionality
     if (themeCheckbox) {
         const currentTheme = localStorage.getItem('theme') || 'light';
-        document.body.classList.add(currentTheme + '-mode');
-        const navbar = document.querySelector('.navbar-inverse');
-        if (navbar) {
-            navbar.classList.add(currentTheme + '-mode');
-        }
+        document.body.classList.add(`${currentTheme}-mode`);
+        document.querySelector('.navbar-inverse').classList.add(`${currentTheme}-mode`);
         themeCheckbox.checked = currentTheme === 'dark';
 
         themeCheckbox.addEventListener('change', function() {
             const newTheme = this.checked ? 'dark' : 'light';
             document.body.classList.toggle('light-mode', newTheme === 'light');
             document.body.classList.toggle('dark-mode', newTheme === 'dark');
-            if (navbar) {
-                navbar.classList.toggle('light-mode', newTheme === 'light');
-                navbar.classList.toggle('dark-mode', newTheme === 'dark');
-            }
+            document.querySelector('.navbar-inverse').classList.toggle('light-mode', newTheme === 'light');
+            document.querySelector('.navbar-inverse').classList.toggle('dark-mode', newTheme === 'dark');
             localStorage.setItem('theme', newTheme);
 
             fetch("/save_theme", {
@@ -133,6 +128,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
             }
         });
     }
+
+    // Form submission validation for crew requests
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            const formData = new FormData(form);
+            console.log('Submitting form with data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            const crewId = formData.get('crew_id');
+            if (!crewId || crewId === '') {
+                alert('Crew ID is missing!');
+                e.preventDefault();
+            }
+        });
+    });
 });
 
 // Function to set event status
@@ -171,20 +182,3 @@ function confirmDelete(eventId) {
         document.getElementById('delete-event-form-' + eventId).submit();
     }
 }
-
-document.addEventListener('DOMContentLoaded', (event) => {
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', (e) => {
-            const formData = new FormData(form);
-            console.log('Submitting form with data:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-            const crewId = formData.get('crew_id');
-            if (!crewId || crewId === '') {
-                alert('Crew ID is missing!');
-                e.preventDefault();
-            }
-        });
-    });
-});

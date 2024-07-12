@@ -83,6 +83,14 @@ class Crew(db.Model):
     def get_roles(self):
         return json.loads(self.roles)
 
+    @property
+    def is_fulfilled(self):
+        required_roles = self.get_roles()
+        for role in required_roles.keys():
+            if not CrewAssignment.is_role_fulfilled(self.id, role):
+                return False
+        return True
+
 
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,6 +101,16 @@ class CrewAssignment(db.Model):
 
     worker = db.relationship('Worker', backref='assignments', lazy=True)
     shift = db.relationship('Shift', uselist=False, backref='crew_assignment')
+
+    @staticmethod
+    def is_role_fulfilled(crew_id, role):
+        crew = Crew.query.get(crew_id)
+        required_roles = crew.get_roles()
+        assigned_roles = {r: 0 for r in required_roles.keys()}
+        for assignment in crew.crew_assignments:
+            if assignment.status == 'accepted' and assignment.role == role:
+                assigned_roles[assignment.role] += 1
+        return assigned_roles[role] >= required_roles[role]
 
     def accept(self):
         if self.status != 'accepted':
