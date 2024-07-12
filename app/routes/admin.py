@@ -131,31 +131,47 @@ def list_events():
     events = Event.query.all()
     return render_template('admin/list_events.html', events=events)
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
+
 @admin_bp.route('/assign_worker', methods=['POST'])
 @login_required
 def assign_worker():
-    worker_id = request.form.get('worker_id')
-    crew_id = request.form.get('crew_id')
+    form = AssignWorkerForm()
+    if form.validate_on_submit():
+        logger.debug(f"Form data: {form.data}")
+        worker_id = form.worker.data
+        crew_id = form.crew_id.data
+        role = form.role.data
 
-    if not worker_id or not crew_id:
-        flash('Worker ID and Crew ID are required.', 'error')
+        worker = Worker.query.get(worker_id)
+        crew = Crew.query.get(crew_id)
+
+        if not worker or not crew:
+            logger.error('Invalid Worker ID or Crew ID.')
+            flash('Invalid Worker ID or Crew ID.', 'error')
+            return redirect(url_for('admin.unfulfilled_crew_requests'))
+
+        existing_assignment = CrewAssignment.query.filter_by(worker_id=worker_id, crew_id=crew_id).first()
+        if existing_assignment:
+            logger.error('Worker is already assigned to this crew.')
+            flash('Worker is already assigned to this crew.', 'error')
+            return redirect(url_for('admin.unfulfilled_crew_requests'))
+
+        crew_assignment = CrewAssignment(worker_id=worker_id, crew_id=crew_id, role=role, status='offered')
+        db.session.add(crew_assignment)
+        db.session.commit()
+        logger.info('Worker assigned successfully.')
+        flash('Worker assigned successfully.', 'success')
         return redirect(url_for('admin.unfulfilled_crew_requests'))
 
-    worker = Worker.query.get(worker_id)
-    crew = Crew.query.get(crew_id)
-    
-    if not worker or not crew:
-        flash('Invalid Worker ID or Crew ID.', 'error')
-        return redirect(url_for('admin.unfulfilled_crew_requests'))
-
-    existing_assignment = CrewAssignment.query.filter_by(worker_id=worker_id, crew_id=crew_id).first()
-    if existing_assignment:
-        flash('Worker is already assigned to this crew.', 'error')
-        return redirect(url_for('admin.unfulfilled_crew_requests'))
-
-    crew_assignment = CrewAssignment(worker_id=worker_id, crew_id=crew_id, status='offered')
-    db.session.add(crew_assignment)
-    db.session.commit()
-    flash('Worker assigned successfully.', 'success')
-    return redirect(url_for('admin.unfulfilled_crew_requests'))
+    logger.debug(f"Form errors: {form.errors}")
+    unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
+    workers = Worker.query.all()
+    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
 

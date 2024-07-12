@@ -21,6 +21,14 @@ def change_password():
         return redirect(url_for('base.home'))
     return render_template('auth/change_password.html', title='Change Password', form=form)
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -28,17 +36,17 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
+        logger.debug(f"Form data: {form.data}")
         worker = Worker.query.filter_by(email=form.email.data).first()
         if worker and worker.check_password(form.password.data):
             login_user(worker, remember=form.remember.data)
-            if worker.password_is_temp:
-                flash('You are using a temporary password. Please change your password.', 'warning')
-                return redirect(url_for('auth.change_password'))
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('base.home'))
         else:
+            logger.error('Login Unsuccessful. Please check email and password')
             flash('Login Unsuccessful. Please check email and password', 'danger')
-    return render_template('auth/login.html', title='Login', form=form)
+    logger.debug(f"Form errors: {form.errors}")
+    return render_template('auth/login.html', form=form)
 
 
 @auth_bp.route('/logout')

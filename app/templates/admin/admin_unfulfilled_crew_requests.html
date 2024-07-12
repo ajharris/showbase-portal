@@ -17,9 +17,10 @@
             <td>{{ crew.id }}</td>
             <td>{{ crew.event.show_name }}</td>
             <td>
-                <form method="POST" action="{{ url_for('admin.assign_worker') }}">
+                <form class="requires-crew-id" method="POST" action="{{ url_for('admin.assign_worker') }}">
                     {{ form.hidden_tag() }} <!-- CSRF token included here -->
                     <input type="hidden" name="crew_id" value="{{ crew.id }}">
+                    <input type="hidden" name="role" value="{{ form.role.data }}">
                     <select name="worker_id" class="form-control" required>
                         {% for worker in workers %}
                         <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
