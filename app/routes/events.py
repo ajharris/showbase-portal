@@ -18,19 +18,16 @@ def create_event():
             show_number=form.show_number.data,
             account_manager_id=form.account_manager.data,
             location_id=form.location.data,
-            sharepoint=form.sharepoint.data,
             active=form.active.data
         )
-        try:
-            db.session.add(event)
-            db.session.commit()
-            flash('Event created successfully!', 'success')
-            return redirect(url_for('events.create_event'))
-        except IntegrityError:
-            db.session.rollback()
-            flash('Show number already exists. Please use a different show number.', 'danger')
+        db.session.add(event)
+        db.session.commit()
+        flash('Event created successfully!', 'success')
+        return redirect(url_for('events.create_event'))
+    
     events = Event.query.all()
     return render_template('events/create_event.html', form=form, events=events)
+
 
 @events_bp.route('/list_events')
 @login_required
@@ -118,14 +115,16 @@ def view_event(event_id):
         ROLES=ROLES
     )
 
-@events_bp.route('/delete_event/<int:event_id>', methods=['POST'])
+@events_bp.route('/events/delete_event/<int:event_id>', methods=['POST'])
 @login_required
 def delete_event(event_id):
+    # Logic to delete event
     event = Event.query.get_or_404(event_id)
     db.session.delete(event)
     db.session.commit()
     flash('Event deleted successfully.', 'success')
     return redirect(url_for('events.list_events'))
+
 
 @events_bp.route('/delete_crew/<int:crew_id>', methods=['POST'])
 @login_required

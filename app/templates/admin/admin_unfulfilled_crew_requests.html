@@ -1,52 +1,35 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Unfulfilled Crew Requests{% endblock %}
-
 {% block page_content %}
-<div class="container">
-    <h1>Unfulfilled Crew Requests</h1>
-    <div class="shift-container">
-        {% for crew in crews %}
-            <div class="crew-request">
-                <h3>Show: {{ crew.event.show_name }} ({{ crew.event.show_number }})</h3>
-                <p>Start: {{ crew.start_time }}</p>
-                <p>End: {{ crew.end_time }}</p>
-                <p>Description: {{ crew.description }}</p>
-                {% for role, count in crew.get_roles().items() if count > 0 %}
-                    {% set offered_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'offered')|list %}
-                    {% set assigned_workers = crew.crew_assignments|selectattr('role', 'equalto', role)|selectattr('status', 'equalto', 'accepted')|list %}
-                    {% for _ in range(count) %}
-                        {% if assigned_workers %}
-                            <div class="form-group">
-                                <label>{{ role }}</label>
-                                <p>{{ assigned_workers[0].worker.first_name }} {{ assigned_workers[0].worker.last_name }} (accepted)</p>
-                                {% set assigned_workers = assigned_workers[1:] %}
-                            </div>
-                        {% elif offered_workers %}
-                            <div class="form-group">
-                                <label>{{ role }}</label>
-                                <p>{{ offered_workers[0].worker.first_name }} {{ offered_workers[0].worker.last_name }} (offered)</p>
-                                {% set offered_workers = offered_workers[1:] %}
-                            </div>
-                        {% else %}
-                            <form method="POST" action="{{ url_for('admin.unfulfilled_crew_requests') }}" id="form_{{ crew.id }}_{{ role }}">
-                                {{ wtf.hidden_tag(form) }}
-                                <input type="hidden" name="crew_id" id="crew_id_{{ crew.id }}_{{ role }}" value="{{ crew.id }}">
-                                <input type="hidden" name="role" id="role_{{ crew.id }}_{{ role }}" value="{{ role }}">
-                                <div class="form-group">
-                                    <label>{{ role }}</label>
-                                    {{ form.worker(class="form-control", id="worker_#{crew.id}_#{role}") }}
-                                </div>
-                                <div class="form-group">
-                                    <button type="submit" class="btn btn-primary">Assign Worker</button>
-                                </div>
-                            </form>
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-            </div>
+<h1>Unfulfilled Crew Requests</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Crew ID</th>
+            <th>Event Name</th>
+            <th>Assign Worker</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for crew in unfulfilled_crews %}
+        <tr>
+            <td>{{ crew.id }}</td>
+            <td>{{ crew.event.show_name }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('admin.assign_worker') }}">
+                    {{ form.hidden_tag() }} <!-- CSRF token included here -->
+                    <input type="hidden" name="crew_id" value="{{ crew.id }}">
+                    <select name="worker_id" class="form-control" required>
+                        {% for worker in workers %}
+                        <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </form>
+            </td>
+        </tr>
         {% endfor %}
-    </div>
-</div>
+    </tbody>
+</table>
 {% endblock %}

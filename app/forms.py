@@ -38,7 +38,6 @@ class EventForm(DynamicChoicesForm):
     show_number = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
     account_manager = SelectField('Account Manager:', choices=[], validators=[InputRequired(), DataRequired()])
     location = SelectField('Location:', choices=[], validators=[InputRequired(), DataRequired()])
-    sharepoint = StringField('SharePoint Link:')
     active = BooleanField('Active', default=True)
     submit = SubmitField('Submit')
 
@@ -46,6 +45,8 @@ class EventForm(DynamicChoicesForm):
         super().__init__(*args, **kwargs)
         self.update_choices('account_manager', [(am.id, f'{am.first_name} {am.last_name}') for am in get_account_managers()])
         self.update_choices('location', [(loc.id, loc.name) for loc in get_locations()])
+
+
 
 class LocationForm(FlaskForm):
     name = StringField('Location Name', validators=[DataRequired()])
@@ -186,12 +187,12 @@ class ResetPasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
 
-class AssignWorkerForm(DynamicChoicesForm):
+class AssignWorkerForm(FlaskForm):
     worker = SelectField('Select Worker', choices=[], coerce=int, validators=[DataRequired()])
-    role = StringField('Role', validators=[DataRequired()])
+    role = HiddenField('Role', validators=[DataRequired()])
     crew_id = HiddenField('Crew ID', validators=[DataRequired()])
     submit = SubmitField('Assign Worker')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.update_choices('worker', [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()])
+        self.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
