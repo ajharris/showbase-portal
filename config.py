@@ -1,10 +1,17 @@
 import os
+from urllib.parse import urlparse
 
+def fix_postgres_dialect(url):
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    return url
+
+DATABASE_URL = fix_postgres_dialect(os.getenv("DATABASE_URL"))
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
     
     # Update the SQLALCHEMY_DATABASE_URI to use PostgreSQL
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads/receipts'
