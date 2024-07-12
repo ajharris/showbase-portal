@@ -129,8 +129,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     }
 
-    // Form submission validation for crew requests
-    document.querySelectorAll('form').forEach(form => {
+    document.querySelectorAll('form.requires-crew-id').forEach(form => {
         form.addEventListener('submit', (e) => {
             const formData = new FormData(form);
             console.log('Submitting form with data:');

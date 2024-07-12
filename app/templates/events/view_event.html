@@ -8,7 +8,7 @@
     {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
     <div id="request-crew-section">
         <h3>Request Crew</h3>
-        <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}" id="crewRequestForm">
+        <form class="requires-crew-id" method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}" id="crewRequestForm">
             {{ crew_request_form.hidden_tag() }}
             <div class="form-group">
                 {{ form_field(crew_request_form.description, class="form-control") }}
