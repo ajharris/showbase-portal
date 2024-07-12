@@ -4,7 +4,7 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
     
     # Update the SQLALCHEMY_DATABASE_URI to use PostgreSQL
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://aharris:Ernskyk3!@localhost/showbase')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads/receipts'
