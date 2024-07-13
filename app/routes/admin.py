@@ -8,6 +8,19 @@ from .. import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+@admin_bp.route('/edit_worker/<int:worker_id>', methods=['GET', 'POST'])
+@login_required
+def edit_worker(worker_id):
+    worker = Worker.query.get_or_404(worker_id)
+    form = AdminCreateWorkerForm(obj=worker)
+    if form.validate_on_submit():
+        form.populate_obj(worker)
+        db.session.commit()
+        flash('Worker updated successfully!', 'success')
+        return redirect(url_for('admin.create_worker'))
+    return render_template('admin/edit_worker.html', form=form, worker=worker)
+
+
 @admin_bp.route('/view_all_shifts')
 @login_required
 def view_all_shifts():
