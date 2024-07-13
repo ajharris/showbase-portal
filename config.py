@@ -1,17 +1,20 @@
 import os
-from urllib.parse import urlparse
 
 def fix_postgres_dialect(url):
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+    if url and url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
     return url
 
-DATABASE_URL = fix_postgres_dialect(os.getenv("DATABASE_URL"))
+SQLALCHEMY_DATABASE_URI = fix_postgres_dialect(os.getenv("SQLALCHEMY_DATABASE_URI"))
+
+if not SQLALCHEMY_DATABASE_URI:
+    raise ValueError("SQLALCHEMY_DATABASE_URI environment variable is not set or is invalid")
+
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')  # Provide a default for SECRET_KEY
     
-    # Update the SQLALCHEMY_DATABASE_URI to use PostgreSQL
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    # Use the fixed SQLALCHEMY_DATABASE_URI
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads/receipts'
@@ -21,6 +24,6 @@ class Config:
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('EMAIL_USER')
-    MAIL_PASSWORD = os.environ.get('EMAIL_PASS')
-    MAIL_DEFAULT_SENDER = os.environ.get('EMAIL_USER')
+    MAIL_USERNAME = os.getenv('EMAIL_USER')
+    MAIL_PASSWORD = os.getenv('EMAIL_PASS')
+    MAIL_DEFAULT_SENDER = os.getenv('EMAIL_USER')
