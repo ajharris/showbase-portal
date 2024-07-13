@@ -24,7 +24,8 @@ class DynamicChoicesForm(FlaskForm):
     def update_choices(self, field_name, choices):
         getattr(self, field_name).choices = choices
 
-class CrewRequestForm(DynamicChoicesForm):
+class CrewRequestForm(FlaskForm):
+    crew_id = HiddenField('Crew ID')
     start_time = DateTimeField('Start Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     end_time = DateTimeField('End Date & Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
     description = StringField('Description', validators=[DataRequired()])
@@ -207,3 +208,4 @@ class AssignWorkerForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
+

@@ -53,6 +53,9 @@ def inactivate_event(event_id):
     flash('Event inactivated successfully.', 'success')
     return redirect(url_for('events.list_events'))
 
+import logging
+logger = logging.getLogger(__name__)
+
 @events_bp.route('/view_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def view_event(event_id):
@@ -64,7 +67,6 @@ def view_event(event_id):
 
     if request.method == 'POST':
         if crew_request_form.submit.data and crew_request_form.validate():
-            # Handle crew request form submission
             roles_json = crew_request_form.roles_json.data
             try:
                 crew = Crew(
@@ -82,9 +84,19 @@ def view_event(event_id):
             except Exception as e:
                 db.session.rollback()
                 flash(f'Error: {str(e)}', 'danger')
+                logger.error('Error while adding crew request: %s', e)
         elif note_form.submit.data and note_form.validate():
-            # Handle note form submission
-            pass
+            note = Note(
+                event_id=event_id,
+                content=note_form.notes.data,
+                account_manager_only=note_form.account_manager_only.data,
+                account_manager_and_td_only=note_form.account_manager_and_td_only.data,
+                worker_id=current_user.id
+            )
+            db.session.add(note)
+            db.session.commit()
+            flash('Note added successfully!', 'success')
+            return redirect(url_for('events.view_event', event_id=event_id))
         elif document_form.submit.data and document_form.validate():
             # Handle document form submission
             pass
@@ -93,27 +105,29 @@ def view_event(event_id):
             db.session.commit()
             flash('SharePoint link updated.', 'success')
             return redirect(url_for('events.view_event', event_id=event_id))
-    
-    # Fetch crew assignments by joining Crew and filtering by event_id
+
     crews = Crew.query.filter_by(event_id=event_id).all()
+    logger.debug('Crews: %s', crews)
     crew_assignments = []
     for crew in crews:
         assignments = CrewAssignment.query.filter_by(crew_id=crew.id).all()
+        logger.debug('Assignments for Crew %d: %s', crew.id, assignments)
         crew_assignments.append({
             'crew': crew,
             'assignments': assignments
         })
 
     return render_template(
-        'events/view_event.html', 
-        event=event, 
-        crew_request_form=crew_request_form, 
-        note_form=note_form, 
-        document_form=document_form, 
-        sharepoint_form=sharepoint_form, 
-        crew_assignments=crew_assignments, 
+        'events/view_event.html',
+        event=event,
+        crew_request_form=crew_request_form,
+        note_form=note_form,
+        document_form=document_form,
+        sharepoint_form=sharepoint_form,
+        crew_assignments=crew_assignments,
         ROLES=ROLES
     )
+
 
 @events_bp.route('/events/delete_event/<int:event_id>', methods=['POST'])
 @login_required
