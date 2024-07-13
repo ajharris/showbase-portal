@@ -1,43 +1,42 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
-{% block title %}Admin Create Worker{% endblock %}
-{% block content %}
-    <div class="container">
-        <h2>Create Worker</h2>
-        <form method="POST" action="">
-            {{ form.hidden_tag() }}
-            <div class="form-group">
-                {{ form.first_name.label(class="form-control-label") }}
-                {{ form.first_name(class="form-control") }}
-            </div>
-            <div class="form-group">
-                {{ form.last_name.label(class="form-control-label") }}
-                {{ form.last_name(class="form-control") }}
-            </div>
-            <div class="form-group">
-                {{ form.phone_number.label(class="form-control-label") }}
-                {{ form.phone_number(class="form-control") }}
-            </div>
-            <div class="form-group">
-                {{ form.email.label(class="form-control-label") }}
-                {{ form.email(class="form-control") }}
-            </div>
-            <div class="form-group">
-                {{ form.temp_password.label(class="form-control-label") }}
-                {{ form.temp_password(class="form-control") }}
-            </div>
-            <div class="form-group form-check">
-                {{ form.is_admin.label(class="form-check-label") }}
-                {{ form.is_admin(class="form-check-input") }}
-            </div>
-            <div class="form-group form-check">
-                {{ form.is_account_manager.label(class="form-check-label") }}
-                {{ form.is_account_manager(class="form-check-input") }}
-            </div>
-            <div class="form-group">
-                {{ form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
+{% from "bootstrap/wtf.html" import form_field %}
+
+{% block page_content %}
+<div class="container">
+    <h2>Create Worker</h2>
+    <form method="POST" action="{{ url_for('admin.create_worker') }}">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form_field(form.first_name, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.last_name, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.email, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.phone_number, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.temp_password, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.confirm_temp_password, class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.is_admin) }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.is_account_manager) }}
+        </div>
+        <div class="form-group">
+            {{ form_field(form.submit, class="btn btn-primary") }}
+        </div>
+    </form>
+</div>
+
+
         <h3>Existing Workers</h3>
         <table class="table table-bordered">
             <thead>
@@ -48,6 +47,7 @@
                     <th>Phone Number</th>
                     <th>Is Admin</th>
                     <th>Is Account Manager</th>
+                    <th>Is Active Employee</th>
                 </tr>
             </thead>
             <tbody>
@@ -59,6 +59,7 @@
                         <td>{{ worker.phone_number or 'Not Updated' }}</td>
                         <td>{{ 'Yes' if worker.is_admin else 'No' }}</td>
                         <td>{{ 'Yes' if worker.is_account_manager else 'No' }}</td>
+                        <td>{{ 'Yes' if worker.is_active else 'No' }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

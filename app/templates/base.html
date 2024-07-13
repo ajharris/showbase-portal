@@ -25,35 +25,36 @@
             <ul class="nav navbar-nav">
                 {% if current_user.is_authenticated %}
                     <li><a href="/">Home</a></li>
-                    <li><a href="{{ url_for('admin.view_all_shifts') }}">View All Shifts</a></li>
+                    
                 {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
                     {% if not session.get('view_as_employee', False) %}
-                        {% if current_user.is_admin and not session.get('view_as_account_manager', False) %}
-                            <li class="dropdown">
+                        {% if current_user.is_admin %}
+                            <li class="dropdown admin-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('admin.create_worker') }}">Create Worker</a></li>
-                                    <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
-                                    <li><a href="{{ url_for('misc.timesheet') }}">Timesheet</a></li>
-                                    <li><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
-                                    <li><a href="{{ url_for('admin.unfulfilled_crew_requests') }}">Crew Requests</a></li>
-                                    <li><a href="{{ url_for('backup.show_backup_restore') }}">Backup/Restore Database</a></li>
-                                    <li><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.create_worker') }}">Create Worker</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.view_all_shifts') }}">View All Shifts</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('misc.timesheet') }}">Timesheet</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.unfulfilled_crew_requests') }}">Crew Requests</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('backup.show_backup_restore') }}">Backup/Restore Database</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
                                 </ul>
                             </li>
                         {% endif %}
                         {% if current_user.is_admin or current_user.is_account_manager %}
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
-                                <li><a href="{{ url_for('events.list_events') }}">List Events</a></li>
-                                <li><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
-                            </ul>
-                        </li>
+                            <li class="dropdown account-manager-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li class="account-manager-field"><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                    <li class="account-manager-field"><a href="{{ url_for('events.list_events') }}">List Events</a></li>
+                                    <li class="account-manager-field"><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
+                                </ul>
+                            </li>
                         {% endif %}
                     {% endif %}
                     <li><a href="{{ url_for('profile.update_profile', worker_id=current_user.id) }}">Update Profile</a></li>
@@ -67,7 +68,7 @@
                     </li>
                     {% if current_user.is_admin or current_user.is_account_manager %}
                         <li class="view-switch-wrapper">
-                            <label class="view-switch" for="view-checkbox" data-checked="{{ 'true' if session.get('view_as_employee', False) else 'false' }}" data-url="{{ url_for('misc.save_view_mode') }}">
+                            <label class="view-switch" for="view-checkbox" data-checked="{{ 'true' if session.get('view_as_employee', False) else 'false' }}" data-url="{{ url_for('admin.save_view_mode') }}">
                                 <input type="checkbox" id="view-checkbox" />
                                 <span class="view-slider round"></span>
                             </label>
@@ -75,7 +76,7 @@
                         </li>
                         {% if current_user.is_admin %}
                             <li class="view-switch-wrapper">
-                                <label class="view-switch" for="view-checkbox-manager" data-checked="{{ 'true' if session.get('view_as_account_manager', False) else 'false' }}" data-url="{{ url_for('misc.save_view_mode') }}">
+                                <label class="view-switch" for="view-checkbox-manager" data-checked="{{ 'true' if session.get('view_as_account_manager', False) else 'false' }}" data-url="{{ url_for('admin.save_view_mode') }}">
                                     <input type="checkbox" id="view-checkbox-manager" />
                                     <span class="view-slider round"></span>
                                 </label>
@@ -92,6 +93,8 @@
     </div>
 </nav>
 {% endblock %}
+
+
 
 {% block content %}
 <div class="container">
