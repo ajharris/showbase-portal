@@ -57,13 +57,15 @@ def generate_events(num=10, workers=None, locations=None):
     if not locations:
         locations = generate_locations()
     account_manager_ids = [worker["id"] for worker in workers if worker["is_account_manager"]]
+    print(f"Account Manager IDs: {account_manager_ids}")  # Debugging line
     for _ in range(num):
         event_id = generate_unique_id(existing_ids)
+        account_manager_id = fake.random_element(elements=account_manager_ids)
         event = {
             "id": event_id,
             "show_name": fake.catch_phrase(),
             "show_number": generate_unique_id(existing_ids),
-            "account_manager_id": fake.random_element(elements=account_manager_ids),
+            "account_manager_id": account_manager_id,
             "location_id": fake.random_element(elements=[location["id"] for location in locations]),
             "sharepoint": fake.url(),
             "active": True
@@ -103,7 +105,7 @@ def generate_expenses(num=10, workers=None, events=None):
             "id": expense_id,
             "receipt_number": fake.bothify(text='????-########'),
             "date": fake.date_this_year().isoformat(),
-            "account_manager_id": fake.random_element(elements=[worker["id"] for worker in workers]),
+            "account_manager_id": fake.random_element(elements=[worker["id"] for worker in workers if worker["is_account_manager"]]),
             "show_name": fake.catch_phrase(),
             "show_number": fake.random_element(elements=[event["show_number"] for event in events]),
             "details": fake.text(),
@@ -130,7 +132,7 @@ def generate_shifts(num=10, workers=None, events=None):
             "end": (fake.date_time_this_year() + timedelta(hours=4)).isoformat(),
             "show_name": fake.catch_phrase(),
             "show_number": fake.random_element(elements=[event["show_number"] for event in events]),
-            "account_manager_id": fake.random_element(elements=[worker["id"] for worker in workers]),
+            "account_manager_id": fake.random_element(elements=[worker["id"] for worker in workers if worker["is_account_manager"]]),
             "location": fake.address(),
             "worker_id": fake.random_element(elements=[worker["id"] for worker in workers]),
             "crew_assignment_id": generate_unique_id(existing_ids)
@@ -160,6 +162,7 @@ def generate_notes(num=10, workers=None, events=None):
     return notes
 
 workers = generate_workers()
+print(f"Generated Workers: {workers}")  # Debugging line
 locations = generate_locations()
 events = generate_events(workers=workers, locations=locations)
 crews = generate_crew(events=events)

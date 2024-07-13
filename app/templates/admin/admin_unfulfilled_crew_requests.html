@@ -13,11 +13,12 @@
     </thead>
     <tbody>
         {% for crew in unfulfilled_crews %}
+        {% if not crew.is_fulfilled %}
         <tr>
             <td>{{ crew.id }}</td>
             <td>{{ crew.event.show_name }}</td>
             <td>
-                <form class="requires-crew-id" method="POST" action="{{ url_for('admin.assign_worker') }}">
+                <form method="POST" action="{{ url_for('admin.assign_worker') }}">
                     {{ form.hidden_tag() }} <!-- CSRF token included here -->
                     <input type="hidden" name="crew_id" value="{{ crew.id }}">
                     <input type="hidden" name="role" value="{{ form.role.data }}">
@@ -30,6 +31,7 @@
                 </form>
             </td>
         </tr>
+        {% endif %}
         {% endfor %}
     </tbody>
 </table>

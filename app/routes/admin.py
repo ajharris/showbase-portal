@@ -46,6 +46,7 @@ def save_view_mode():
 def unfulfilled_crew_requests():
     form = AssignWorkerForm()
     if form.validate_on_submit():
+        logger.debug(f"Form data: {form.data}")
         crew_id = form.crew_id.data
         worker_id = form.worker.data
         role = form.role.data
@@ -65,6 +66,7 @@ def unfulfilled_crew_requests():
         return redirect(url_for('admin.unfulfilled_crew_requests'))
 
     unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
+    logger.debug(f"Unfulfilled Crews: {unfulfilled_crews}")
     workers = Worker.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
 

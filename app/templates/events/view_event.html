@@ -8,8 +8,10 @@
     {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
     <div id="request-crew-section">
         <h3>Request Crew</h3>
-        <form class="requires-crew-id" method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}" id="crewRequestForm">
+        <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}" id="crewRequestForm">
             {{ crew_request_form.hidden_tag() }}
+            <input type="hidden" name="crew_id" value="{{ crew_request_form.crew_id.data }}">
+            <!-- Other fields here -->
             <div class="form-group">
                 {{ form_field(crew_request_form.description, class="form-control") }}
             </div>
@@ -48,6 +50,7 @@
                 {{ form_field(crew_request_form.submit, class="btn btn-primary") }}
             </div>
         </form>
+        
     </div>
     {% endif %}
 
@@ -102,6 +105,7 @@
         </div>
         {% endfor %}
     </div>
+    
     
     <h3>Notes</h3>
     <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">

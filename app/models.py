@@ -85,10 +85,12 @@ class Crew(db.Model):
     @property
     def is_fulfilled(self):
         required_roles = self.get_roles()
-        for role in required_roles.keys():
-            if not CrewAssignment.is_role_fulfilled(self.id, role):
+        for role, count in required_roles.items():
+            assigned_count = sum(1 for assignment in self.crew_assignments if assignment.role == role and assignment.status == 'accepted')
+            if assigned_count < count:
                 return False
         return True
+
 
 
 class CrewAssignment(db.Model):
