@@ -3,16 +3,24 @@ from flask import Blueprint, render_template, redirect, url_for, flash, session,
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from ..models import Crew, Location, Worker, CrewAssignment, Event
-from ..forms import AssignWorkerForm, AdminCreateWorkerForm, LocationForm
+from ..forms import AssignWorkerForm, AdminCreateWorkerForm, EditWorkerForm, LocationForm
 from .. import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+def handle_view_modes(view_as_employee=None, view_as_manager=None):
+    if view_as_employee is not None:
+        session['view_as_employee'] = view_as_employee == 'true'
+        session.pop('view_as_account_manager', None)
+    if view_as_manager is not None:
+        session['view_as_account_manager'] = view_as_manager == 'true'
+        session.pop('view_as_employee', None)
 
 @admin_bp.route('/edit_worker/<int:worker_id>', methods=['GET', 'POST'])
 @login_required
 def edit_worker(worker_id):
     worker = Worker.query.get_or_404(worker_id)
-    form = AdminCreateWorkerForm(obj=worker)
+    form = EditWorkerForm(obj=worker)
     if form.validate_on_submit():
         form.populate_obj(worker)
         db.session.commit()
@@ -20,31 +28,18 @@ def edit_worker(worker_id):
         return redirect(url_for('admin.create_worker'))
     return render_template('admin/edit_worker.html', form=form, worker=worker)
 
-
 @admin_bp.route('/view_all_shifts')
 @login_required
 def view_all_shifts():
     shifts = []  # Replace with actual data retrieval logic
     return render_template('admin/view_all_shifts.html', shifts=shifts)
 
-
 @admin_bp.route('/save_view_mode', methods=['POST'])
 @login_required
 def save_view_mode():
     data = request.json
-    view_as_employee = data.get('viewAsEmployee')
-    view_as_manager = data.get('viewAsManager')
-
-    if view_as_employee is not None:
-        session['view_as_employee'] = view_as_employee == 'true'
-        session.pop('view_as_account_manager', None)
-
-    if view_as_manager is not None:
-        session['view_as_account_manager'] = view_as_manager == 'true'
-        session.pop('view_as_employee', None)
-
+    handle_view_modes(data.get('viewAsEmployee'), data.get('viewAsManager'))
     return jsonify({'status': 'success'})
-
 
 @admin_bp.route('/unfulfilled_crew_requests', methods=['GET', 'POST'])
 @login_required
@@ -195,4 +190,3 @@ def assign_worker():
     unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
     workers = Worker.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
-
