@@ -56,6 +56,16 @@ class LocationForm(FlaskForm):
     other_info = TextAreaField('Other Information')
     submit = SubmitField('Save')
 
+class EditWorkerForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number')
+    is_admin = BooleanField('Admin')
+    is_account_manager = BooleanField('Account Manager')
+    submit = SubmitField('Update Worker')
+
+
 class AdminCreateWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
