@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const adminDropdown = document.querySelector('.admin-dropdown');
     const accountManagerDropdown = document.querySelector('.account-manager-dropdown');
 
+    console.log('Admin Fields:', adminFields);
+    console.log('Account Manager Fields:', accountManagerFields);
+    console.log('Admin Dropdown:', adminDropdown);
+    console.log('Account Manager Dropdown:', accountManagerDropdown);
+
     // Theme toggle functionality
     if (themeCheckbox) {
         const currentTheme = localStorage.getItem('theme') || 'light';
@@ -35,28 +40,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     // Function to toggle view as employee fields
     function toggleFields() {
-        if (viewCheckbox && viewCheckbox.checked) {
-            adminFields.forEach(field => field.style.display = 'none');
-            accountManagerFields.forEach(field => field.style.display = 'none');
-            if (adminDropdown) adminDropdown.style.display = 'none';
-            if (accountManagerDropdown) accountManagerDropdown.style.display = 'none';
-        } else {
-            adminFields.forEach(field => field.style.display = 'block');
-            accountManagerFields.forEach(field => field.style.display = 'block');
-            if (adminDropdown) adminDropdown.style.display = 'block';
-            if (accountManagerDropdown) accountManagerDropdown.style.display = 'block';
-        }
+        const viewAsEmployee = localStorage.getItem('viewAsEmployee') === 'true';
+        console.log('Toggling fields for View as Employee:', viewAsEmployee);
+
+        adminFields.forEach(field => field.style.display = viewAsEmployee ? 'none' : 'block');
+        accountManagerFields.forEach(field => field.style.display = viewAsEmployee ? 'none' : 'block');
+        if (adminDropdown) adminDropdown.style.display = viewAsEmployee ? 'none' : 'block';
+        if (accountManagerDropdown) accountManagerDropdown.style.display = viewAsEmployee ? 'none' : 'block';
     }
 
     // Function to toggle view as manager fields
     function toggleManagerFields() {
-        if (viewCheckboxManager && viewCheckboxManager.checked) {
-            adminFields.forEach(field => field.style.display = 'none');
-            if (adminDropdown) adminDropdown.style.display = 'none';
-        } else {
-            adminFields.forEach(field => field.style.display = 'block');
-            if (adminDropdown) adminDropdown.style.display = 'block';
-        }
+        const viewAsManager = localStorage.getItem('viewAsManager') === 'true';
+        console.log('Toggling fields for View as Manager:', viewAsManager);
+
+        adminFields.forEach(field => field.style.display = viewAsManager ? 'none' : 'block');
+        if (adminDropdown) adminDropdown.style.display = viewAsManager ? 'none' : 'block';
     }
 
     // View as Employee functionality
@@ -76,7 +75,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ viewAsEmployee: viewMode, viewAsManager: 'false' })
+                body: JSON.stringify({ viewAsEmployee: viewMode })
             }).then(() => {
                 location.reload();
             }).catch(error => console.error('Error:', error));
@@ -100,7 +99,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ viewAsManager: viewMode, viewAsEmployee: 'false' })
+                body: JSON.stringify({ viewAsManager: viewMode })
             }).then(() => {
                 location.reload();
             }).catch(error => console.error('Error:', error));
@@ -129,6 +128,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     }
 
+    // Form submission validation for forms that require crew ID
     document.querySelectorAll('form.requires-crew-id').forEach(form => {
         form.addEventListener('submit', (e) => {
             const formData = new FormData(form);

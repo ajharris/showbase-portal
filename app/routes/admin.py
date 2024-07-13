@@ -14,17 +14,24 @@ def view_all_shifts():
     shifts = []  # Replace with actual data retrieval logic
     return render_template('admin/view_all_shifts.html', shifts=shifts)
 
+
 @admin_bp.route('/save_view_mode', methods=['POST'])
 @login_required
 def save_view_mode():
     data = request.json
     view_as_employee = data.get('viewAsEmployee')
     view_as_manager = data.get('viewAsManager')
+
     if view_as_employee is not None:
         session['view_as_employee'] = view_as_employee == 'true'
+        session.pop('view_as_account_manager', None)
+
     if view_as_manager is not None:
-        session['view_as_manager'] = view_as_manager == 'true' and current_user.is_admin
+        session['view_as_account_manager'] = view_as_manager == 'true'
+        session.pop('view_as_employee', None)
+
     return jsonify({'status': 'success'})
+
 
 @admin_bp.route('/unfulfilled_crew_requests', methods=['GET', 'POST'])
 @login_required
@@ -77,6 +84,7 @@ def create_worker():
             flash('Email already registered. Please use a different email.', 'danger')
     else:
         print(f"Form errors: {form.errors}")
+        print(f"Form data: {form.data}")
 
     workers = Worker.query.all()
     return render_template('admin/admin_create_worker.html', form=form, workers=workers)
