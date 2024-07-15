@@ -6,32 +6,36 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Crew ID</th>
-            <th>Event Name</th>
+            <th>Show Name</th>
+            <th>Role</th>
             <th>Assign Worker</th>
         </tr>
     </thead>
     <tbody>
         {% for crew in unfulfilled_crews %}
-        {% if not crew.is_fulfilled %}
+        {% for role, required_count in crew.get_roles().items() %}
+        {% set assigned_count = crew.get_assigned_role_count(role) %}
+        {% for _ in range(required_count - assigned_count) %}
         <tr>
-            <td>{{ crew.id }}</td>
             <td>{{ crew.event.show_name }}</td>
+            <td>{{ role }}</td>
             <td>
                 <form method="POST" action="{{ url_for('admin.assign_worker') }}">
-                    {{ form.hidden_tag() }} <!-- CSRF token included here -->
+                    {{ form.csrf_token }}
                     <input type="hidden" name="crew_id" value="{{ crew.id }}">
-                    <input type="hidden" name="role" value="{{ form.role.data }}">
-                    <select name="worker_id" class="form-control" required>
+                    <input type="hidden" name="role" value="{{ role }}">
+                    <select name="worker" class="form-control" required>
                         {% for worker in workers %}
                         <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
                         {% endfor %}
                     </select>
                     <button type="submit" class="btn btn-primary">Assign</button>
                 </form>
+                <p>Debug: Crew ID - {{ crew.id }}, Role - {{ role }}</p>
             </td>
         </tr>
-        {% endif %}
+        {% endfor %}
+        {% endfor %}
         {% endfor %}
     </tbody>
 </table>

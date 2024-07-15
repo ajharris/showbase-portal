@@ -23,12 +23,12 @@
                         <div class="shift-actions">
                             {% if shift.status == 'offered' %}
                                 <form method="POST" action="{{ url_for('base.accept_offer') }}">
-                                    {{ form.hidden_tag() }}
+                                    <input type="hidden" name="csrf_token" value="{{ csrf }}">
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-success">Accept</button>
                                 </form>
                                 <form method="POST" action="{{ url_for('base.reject_offer') }}">
-                                    {{ form.hidden_tag() }}
+                                    <input type="hidden" name="csrf_token" value="{{ csrf }}">
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-danger">Reject</button>
                                 </form>
