@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
+from flask_wtf.csrf import generate_csrf
 from ..models import CrewAssignment, Crew, Expense
 from ..utils import get_pay_periods, create_time_report_ch, create_expense_report_ch
 from .. import db
@@ -54,8 +55,12 @@ def home():
     # Generate reports
     shift_report = create_time_report_ch(shifts)
     expense_report = create_expense_report_ch(expenses)
+    
+    # Generate CSRF token
+    csrf = generate_csrf()
 
-    return render_template('base/home.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report, now=now)
+    return render_template('base/home.html', upcoming_shifts=upcoming_shifts, pay_periods=pay_periods, selected_period_start=selected_period_start, shift_report=shift_report, expense_report=expense_report, now=now, csrf=csrf)
+
 
 @base_bp.route('/accept_offer', methods=['POST'])
 @login_required

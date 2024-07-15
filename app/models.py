@@ -78,16 +78,18 @@ class Crew(db.Model):
     description = db.Column(db.String, nullable=False)
 
     crew_assignments = db.relationship('CrewAssignment', backref='crew', lazy=True)
-
+    
     def get_roles(self):
         return json.loads(self.roles)
+
+    def get_assigned_role_count(self, role):
+        return sum(1 for assignment in self.crew_assignments if assignment.role == role and assignment.status == 'accepted')
 
     @property
     def is_fulfilled(self):
         required_roles = self.get_roles()
         for role, count in required_roles.items():
-            assigned_count = sum(1 for assignment in self.crew_assignments if assignment.role == role and assignment.status == 'accepted')
-            if assigned_count < count:
+            if self.get_assigned_role_count(role) < count:
                 return False
         return True
 
