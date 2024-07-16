@@ -1,12 +1,13 @@
+# app/forms.py
+
 import logging
-from flask import redirect, url_for, render_template, flash
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, 
+    StringField, SubmitField, IntegerField, FloatField, SelectField, 
     PasswordField, DateTimeField, BooleanField, SelectMultipleField, TextAreaField, 
-    HiddenField
+    HiddenField, FieldList, FormField, FileField
 )
-from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo, URL
+from wtforms.validators import DataRequired, InputRequired, Email, EqualTo, URL, Optional
 from flask_wtf.file import FileAllowed
 from wtforms.widgets import ListWidget, CheckboxInput
 from .models import Worker
@@ -19,6 +20,29 @@ logger = logging.getLogger(__name__)
 
 class CSRFForm(FlaskForm):
     pass
+
+class RoleCheckboxForm(FlaskForm):
+    pass
+
+for role in ROLES:
+    setattr(RoleCheckboxForm, role, BooleanField(role))
+
+class BaseWorkerForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number')
+    is_admin = BooleanField('Is Admin')
+    is_account_manager = BooleanField('Is Account Manager')
+    role_capabilities = FormField(RoleCheckboxForm)
+
+class AdminCreateWorkerForm(BaseWorkerForm):
+    temp_password = PasswordField('Temporary Password', validators=[DataRequired(), EqualTo('confirm_temp_password', message='Passwords must match')])
+    confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired()])
+    submit = SubmitField('Create Worker')
+
+class EditWorkerForm(BaseWorkerForm):
+    submit = SubmitField('Update Worker')
 
 class DynamicChoicesForm(FlaskForm):
     def update_choices(self, field_name, choices):
@@ -33,7 +57,6 @@ class CrewRequestForm(FlaskForm):
     shift_type = SelectMultipleField('Shift Type', choices=[('Setup', 'Setup'), ('Show', 'Show'), ('Strike', 'Strike')], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
     submit = SubmitField('Add Crew Request')
 
-
 class EventForm(DynamicChoicesForm):
     show_name = StringField('Show Name:', validators=[InputRequired(), DataRequired()])
     show_number = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
@@ -47,8 +70,6 @@ class EventForm(DynamicChoicesForm):
         self.update_choices('account_manager', [(am.id, f'{am.first_name} {am.last_name}') for am in get_account_managers()])
         self.update_choices('location', [(loc.id, loc.name) for loc in get_locations()])
 
-
-
 class LocationForm(FlaskForm):
     name = StringField('Location Name', validators=[DataRequired()])
     address = TextAreaField('Address', validators=[DataRequired()])
@@ -56,27 +77,6 @@ class LocationForm(FlaskForm):
     dress_code = TextAreaField('Dress Code')
     other_info = TextAreaField('Other Information')
     submit = SubmitField('Save')
-
-class EditWorkerForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
-    is_admin = BooleanField('Admin')
-    is_account_manager = BooleanField('Account Manager')
-    submit = SubmitField('Update Worker')
-
-
-class AdminCreateWorkerForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
-    temp_password = PasswordField('Temporary Password', validators=[DataRequired(), EqualTo('confirm_temp_password', message='Passwords must match')])
-    confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired()])
-    is_admin = BooleanField('Admin')
-    is_account_manager = BooleanField('Account Manager')
-    submit = SubmitField('Create Worker')
 
 class ChangePasswordForm(FlaskForm):
     new_password = PasswordField('New Password', validators=[DataRequired()])
@@ -112,25 +112,9 @@ class AdminUpdateProfileForm(UpdateProfileForm):
     is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
     is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
 
-class AdminUpdateWorkerForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
-    is_admin = BooleanField('Admin')
-    is_account_manager = BooleanField('Account Manager')
+class AdminUpdateWorkerForm(BaseWorkerForm):
     active = BooleanField('Active')
     submit = SubmitField('Update')
-
-def update_worker(worker_id):
-    worker = Worker.query.get_or_404(worker_id)
-    form = AdminUpdateWorkerForm(obj=worker)
-    if form.validate_on_submit():
-        form.populate_obj(worker)
-        db.session.commit()
-        flash('Worker updated successfully.', 'success')
-        return redirect(url_for('admin.manage_workers'))
-    return render_template('admin/update_worker.html', form=form)
 
 class ShiftForm(DynamicChoicesForm):
     start = StringField('Shift Start:', id='shift_start', validators=[InputRequired(), DataRequired()])
@@ -180,7 +164,6 @@ class LoginForm(FlaskForm):
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
 
-
 class RegistrationForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
@@ -203,9 +186,4 @@ class AssignWorkerForm(FlaskForm):
     worker = SelectField('Select Worker', coerce=int, validators=[DataRequired()])
     role = HiddenField('Role', validators=[DataRequired()])
     crew_id = HiddenField('Crew ID', validators=[DataRequired()])
-    submit = SubmitField('Assign Worker')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
-
+    submit = SubmitField

@@ -31,6 +31,10 @@
             {{ form_field(form.is_account_manager) }}
         </div>
         <div class="form-group">
+            <label>Role Capabilities</label>
+            {{ form_field(form.role_capabilities) }}
+        </div>
+        <div class="form-group">
             {{ form_field(form.submit, class="btn btn-primary") }}
         </div>
     </form>
@@ -58,7 +62,7 @@
                     <td>{{ worker.phone_number or 'Not Updated' }}</td>
                     <td>{{ 'Yes' if worker.is_admin else 'No' }}</td>
                     <td>{{ 'Yes' if worker.is_account_manager else 'No' }}</td>
-                    <td>{{ 'Yes' if worker.is_active else 'No' }}</td>
+                    <td>{{ 'Yes' if worker.active else 'No' }}</td>
                     <td>
                         <a href="{{ url_for('admin.edit_worker', worker_id=worker.id) }}" class="btn btn-primary btn-sm">Edit</a>
                     </td>
