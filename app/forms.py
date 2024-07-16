@@ -200,7 +200,7 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('Reset Password')
 
 class AssignWorkerForm(FlaskForm):
-    worker = SelectField('Select Worker', choices=[], coerce=int, validators=[DataRequired()])
+    worker = SelectField('Select Worker', coerce=int, validators=[DataRequired()])
     role = HiddenField('Role', validators=[DataRequired()])
     crew_id = HiddenField('Crew ID', validators=[DataRequired()])
     submit = SubmitField('Assign Worker')
