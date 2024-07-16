@@ -1,9 +1,8 @@
-"""initial migration
+"""Adjust backref names in models
 
-
-Revision ID: 39e1f78658e9
+Revision ID: ba1fc3115566
 Revises: 
-Create Date: 2024-07-12 18:57:49.102026
+Create Date: 2024-07-16 06:52:31.205781
 
 """
 from alembic import op
@@ -11,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '39e1f78658e9'
+revision = 'ba1fc3115566'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -33,7 +32,7 @@ def upgrade():
     sa.Column('first_name', sa.String(length=64), nullable=False),
     sa.Column('last_name', sa.String(length=64), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
-    sa.Column('phone_number', sa.String(length=20), nullable=True),
+    sa.Column('phone_number', sa.String(length=30), nullable=True),
     sa.Column('is_admin', sa.Boolean(), nullable=True),
     sa.Column('is_account_manager', sa.Boolean(), nullable=True),
     sa.Column('password_hash', sa.String(length=256), nullable=True),

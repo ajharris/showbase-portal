@@ -11,29 +11,29 @@
             <h2>Upcoming Shifts</h2>
             <div class="shift-container">
                 {% for shift in upcoming_shifts %}
-                    {% set is_within_48_hours = (shift.crew.start_time - now).total_seconds() <= 172800 %}
+                    {% set is_within_48_hours = (shift.assigned_crew.start_time - now).total_seconds() <= 172800 %}
                     <div class="shift-item {% if is_within_48_hours and shift.status != 'accepted' %}shift-within-48-hours-offered{% elif is_within_48_hours %}shift-within-48-hours{% endif %}">
                         <div class="shift-info">
-                            <strong>Show:</strong> {{ shift.crew.event.show_name }} ({{ shift.crew.event.show_number }}) | 
+                            <strong>Show:</strong> {{ shift.assigned_crew.event.show_name }} ({{ shift.assigned_crew.event.show_number }}) | 
                             <strong>Role:</strong> {{ shift.role }} | 
-                            <strong>Location:</strong> {{ shift.crew.event.location.name }} | 
-                            <strong>Start:</strong> {{ shift.crew.start_time }} | 
-                            <strong>End:</strong> {{ shift.crew.end_time }}
+                            <strong>Location:</strong> {{ shift.assigned_crew.event.location.name }} | 
+                            <strong>Start:</strong> {{ shift.assigned_crew.start_time }} | 
+                            <strong>End:</strong> {{ shift.assigned_crew.end_time }}
                         </div>
                         <div class="shift-actions">
                             {% if shift.status == 'offered' %}
                                 <form method="POST" action="{{ url_for('base.accept_offer') }}">
-                                    {{ form.hidden_tag() }}
+                                    <input type="hidden" name="csrf_token" value="{{ csrf }}">
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-success">Accept</button>
                                 </form>
                                 <form method="POST" action="{{ url_for('base.reject_offer') }}">
-                                    {{ form.hidden_tag() }}
+                                    <input type="hidden" name="csrf_token" value="{{ csrf }}">
                                     <input type="hidden" name="assignment_id" value="{{ shift.id }}">
                                     <button type="submit" class="btn btn-danger">Reject</button>
                                 </form>
                             {% endif %}
-                            <form method="GET" action="{{ url_for('events.view_event', event_id=shift.crew.event_id) }}">
+                            <form method="GET" action="{{ url_for('events.view_event', event_id=shift.assigned_crew.event_id) }}">
                                 <button type="submit" class="btn btn-info">View Details</button>
                             </form>
                         </div>

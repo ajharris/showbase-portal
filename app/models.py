@@ -26,6 +26,12 @@ class Worker(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def is_available(self, start_time, end_time):
+        for assignment in self.crew_assignments:
+            if assignment.status in ['offered', 'accepted'] and not (assignment.assigned_crew.end_time <= start_time or assignment.assigned_crew.start_time >= end_time):
+                return False
+        return True
+
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
@@ -77,20 +83,51 @@ class Crew(db.Model):
     shift_type = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
 
-    crew_assignments = db.relationship('CrewAssignment', backref='crew', lazy=True)
+    crew_assignments = db.relationship('CrewAssignment', backref='assigned_crew', lazy=True)
 
     def get_roles(self):
         return json.loads(self.roles)
+
+    def get_assigned_role_count(self, role):
+        return sum(1 for assignment in self.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted'])
+
+    def get_assigned_roles(self):
+        assigned_roles = {}
+        for assignment in self.crew_assignments:
+            if assignment.status in ['offered', 'accepted']:
+                if assignment.role in assigned_roles:
+                    assigned_roles[assignment.role] += 1
+                else:
+                    assigned_roles[assignment.role] = 1
+        return assigned_roles
+
+    def get_unassigned_roles(self):
+        required_roles = self.get_roles()
+        assigned_roles = self.get_assigned_roles()
+        unassigned_roles = {role: required_roles[role] - assigned_roles.get(role, 0) for role in required_roles}
+        return {role: count for role, count in unassigned_roles.items() if count > 0}
 
     @property
     def is_fulfilled(self):
         required_roles = self.get_roles()
         for role, count in required_roles.items():
-            assigned_count = sum(1 for assignment in self.crew_assignments if assignment.role == role and assignment.status == 'accepted')
-            if assigned_count < count:
+            if self.get_assigned_role_count(role) < count:
                 return False
         return True
 
+    def assign_worker(self, worker, role):
+        if self.get_assigned_role_count(role) < self.get_roles().get(role, 0):
+            new_assignment = CrewAssignment(
+                crew_id=self.id,
+                worker_id=worker.id,
+                role=role,
+                status='offered'
+            )
+            db.session.add(new_assignment)
+            db.session.commit()
+
+    def get_assignment_for_role(self, role):
+        return next((assignment for assignment in self.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted']), None)
 
 
 class CrewAssignment(db.Model):
@@ -100,8 +137,7 @@ class CrewAssignment(db.Model):
     role = db.Column(db.String(64), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='offered')
 
-    worker = db.relationship('Worker', backref='assignments', lazy=True)
-    shift = db.relationship('Shift', uselist=False, backref='crew_assignment')
+    worker = db.relationship('Worker', backref='crew_assignments')
 
     @staticmethod
     def is_role_fulfilled(crew_id, role):
@@ -109,25 +145,12 @@ class CrewAssignment(db.Model):
         required_roles = crew.get_roles()
         assigned_roles = {r: 0 for r in required_roles.keys()}
         for assignment in crew.crew_assignments:
-            if assignment.status == 'accepted' and assignment.role == role:
+            if assignment.status in ['offered', 'accepted'] and assignment.role == role:
                 assigned_roles[assignment.role] += 1
         return assigned_roles[role] >= required_roles[role]
 
-    def accept(self):
-        if self.status != 'accepted':
-            self.status = 'accepted'
-            shift = Shift(
-                start=self.crew.start_time,
-                end=self.crew.end_time,
-                show_name=self.crew.event.show_name,
-                show_number=self.crew.event.show_number,
-                account_manager_id=self.crew.event.account_manager_id,
-                location=self.crew.event.location.name,
-                worker_id=self.worker_id,
-                crew_assignment=self
-            )
-            db.session.add(shift)
-            db.session.commit()
+
+
 
 
 class Expense(db.Model):
