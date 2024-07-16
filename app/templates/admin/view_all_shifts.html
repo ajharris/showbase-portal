@@ -2,30 +2,61 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block page_content %}
-<h1>All Shifts</h1>
+<h1>All Upcoming Shifts</h1>
 <table class="table">
     <thead>
         <tr>
-            <th>Shift ID</th>
+            <th>Start Time</th>
             <th>Event Name</th>
+            <th>Role</th>
+            <th>Worker</th>
+            <th>Status</th>
             <th>Assign Worker</th>
         </tr>
     </thead>
     <tbody>
-        {% for shift in shifts %}
+        {% for assignment in crew_assignments %}
         <tr>
-            <td>{{ shift.id }}</td>
-            <td>{{ shift.event.show_name }}</td>
+            <td>{{ assignment.assigned_crew.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ assignment.assigned_crew.event.show_name }}</td>
+            <td>{{ assignment.role }}</td>
             <td>
-                <form class="requires-crew-id" method="POST" action="{{ url_for('admin.assign_worker') }}">
-                    <input type="hidden" name="crew_id" value="{{ shift.id }}">
-                    <select name="worker_id" class="form-control">
-                        {% for worker in workers %}
-                        <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-primary">Assign</button>
-                </form>
+                {% if assignment.worker %}
+                    {{ assignment.worker.first_name }} {{ assignment.worker.last_name }}
+                {% else %}
+                    Unassigned
+                {% endif %}
+            </td>
+            <td>{{ assignment.status }}</td>
+            <td>
+                {% if not assignment.worker %}
+                    <form class="requires-crew-id" method="POST" action="{{ url_for('admin.assign_worker') }}">
+                        {{ form.csrf_token }}
+                        <input type="hidden" name="crew_id" value="{{ assignment.crew_id }}">
+                        <input type="hidden" name="role" value="{{ assignment.role }}">
+                        <select name="worker_id" class="form-control">
+                            {% for worker in workers %}
+                                {% if worker.is_available(assignment.assigned_crew.start_time, assignment.assigned_crew.end_time) %}
+                                    <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </form>
+                {% else %}
+                    {% if assignment.status == 'offered' %}
+                        <form method="POST" action="{{ url_for('admin.remind_worker', assignment_id=assignment.id) }}" style="display:inline;">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-warning">Remind</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin.revoke_offer', assignment_id=assignment.id) }}" style="display:inline;">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-danger">Revoke</button>
+                        </form>
+                    {% else %}
+                        Already Assigned
+                    {% endif %}
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
