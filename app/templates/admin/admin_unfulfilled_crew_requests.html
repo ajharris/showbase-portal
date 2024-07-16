@@ -2,40 +2,46 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block page_content %}
-<h1>Unfulfilled Crew Requests</h1>
+<h1>Crew Requests for Upcoming Events</h1>
 <table class="table">
     <thead>
         <tr>
             <th>Show Name</th>
             <th>Role</th>
-            <th>Assign Worker</th>
+            <th>Assigned Worker</th>
         </tr>
     </thead>
     <tbody>
-        {% for crew in unfulfilled_crews %}
-        {% for role, required_count in crew.get_roles().items() %}
-        {% set assigned_count = crew.get_assigned_role_count(role) %}
-        {% for _ in range(required_count - assigned_count) %}
-        <tr>
-            <td>{{ crew.event.show_name }}</td>
-            <td>{{ role }}</td>
-            <td>
-                <form method="POST" action="{{ url_for('admin.assign_worker') }}">
-                    {{ form.csrf_token }}
-                    <input type="hidden" name="crew_id" value="{{ crew.id }}">
-                    <input type="hidden" name="role" value="{{ role }}">
-                    <select name="worker" class="form-control" required>
-                        {% for worker in workers %}
-                        <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-primary">Assign</button>
-                </form>
-                <p>Debug: Crew ID - {{ crew.id }}, Role - {{ role }}</p>
-            </td>
-        </tr>
-        {% endfor %}
-        {% endfor %}
+        {% for crew in upcoming_crews %}
+            {% for role, required_count in crew.get_roles().items() %}
+                {% set assigned_count = crew.get_assigned_role_count(role) %}
+                {% for _ in range(required_count) %}
+                    <tr>
+                        <td>{{ crew.event.show_name }}</td>
+                        <td>{{ role }}</td>
+                        <td>
+                            {% set assignment = crew.get_assignment_for_role(role) %}
+                            {% if assignment %}
+                                {{ assignment.worker.first_name }} {{ assignment.worker.last_name }} ({{ assignment.status }})
+                            {% else %}
+                                <form method="POST" action="{{ url_for('admin.assign_worker') }}">
+                                    {{ form.csrf_token }}
+                                    <input type="hidden" name="crew_id" value="{{ crew.id }}">
+                                    <input type="hidden" name="role" value="{{ role }}">
+                                    <select name="worker" class="form-control" required>
+                                        {% for worker in workers %}
+                                            {% if worker.is_available(crew.start_time, crew.end_time) %}
+                                                <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Assign</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
         {% endfor %}
     </tbody>
 </table>
