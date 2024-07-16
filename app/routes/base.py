@@ -21,7 +21,7 @@ def home():
     
     # Debugging: Log the upcoming shifts
     for shift in upcoming_shifts:
-        current_app.logger.debug(f'Upcoming Shift: {shift.id} | Role: {shift.role} | Status: {shift.status} | Start: {shift.crew.start_time} | End: {shift.crew.end_time}')
+        current_app.logger.debug(f'Upcoming Shift: {shift.id} | Role: {shift.role} | Status: {shift.status} | Start: {shift.assigned_crew.start_time} | End: {shift.assigned_crew.end_time}')
     
     # Generate a limited number of pay periods
     start_date = datetime(2024, 1, 7)
@@ -44,7 +44,7 @@ def home():
     
     # Debugging: Log the shifts for the pay period
     for shift in shifts:
-        current_app.logger.debug(f'Shift: {shift.id} | Role: {shift.role} | Status: {shift.status} | Start: {shift.crew.start_time} | End: {shift.crew.end_time}')
+        current_app.logger.debug(f'Shift: {shift.id} | Role: {shift.role} | Status: {shift.status} | Start: {shift.assigned_crew.start_time} | End: {shift.assigned_crew.end_time}')
     
     expenses = Expense.query.filter(
         Expense.worker_id == current_user.id,
