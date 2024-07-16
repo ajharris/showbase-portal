@@ -1,0 +1,696 @@
+{
+    "workers": [
+        {
+            "id": 431,
+            "first_name": "Erica",
+            "last_name": "Wood",
+            "email": "vsims@example.net",
+            "phone_number": "758.669.0333",
+            "is_admin": false,
+            "is_account_manager": false,
+            "password_hash": "scrypt:32768:8:1$zFQdRXQ6SHjQhhob$73013bb0503812e02a8a2ee428ba31d380b0a530117f8882f987e489fe16cb480d61a1c0ce7ed4168ef0a800954de1ce7a4177de79c70130b00d00b524161027",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 694,
+            "first_name": "Jeremy",
+            "last_name": "Shaw",
+            "email": "william98@example.com",
+            "phone_number": "(354)805-3728x9370",
+            "is_admin": false,
+            "is_account_manager": false,
+            "password_hash": "scrypt:32768:8:1$MvGeV8KZWOMcGqmd$360be628fc7459d25d7d197eaf2c1fa5869cacb547fded6fcf400995c81948232ff0e29fd94784d90953da716bf26a5dd65e0743af7cfc7d230ad1467b94b120",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 108,
+            "first_name": "Megan",
+            "last_name": "Foster",
+            "email": "deborahblack@example.com",
+            "phone_number": "(800)420-1394x36474",
+            "is_admin": false,
+            "is_account_manager": false,
+            "password_hash": "scrypt:32768:8:1$ymICccSbimRLf6sp$49278782566fcc38b4333a82838647f92e0c9650a4415222d381fa102db19913aeadfb361566810f117259463c3a6bd74fd46068326ed676ac4533748ec78b10",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 908,
+            "first_name": "Courtney",
+            "last_name": "Rodriguez",
+            "email": "cynthia17@example.org",
+            "phone_number": "(417)233-4589",
+            "is_admin": false,
+            "is_account_manager": true,
+            "password_hash": "scrypt:32768:8:1$o3E5rnAaAwWUHFyD$565ff30b10d0342a27f98110cc50fa6cb5ff089aae25a1cc3817d23ed6e3f2fa6d1577087b306a39d6e8cf00d2b28bd7d37be56ffbd30947a50e3dbee07522da",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 944,
+            "first_name": "Michael",
+            "last_name": "Cooper",
+            "email": "bthornton@example.net",
+            "phone_number": "(441)610-3545x362",
+            "is_admin": true,
+            "is_account_manager": false,
+            "password_hash": "scrypt:32768:8:1$W2tgDMrxawAUEnw4$53e6c5dc45bb20b0009e602a27a6cb7e3d9018a3cfc814392308ee288908d472619b5a5a195348374c8f7e892bf9b5aad2bd8e8df892cfdc2f36f4011af6a4aa",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 301,
+            "first_name": "David",
+            "last_name": "Tran",
+            "email": "ihart@example.com",
+            "phone_number": "(689)742-8294x4036",
+            "is_admin": false,
+            "is_account_manager": false,
+            "password_hash": "scrypt:32768:8:1$k7Pej3lMBqZNxAFj$49168fb91f55d7629cdef1f79e22493909a447e9d82238cd2fd9239f45212f0a23c22346fa24520ffd853906085cb41962189c3764c09b7b935f3694d2a78ca4",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 184,
+            "first_name": "Cameron",
+            "last_name": "Campbell",
+            "email": "zlane@example.org",
+            "phone_number": "001-864-857-0505x0129",
+            "is_admin": false,
+            "is_account_manager": false,
+            "password_hash": "scrypt:32768:8:1$g6OhM3rHw9OVWOYe$eef1a472ed42b76f2005576b81b0e19f92705b6eda48632cf2428a038e8ff6c3952ec44448c1abc364f130848b5e17b7b690b6714d3fb822670bf8c649202e9c",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 421,
+            "first_name": "Ashley",
+            "last_name": "Mcdonald",
+            "email": "dale68@example.com",
+            "phone_number": "422-340-7363x048",
+            "is_admin": false,
+            "is_account_manager": true,
+            "password_hash": "scrypt:32768:8:1$rQ7rJo8CT8YQKkCK$f8741783dd566f382e09708f44e2ada8b9e8d57f98b1c5dbde6b8cd7c9bb25a820a69c5ae143f54f9c3546bcc19ab22e245fe321a579781e63f62b6403125907",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 941,
+            "first_name": "Nathan",
+            "last_name": "Meadows",
+            "email": "danielwhite@example.org",
+            "phone_number": "281-539-5149",
+            "is_admin": false,
+            "is_account_manager": true,
+            "password_hash": "scrypt:32768:8:1$jf6YeyCfJ8C1Cn0h$6394ccc943d738ac4467adf335dcdfa0e9eb35286f257613a87ac2df06ceb3049f8b7666ebe75ca81c53a48ee3681748c0375202082a0c81ac0ee5aeb9f1fca7",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        },
+        {
+            "id": 237,
+            "first_name": "Anthony",
+            "last_name": "Lewis",
+            "email": "hrose@example.org",
+            "phone_number": "001-591-762-0362x5484",
+            "is_admin": true,
+            "is_account_manager": false,
+            "password_hash": "scrypt:32768:8:1$if7tHg0XKm9zeeZV$0edb9c93e2a072b9af32aa5e3e71dbb75dd81ace0962047d898fa69dc5d7838bba642a7933a7506697e89fae016139e63140ec1e6ec19daaac09323fe85a8163",
+            "theme": "light",
+            "active": true,
+            "password_is_temp": true
+        }
+    ],
+    "locations": [
+        {
+            "id": 280,
+            "name": "Stokes-Phillips",
+            "address": "631 Taylor Forge Suite 211\nCarolynstad, TX 85379",
+            "loading_notes": "Receive Republican final sister in live how. Rise for lead admit care treatment. Through stop glass argue book.\nStyle decide bank mouth expect. Girl make program she process vote. Development color a evidence north manager.\nCenter kind use cause little true. Improve culture there life especially expect office. South by even organization.\nRed instead available play call. Determine provide card let number range. Ago machine ok society could.\nPass school what market response. With consumer against soon item wear.\nCitizen third reveal participant church old. Rate front mean bring bank beat.\nFear civil audience. Significant debate executive save one wait sense. Though become what.\nSuccessful reason Congress move example level before week. To rest risk relate task. Investment old nearly visit.\nFire soon blue value.\nDetermine care product nearly teach. Step recognize role fly area. Along up it lay. Beautiful town safe.\nFight firm particular else address. Because case huge cut build break table.",
+            "dress_code": "Drug also spring line wait.\nContinue with situation walk production scene civil. Realize box material production hotel control year fall. Often crime everyone participant great simply free born.",
+            "other_info": "Management able discuss. Building crime face me this field. Say along statement stock. Fly build ten world son magazine instead.\nCertain continue society summer start food go. Group car citizen thank suggest among edge.\nAs movement store hope person majority major. Common of part than adult them scene. Theory growth agreement spend film.\nImagine find man about doctor. Black democratic yet traditional.\nAction ready present through.\nBar as night contain within paper. Almost effect degree financial network base go. Subject manager generation present.\nSure kid main stop. Put second professor example particular deep.\nParticular industry grow or. Training agency hot girl onto often course media.\nBecause could exist.\nHusband wait role sea. Skin candidate crime professional agent visit blood term. Health officer official article nearly.\nAcross law send get minute along. Build doctor indeed series black. Moment page pretty any.\nCheck next sing. Mother specific gas page such few miss both. Past however current tax."
+        },
+        {
+            "id": 505,
+            "name": "Brown, Walker and Mcmahon",
+            "address": "385 Ronald Turnpike\nWest Deannaport, WV 48165",
+            "loading_notes": "Close rich start decision worker.\nGas reach go western participant room. Detail with military sound service heart.\nAllow choose learn policy which but red financial. Few few next group leader. Behind most family why.\nBecause last just other fight another they. Result necessary car seat onto enter mission power. Base knowledge cut popular interview hospital a.\nTry teacher someone. Decide almost head only represent.\nDraw blood national them unit. Must these have understand parent director vote fight. Cut card image lot.\nBaby former particularly movie.\nAbility around upon give really choice. Hospital key range tend clear however recognize yard. Wait instead entire me heavy.\nSenior idea model book. Through traditional military theory leader positive make.\nFocus pattern peace on truth long yeah memory. Whole relate yes notice a.\nPicture skin fine chance black civil alone. That fire avoid television old management debate. Simple save wrong create.",
+            "dress_code": "Candidate grow cup. Want try author.\nFinancial big out include age bad program. Company alone talk allow interest someone. Network husband certain subject. Generation hair majority single we weight.\nUnit different program rock my present forget.",
+            "other_info": "Tax night structure society really first save where. Similar increase east serve. Glass we hear allow quality.\nFar next action own. Writer per dream away area. Body wind among house reason century might.\nAgent south population radio easy. As quite me worry popular. Seat institution change TV.\nMission significant heavy together carry service. Three share suffer particular have conference fire. Small star return hand phone wear.\nPicture process head much start.\nHim according military today traditional list. Statement public third.\nShow city close your order must evidence. Event wish whose five coach someone. Production worry film.\nSimilar indeed challenge enough trouble important support black. Above than will magazine. Memory real beat walk particularly wait daughter.\nMain prepare party carry system speak goal.\nCheck draw development with western. Baby respond free parent talk general lot. His example same born."
+        },
+        {
+            "id": 11,
+            "name": "Richardson Ltd",
+            "address": "2534 Charles Curve Apt. 653\nDuncanstad, GA 82206",
+            "loading_notes": "Example teacher however fall rule.\nThink democratic body my tax speak enter. Economy development inside yard trouble data need Mrs. School brother this gun.\nHouse camera hand sing. Town age fine change middle above just.\nIncluding single away protect people fund religious.\nDetail education top truth six next skill. Since reason party television particular campaign game.\nPoint inside agreement professional series. Agreement create interesting. Certain hospital less simple window. Treatment attack including hotel listen economy.\nMoment half policy beautiful attorney behavior. System gas floor major operation leave. Herself many use.\nMorning expert prevent computer agent respond. Us must might set drop seat. One newspaper book.\nOk record out force.\nMovie must plant arm. Off success early trade health system myself outside. Owner forward water little deep that question need.\nWhite worry bar we. Play national town American. Parent cell impact must owner.",
+            "dress_code": "Wide low learn follow development above. Skill different fire material production radio.\nPush others adult president program. Project too detail or. Determine maybe general friend.",
+            "other_info": "Choose manager positive low son accept room. For wind left light walk. Participant order task heavy argue ball improve.\nList show city. Story deep attack before Mrs network other. Paper near let time.\nSmile name must side. Artist political fast make different develop easy. Answer understand commercial western available get.\nTeach leader including part exist course.\nFloor represent paper argue film. Help on film effect pay short. Produce lay sea read education current kid security.\nHuman reach reality ever far many. Citizen avoid for foreign quickly cell kind.\nMay represent keep language support while. Board break wall another letter.\nMr vote the ok worry student environment. Book old effect fly. Glass pass three left.\nMiddle hit American out.\nUnit democratic there hundred air. Bill receive raise recently build other.\nWrite customer significant total husband. Standard imagine week together dog.\nBy eye material lead. Enjoy baby present heart one first. Ask help agreement simply peace travel nor."
+        },
+        {
+            "id": 525,
+            "name": "Boyd LLC",
+            "address": "PSC 6419, Box 8587\nAPO AA 32665",
+            "loading_notes": "Fight bag arrive big. Impact four fight reduce accept Republican. Write seat mention reduce. Day argue effect explain.\nPosition memory writer produce.\nFew far energy seven sense. Beyond wear organization option book success staff. Movement wish but enter least determine analysis.\nEducation third stay majority structure day play across. Stock enjoy war stock employee require. Or here plant great leave.\nSix find approach evening point yourself above. Serve make character lay because present. Soldier care institution man computer.\nStore interest worker just daughter. Beat develop hospital surface pick.\nBrother bank he article cause tough staff. Something guess high stay north else personal building. Lose democratic art street deep share.\nCreate season maintain pretty college institution. Beautiful back key real particularly money customer hand. Later large what your concern.\nMaintain receive hit power method inside focus Congress. Between enter possible six.",
+            "dress_code": "Green public run argue nearly market. Certain bring continue fight raise.\nBreak according create new part marriage teach. Office arrive which left.",
+            "other_info": "The sure development program hit approach foot. In activity end exactly.\nRelationship growth example answer eat. Door political building special pressure.\nOver movie player not believe director trial big. City simply win we office anyone level.\nProject official knowledge hundred home view. Game admit trip glass less collection cost. Law talk professor charge true. Practice firm my reveal health community.\nStructure image employee month. Particularly policy focus drop arrive sure politics.\nRequire view language already. Know field town thousand mission and. Agreement name street recent.\nInterest lawyer see girl employee design. Production policy across school expert student. Without smile standard newspaper trip.\nFull effect peace treatment.\nPaper poor rate stock. Loss thought child participant wide record evidence.\nPrepare hot parent activity science cut. Your large seem ability me weight.\nStation out audience Congress piece care. Future may figure between investment science. Cause do anything."
+        },
+        {
+            "id": 390,
+            "name": "Lopez-Ramirez",
+            "address": "57440 Browning Pines Suite 112\nSouth Kylefurt, AK 50499",
+            "loading_notes": "Determine open apply detail. Receive quite price behavior.\nLong front rather find challenge since four. Suggest in his commercial. Tough assume however without.\nCourt some give travel stock help fly. Condition place once red dream yeah subject. Safe great player official reflect per benefit benefit.\nHappen mention main feeling. Detail Mrs area hit deal into identify. Later explain would join bag.\nReceive can campaign message expert fly. Its game picture central.\nDiscover data cover coach actually test front. Notice total upon figure rise candidate myself.\nCase among better just successful. Activity though player strong medical sign. Evening less one entire rise.\nMiddle he opportunity never water. Force fact discover onto.\nIts woman continue hair. Tax explain physical because food ten wife.\nGoal that develop I. Certainly moment miss among science.\nProve face star happy answer attorney. Soldier mention building like maybe card responsibility.",
+            "dress_code": "In yard material marriage ahead. Executive organization until message. Would tell somebody without boy.\nPer food ten claim mission old receive my. Among campaign believe buy along president. Order nearly film specific rule Congress push.",
+            "other_info": "Catch hotel second much list. Mother expert and but. Number stage control. Perhaps employee education about sort consumer.\nCommercial lead water south car career among. Such free player right between.\nWhatever culture help onto former rest. Clearly yard detail some activity newspaper.\nSince last fish specific hit sport other wait. Step decision power might moment organization.\nRespond change cause most discover. Say beautiful section quite. Along throughout grow hair buy break.\nEarly stage other threat network. Drop face state world yet black.\nRecently interview anyone. Building point cell care break.\nAttorney where it cause beat low present. Agency keep history hot before control too matter.\nJoin research role save. Prove site success dinner force.\nThough fight pretty develop fire where up off. Without attack their health. Something suggest media now gun purpose glass usually.\nMission fall herself all note. Statement should range building. Last including finish strategy speak second."
+        }
+    ],
+    "events": [
+        {
+            "id": 403,
+            "show_name": "Enterprise-wide heuristic synergy",
+            "show_number": 931,
+            "account_manager_id": 908,
+            "location_id": 505,
+            "sharepoint": "http://www.gregory.com/",
+            "active": true
+        },
+        {
+            "id": 417,
+            "show_name": "Seamless mission-critical pricing structure",
+            "show_number": 602,
+            "account_manager_id": 941,
+            "location_id": 390,
+            "sharepoint": "https://www.torres.com/",
+            "active": true
+        },
+        {
+            "id": 782,
+            "show_name": "Right-sized dedicated Graphical User Interface",
+            "show_number": 872,
+            "account_manager_id": 941,
+            "location_id": 505,
+            "sharepoint": "https://ramirez.org/",
+            "active": true
+        },
+        {
+            "id": 911,
+            "show_name": "Cross-group uniform project",
+            "show_number": 691,
+            "account_manager_id": 908,
+            "location_id": 505,
+            "sharepoint": "http://schneider.com/",
+            "active": true
+        },
+        {
+            "id": 443,
+            "show_name": "Reduced even-keeled protocol",
+            "show_number": 490,
+            "account_manager_id": 908,
+            "location_id": 390,
+            "sharepoint": "https://www.carlson.com/",
+            "active": true
+        },
+        {
+            "id": 954,
+            "show_name": "Operative scalable moratorium",
+            "show_number": 619,
+            "account_manager_id": 421,
+            "location_id": 11,
+            "sharepoint": "http://www.martinez.com/",
+            "active": true
+        },
+        {
+            "id": 226,
+            "show_name": "Phased multi-tasking neural-net",
+            "show_number": 209,
+            "account_manager_id": 908,
+            "location_id": 280,
+            "sharepoint": "http://www.davis-rogers.net/",
+            "active": true
+        },
+        {
+            "id": 511,
+            "show_name": "Organic 3rdgeneration synergy",
+            "show_number": 63,
+            "account_manager_id": 941,
+            "location_id": 390,
+            "sharepoint": "https://www.monroe-hudson.biz/",
+            "active": true
+        },
+        {
+            "id": 213,
+            "show_name": "Grass-roots logistical artificial intelligence",
+            "show_number": 127,
+            "account_manager_id": 421,
+            "location_id": 525,
+            "sharepoint": "https://www.campbell.com/",
+            "active": true
+        },
+        {
+            "id": 107,
+            "show_name": "Secured bandwidth-monitored workforce",
+            "show_number": 29,
+            "account_manager_id": 421,
+            "location_id": 280,
+            "sharepoint": "http://www.brown-thomas.info/",
+            "active": true
+        }
+    ],
+    "crews": [
+        {
+            "id": 438,
+            "event_id": 911,
+            "start_time": "2024-03-30T12:15:07.065608",
+            "end_time": "2024-02-03T18:14:47.621514",
+            "roles": "{\"role1\": 3}",
+            "shift_type": "reflect",
+            "description": "Reveal fish news off price. Serve college goal article sometimes member. White beat commercial charge best.\nEconomic goal step. Life mother itself several owner standard."
+        },
+        {
+            "id": 850,
+            "event_id": 226,
+            "start_time": "2024-07-05T09:38:34.553629",
+            "end_time": "2024-06-14T10:18:07.884071",
+            "roles": "{\"role1\": 4}",
+            "shift_type": "size",
+            "description": "Dark some hotel. One blood money hand many.\nFirst south other responsibility night those more. Style majority care. Coach through show like."
+        },
+        {
+            "id": 53,
+            "event_id": 226,
+            "start_time": "2024-04-28T06:23:52.933430",
+            "end_time": "2024-06-15T18:53:19.807275",
+            "roles": "{\"role1\": 1}",
+            "shift_type": "civil",
+            "description": "Condition worry report answer call their paper president. Rest two fast site purpose stuff buy foot.\nOf election draw summer. Easy staff sport institution."
+        },
+        {
+            "id": 6,
+            "event_id": 954,
+            "start_time": "2024-02-22T06:12:15.321099",
+            "end_time": "2024-05-31T19:07:59.077654",
+            "roles": "{\"role1\": 4}",
+            "shift_type": "during",
+            "description": "The strong population media. Conference certainly always mission war example available put. Entire quite peace whose project. Low sit kid compare."
+        },
+        {
+            "id": 508,
+            "event_id": 443,
+            "start_time": "2024-05-31T19:03:36.301962",
+            "end_time": "2024-04-14T20:11:00.797353",
+            "roles": "{\"role1\": 5}",
+            "shift_type": "network",
+            "description": "Including when article movie and home daughter age. Less third step father field stock fine. Remain real run scene clearly project.\nInteresting owner always. Sport example medical set leader talk."
+        },
+        {
+            "id": 726,
+            "event_id": 403,
+            "start_time": "2024-01-20T20:10:06.068193",
+            "end_time": "2024-04-01T09:15:40.213947",
+            "roles": "{\"role1\": 1}",
+            "shift_type": "behind",
+            "description": "Glass show without south participant. Care money result guess talk weight."
+        },
+        {
+            "id": 88,
+            "event_id": 107,
+            "start_time": "2024-01-12T22:21:35.507344",
+            "end_time": "2024-04-09T09:50:41.156287",
+            "roles": "{\"role1\": 3}",
+            "shift_type": "color",
+            "description": "Deep training watch lead along pull. Career none board.\nWhen item step lawyer hour see truth. Through town factor skin."
+        },
+        {
+            "id": 305,
+            "event_id": 226,
+            "start_time": "2024-05-10T04:00:50.849968",
+            "end_time": "2024-03-25T14:28:45.196273",
+            "roles": "{\"role1\": 2}",
+            "shift_type": "in",
+            "description": "Address close sort check box evidence its voice. Easy entire right.\nThe must set authority movie sell. Man hour media performance."
+        },
+        {
+            "id": 106,
+            "event_id": 911,
+            "start_time": "2024-04-22T21:25:04.393588",
+            "end_time": "2024-03-08T22:57:14.929744",
+            "roles": "{\"role1\": 4}",
+            "shift_type": "capital",
+            "description": "Hear money amount administration. Set second produce camera memory newspaper senior. Grow although him gas whatever right pattern."
+        },
+        {
+            "id": 823,
+            "event_id": 403,
+            "start_time": "2024-01-31T06:37:06.464274",
+            "end_time": "2024-05-23T12:02:43.304053",
+            "roles": "{\"role1\": 2}",
+            "shift_type": "major",
+            "description": "Court you thing sure. Up can behind word I cup.\nSize our easy old choice.\nPast word animal present young traditional lead participant. Nearly buy old large maybe east sure."
+        }
+    ],
+    "expenses": [
+        {
+            "id": 764,
+            "receipt_number": "tBCS-22728546",
+            "date": "2024-02-11",
+            "account_manager_id": 908,
+            "show_name": "Integrated 5thgeneration software",
+            "show_number": 602,
+            "details": "Price stand himself military husband almost. Anyone tend happy message start wonder. Reveal building financial science race. Price more course field can.",
+            "net": 24300,
+            "hst": 65,
+            "receipt_filename": "every.pdf",
+            "worker_id": 301
+        },
+        {
+            "id": 46,
+            "receipt_number": "StMi-31938259",
+            "date": "2024-01-04",
+            "account_manager_id": 941,
+            "show_name": "Optimized disintermediate Graphic Interface",
+            "show_number": 872,
+            "details": "Run direction old. Discussion allow sea draw father blue fire throughout.\nRead color others relationship benefit political could. He side listen man quality.",
+            "net": 49391,
+            "hst": 38,
+            "receipt_filename": "order.pdf",
+            "worker_id": 694
+        },
+        {
+            "id": 455,
+            "receipt_number": "omHu-40482122",
+            "date": "2024-05-06",
+            "account_manager_id": 941,
+            "show_name": "Multi-lateral multimedia strategy",
+            "show_number": 931,
+            "details": "Along may record. Thank option operation act return window. Both current main religious into firm.",
+            "net": 44637,
+            "hst": 80,
+            "receipt_filename": "yes.pdf",
+            "worker_id": 301
+        },
+        {
+            "id": 735,
+            "receipt_number": "zhJe-36127680",
+            "date": "2024-05-03",
+            "account_manager_id": 941,
+            "show_name": "Synchronized bottom-line toolset",
+            "show_number": 691,
+            "details": "These system mission security lawyer maybe. Artist well listen soon off American.\nLook action home toward she politics experience later. Research car happen interview same low doctor I.",
+            "net": 39767,
+            "hst": 20,
+            "receipt_filename": "story.pdf",
+            "worker_id": 908
+        },
+        {
+            "id": 774,
+            "receipt_number": "Ozsl-14851394",
+            "date": "2024-03-18",
+            "account_manager_id": 421,
+            "show_name": "Self-enabling neutral array",
+            "show_number": 691,
+            "details": "Tonight cold the game everything care provide. Quite maintain significant dinner compare. Officer another relationship network.",
+            "net": 7233,
+            "hst": 64,
+            "receipt_filename": "bar.pdf",
+            "worker_id": 108
+        },
+        {
+            "id": 45,
+            "receipt_number": "ACWW-89577590",
+            "date": "2024-07-02",
+            "account_manager_id": 421,
+            "show_name": "Optimized well-modulated algorithm",
+            "show_number": 691,
+            "details": "Finish sort become final force case box. Some employee author build military say consider teacher.\nLot fast involve girl. Foot season out put financial feeling whole.",
+            "net": 71467,
+            "hst": 40,
+            "receipt_filename": "themselves.pdf",
+            "worker_id": 694
+        },
+        {
+            "id": 750,
+            "receipt_number": "ooie-91400600",
+            "date": "2024-07-07",
+            "account_manager_id": 908,
+            "show_name": "Switchable neutral leverage",
+            "show_number": 63,
+            "details": "Knowledge any point evidence heart. Each clear get.\nHeart end none. Across high theory American. Represent drug less us truth accept type.",
+            "net": 2412,
+            "hst": 1,
+            "receipt_filename": "out.pdf",
+            "worker_id": 237
+        },
+        {
+            "id": 280,
+            "receipt_number": "SdRn-43400615",
+            "date": "2024-06-14",
+            "account_manager_id": 941,
+            "show_name": "Upgradable composite knowledge user",
+            "show_number": 63,
+            "details": "Energy respond life national network article five. Within me walk next system whole. Draw everyone fill attorney treat together. Two suddenly whole listen natural.",
+            "net": 30413,
+            "hst": 77,
+            "receipt_filename": "main.pdf",
+            "worker_id": 301
+        },
+        {
+            "id": 877,
+            "receipt_number": "ERAW-91475236",
+            "date": "2024-04-25",
+            "account_manager_id": 421,
+            "show_name": "Total empowering capacity",
+            "show_number": 63,
+            "details": "Anything until just garden science something. Wife administration drop system. Notice society until.\nMinute suggest board. Allow enjoy instead listen again not.",
+            "net": 71069,
+            "hst": 89,
+            "receipt_filename": "method.pdf",
+            "worker_id": 941
+        },
+        {
+            "id": 25,
+            "receipt_number": "SbBw-87018086",
+            "date": "2024-04-24",
+            "account_manager_id": 941,
+            "show_name": "Reverse-engineered transitional middleware",
+            "show_number": 209,
+            "details": "Degree close ready speak down. Light east middle. Ok including nice father ask fear buy. Include able lawyer run.",
+            "net": 25780,
+            "hst": 14,
+            "receipt_filename": "wrong.pdf",
+            "worker_id": 431
+        }
+    ],
+    "shifts": [
+        {
+            "id": 503,
+            "start": "2024-01-15T10:38:33.994893",
+            "end": "2024-04-07T12:31:25.872872",
+            "show_name": "Advanced tertiary Local Area Network",
+            "show_number": 490,
+            "account_manager_id": 908,
+            "location": "25463 Mckenzie Mill\nNorth Rachel, IL 06827",
+            "worker_id": 184,
+            "crew_assignment_id": 56
+        },
+        {
+            "id": 180,
+            "start": "2024-06-15T13:15:54.770394",
+            "end": "2024-01-07T23:26:04.827132",
+            "show_name": "Customer-focused actuating info-mediaries",
+            "show_number": 619,
+            "account_manager_id": 941,
+            "location": "294 Vincent Underpass\nEast Tanner, NE 67996",
+            "worker_id": 431,
+            "crew_assignment_id": 190
+        },
+        {
+            "id": 247,
+            "start": "2024-04-04T21:42:08.460465",
+            "end": "2024-02-19T11:23:54.436339",
+            "show_name": "Enhanced encompassing adapter",
+            "show_number": 490,
+            "account_manager_id": 421,
+            "location": "757 James Villages Suite 778\nFreemanmouth, FL 65123",
+            "worker_id": 431,
+            "crew_assignment_id": 450
+        },
+        {
+            "id": 15,
+            "start": "2024-04-25T23:05:44.692959",
+            "end": "2024-01-05T17:25:43.926158",
+            "show_name": "Future-proofed fault-tolerant circuit",
+            "show_number": 63,
+            "account_manager_id": 941,
+            "location": "868 Joshua Walk Apt. 020\nSouth Steven, ID 48980",
+            "worker_id": 421,
+            "crew_assignment_id": 570
+        },
+        {
+            "id": 182,
+            "start": "2024-05-30T19:27:10.103755",
+            "end": "2024-01-23T17:03:04.951952",
+            "show_name": "Innovative bottom-line intranet",
+            "show_number": 691,
+            "account_manager_id": 908,
+            "location": "8333 Michelle Springs Suite 725\nTrevinochester, NJ 75978",
+            "worker_id": 944,
+            "crew_assignment_id": 702
+        },
+        {
+            "id": 390,
+            "start": "2024-03-05T05:49:31.588161",
+            "end": "2024-03-30T21:07:23.334159",
+            "show_name": "Front-line impactful policy",
+            "show_number": 209,
+            "account_manager_id": 421,
+            "location": "502 Anderson Junction Suite 134\nTracyside, MT 41248",
+            "worker_id": 184,
+            "crew_assignment_id": 467
+        },
+        {
+            "id": 922,
+            "start": "2024-01-22T04:14:45.537048",
+            "end": "2024-01-22T09:40:48.475616",
+            "show_name": "Devolved intangible methodology",
+            "show_number": 490,
+            "account_manager_id": 908,
+            "location": "USS Hendricks\nFPO AE 64763",
+            "worker_id": 431,
+            "crew_assignment_id": 728
+        },
+        {
+            "id": 820,
+            "start": "2024-01-25T04:54:49.886114",
+            "end": "2024-07-11T15:56:56.562263",
+            "show_name": "De-engineered composite standardization",
+            "show_number": 63,
+            "account_manager_id": 908,
+            "location": "42299 Robinson Course\nAlanside, NM 64636",
+            "worker_id": 108,
+            "crew_assignment_id": 22
+        },
+        {
+            "id": 564,
+            "start": "2024-02-16T08:59:12.246788",
+            "end": "2024-01-05T16:53:52.651743",
+            "show_name": "Optional high-level database",
+            "show_number": 490,
+            "account_manager_id": 908,
+            "location": "3141 Greene Road\nBergchester, WI 63053",
+            "worker_id": 421,
+            "crew_assignment_id": 97
+        },
+        {
+            "id": 316,
+            "start": "2024-05-03T06:03:39.772729",
+            "end": "2024-01-06T20:44:22.529573",
+            "show_name": "Customizable asymmetric task-force",
+            "show_number": 29,
+            "account_manager_id": 908,
+            "location": "Unit 8803 Box 4390\nDPO AP 70303",
+            "worker_id": 944,
+            "crew_assignment_id": 328
+        }
+    ],
+    "notes": [
+        {
+            "id": 660,
+            "content": "Offer feel garden decade. Only carry chance left foreign.\nInstead measure off city street mention. Player this particular huge wait certainly exist visit. See member investment.",
+            "created_at": "2024-04-01T16:54:13.852709",
+            "event_id": 417,
+            "worker_id": 108,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 240,
+            "content": "Attack star past history loss politics practice leg. Type college instead but. What our should direction.",
+            "created_at": "2024-01-27T22:21:19.457936",
+            "event_id": 911,
+            "worker_id": 941,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 424,
+            "content": "Whom plan policy study response. Leave true fill quality reason weight now. Theory clearly write black culture.",
+            "created_at": "2024-02-06T20:37:22.428592",
+            "event_id": 107,
+            "worker_id": 431,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 213,
+            "content": "Speak walk take affect kid require. Plan treatment computer race might same fear.\nWould mention cell summer provide. Group big by course third close two. Speech play rate fast many trip city.",
+            "created_at": "2024-03-01T07:26:27.240140",
+            "event_id": 107,
+            "worker_id": 431,
+            "account_manager_only": true,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 171,
+            "content": "Ask economic find federal. So big person training friend.\nItem policy necessary sound nature space.",
+            "created_at": "2024-03-29T19:21:52.878427",
+            "event_id": 511,
+            "worker_id": 301,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 907,
+            "content": "Also movement not story lose manage specific. Where especially peace item shake southern.",
+            "created_at": "2024-04-17T17:49:08.985084",
+            "event_id": 443,
+            "worker_id": 944,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 228,
+            "content": "Detail environmental put cultural perhaps. Why effort card when wind generation Mrs. Determine general hot right entire avoid plant.",
+            "created_at": "2024-03-04T12:16:53.879945",
+            "event_id": 911,
+            "worker_id": 908,
+            "account_manager_only": true,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 346,
+            "content": "Improve try green trouble pressure deal. Leg close much about far whether. Line garden social again idea front. Certain father memory after mother produce view miss.\nBefore cut common owner.",
+            "created_at": "2024-07-03T22:35:48.162482",
+            "event_id": 417,
+            "worker_id": 944,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 153,
+            "content": "Imagine wind scientist answer significant note. Hair crime group. Laugh significant policy possible.",
+            "created_at": "2024-05-03T10:47:22.318574",
+            "event_id": 954,
+            "worker_id": 944,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        },
+        {
+            "id": 848,
+            "content": "Page behavior animal knowledge television sport. Avoid every red hold could rate. Kitchen quality director send western. Deep former learn.",
+            "created_at": "2024-06-21T01:16:41.748135",
+            "event_id": 226,
+            "worker_id": 944,
+            "account_manager_only": false,
+            "account_manager_and_td_only": false
+        }
+    ]
+}
