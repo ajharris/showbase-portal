@@ -32,8 +32,17 @@ def edit_worker(worker_id):
 @admin_bp.route('/view_all_shifts')
 @login_required
 def view_all_shifts():
-    shifts = []  # Replace with actual data retrieval logic
-    return render_template('admin/view_all_shifts.html', shifts=shifts)
+    now = datetime.utcnow()
+    # Fetch all upcoming crew assignments with status 'unassigned', 'offered', or 'accepted'
+    crew_assignments = CrewAssignment.query.join(Crew).filter(
+        CrewAssignment.status.in_(['offered', 'accepted']),
+        Crew.start_time >= now
+    ).order_by(Crew.start_time).all()
+
+    workers = Worker.query.all()
+    form = AssignWorkerForm()
+    return render_template('admin/view_all_shifts.html', crew_assignments=crew_assignments, workers=workers, form=form)
+
 
 @admin_bp.route('/save_view_mode', methods=['POST'])
 @login_required
@@ -72,10 +81,10 @@ def unfulfilled_crew_requests():
 
         return redirect(url_for('admin.unfulfilled_crew_requests'))
 
-    # Fetch all upcoming crews
-    upcoming_crews = Crew.query.filter(Crew.end_time >= datetime.utcnow()).all()
+    # Fetch all crews that are not fully fulfilled
+    unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
     workers = Worker.query.all()
-    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, upcoming_crews=upcoming_crews, workers=workers)
+    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
 
 
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
@@ -214,3 +223,20 @@ def assign_worker():
     unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
     workers = Worker.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
+
+@admin_bp.route('/remind_worker/<int:assignment_id>', methods=['POST'])
+@login_required
+def remind_worker(assignment_id):
+    assignment = CrewAssignment.query.get_or_404(assignment_id)
+    # Logic to send a reminder to the worker (e.g., sending an email or notification)
+    flash(f'Reminder sent to {assignment.worker.first_name} {assignment.worker.last_name}.', 'success')
+    return redirect(url_for('admin.view_all_shifts'))
+
+@admin_bp.route('/revoke_offer/<int:assignment_id>', methods=['POST'])
+@login_required
+def revoke_offer(assignment_id):
+    assignment = CrewAssignment.query.get_or_404(assignment_id)
+    assignment.status = 'revoked'
+    db.session.commit()
+    flash(f'Offer revoked for role {assignment.role} at {assignment.assigned_crew.event.show_name}.', 'success')
+    return redirect(url_for('admin.view_all_shifts'))
