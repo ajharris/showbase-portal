@@ -46,22 +46,17 @@ def save_view_mode():
 @login_required
 def unfulfilled_crew_requests():
     form = AssignWorkerForm()
+
     # Set the worker choices before form validation
     form.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
-    
+
     if form.validate_on_submit():
         worker_id = form.worker.data
         crew_id = form.crew_id.data
         role = form.role.data
-        logger.debug(f"Form Data - Worker ID: {worker_id}, Crew ID: {crew_id}, Role: {role}")
 
         try:
-            # Check if the role is already fulfilled
-            if CrewAssignment.is_role_fulfilled(crew_id, role):
-                flash('This role is already fulfilled.', 'warning')
-                return redirect(url_for('admin.unfulfilled_crew_requests'))
-
-            # Create the crew assignment
+            # Create the crew assignment with status 'offered'
             assignment = CrewAssignment(
                 crew_id=crew_id,
                 worker_id=worker_id,
@@ -70,19 +65,18 @@ def unfulfilled_crew_requests():
             )
             db.session.add(assignment)
             db.session.commit()
-            assigned_worker_name = next((name for id, name in form.worker.choices if id == worker_id), None)
-            flash(f'Worker {assigned_worker_name} assigned successfully!', 'success')
+            flash(f'Worker assigned successfully!', 'success')
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
-            logger.error(f"Error assigning worker: {str(e)}")
-        return redirect(url_for('admin.unfulfilled_crew_requests'))
-    else:
-        logger.debug(f"Form errors: {form.errors}")
 
-    unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
+        return redirect(url_for('admin.unfulfilled_crew_requests'))
+
+    # Fetch all upcoming crews
+    upcoming_crews = Crew.query.filter(Crew.end_time >= datetime.utcnow()).all()
     workers = Worker.query.all()
-    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
+    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, upcoming_crews=upcoming_crews, workers=workers)
+
 
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
 @login_required
@@ -186,19 +180,14 @@ logger.addHandler(handler)
 @login_required
 def assign_worker():
     form = AssignWorkerForm()
-    
+
     # Set the worker choices before form validation
     form.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
-    assigned_worker_name = None
 
-    logger.debug(f"Worker choices: {form.worker.choices}")
-
-    logger.debug(f"AssignWorkerForm data: {request.form}")
     if form.validate_on_submit():
         worker_id = form.worker.data
         crew_id = form.crew_id.data
         role = form.role.data
-        logger.debug(f"Form Data - Worker ID: {worker_id}, Crew ID: {crew_id}, Role: {role}")
 
         try:
             # Check if the role is already fulfilled
@@ -206,7 +195,7 @@ def assign_worker():
                 flash('This role is already fulfilled.', 'warning')
                 return redirect(url_for('admin.unfulfilled_crew_requests'))
 
-            # Create the crew assignment
+            # Create the crew assignment with status 'offered'
             assignment = CrewAssignment(
                 crew_id=crew_id,
                 worker_id=worker_id,
@@ -215,18 +204,12 @@ def assign_worker():
             )
             db.session.add(assignment)
             db.session.commit()
-            assigned_worker_name = next((name for id, name in form.worker.choices if id == worker_id), None)
-            flash(f'Worker {assigned_worker_name} assigned successfully!', 'success')
+            flash(f'Worker assigned successfully!', 'success')
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
-            logger.error(f"Error assigning worker: {str(e)}")
+
         return redirect(url_for('admin.unfulfilled_crew_requests'))
-    else:
-        logger.debug(f"Form errors: {form.errors}")
-        logger.debug(f"Field worker: {form.worker.data}")
-        logger.debug(f"Field crew_id: {form.crew_id.data}")
-        logger.debug(f"Field role: {form.role.data}")
 
     unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
     workers = Worker.query.all()
