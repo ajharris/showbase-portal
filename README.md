@@ -67,7 +67,7 @@ Sync with Smart Sheet for project management and Salesforce for CRM, providing a
 
 ### Backend Setup
 - [x] Configure PostgreSQL Database - hosted on Heroku/AWS
-> - [x] Define Database Models - needs work some overlap should be removed
+- [x] Define Database Models - needs work some overlap should be removed
 - [x] Set Up Flask
 
 ### User Authentication

@@ -28,36 +28,29 @@
             <ul class="nav navbar-nav">
                 {% if current_user.is_authenticated %}
                     <li><a href="/">Home</a></li>
-                    
                 {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
                     {% if not session.get('view_as_employee', False) %}
                         {% if current_user.is_admin %}
-                            <li class="dropdown admin-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
-                                <ul class="dropdown-menu">
-                                    <li class="admin-field"><a href="{{ url_for('admin.create_worker') }}">Create Worker</a></li>
-                                    <li class="admin-field"><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
-                                    <li class="admin-field"><a href="{{ url_for('admin.view_all_shifts') }}">View All Shifts</a></li>
-                                    <li class="admin-field"><a href="{{ url_for('misc.timesheet') }}">Timesheet</a></li>
-                                    <li class="admin-field"><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
-                                    <li class="admin-field"><a href="{{ url_for('admin.unfulfilled_crew_requests') }}">Crew Requests</a></li>
-                                    <li class="admin-field"><a href="{{ url_for('backup.show_backup_restore') }}">Backup/Restore Database</a></li>
-                                    <li class="admin-field"><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
-                                </ul>
-                            </li>
+                            {{ render_dropdown('Admin', [
+                                ('admin.create_worker', 'Create Worker'),
+                                ('events.create_event', 'Create Event'),
+                                ('admin.view_all_shifts', 'View All Shifts'),
+                                ('misc.timesheet', 'Timesheet'),
+                                ('misc.expenses', 'Expenses'),
+                                ('admin.unfulfilled_crew_requests', 'Crew Requests'),
+                                ('backup.show_backup_restore', 'Backup/Restore Database'),
+                                ('admin.add_location', 'Add/Edit Location')
+                            ], 'admin-field', 'admin-dropdown') }}
                         {% endif %}
                         {% if current_user.is_admin or current_user.is_account_manager %}
-                            <li class="dropdown account-manager-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Manager <span class="caret"></span></a>
-                                <ul class="dropdown-menu">
-                                    <li class="account-manager-field"><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
-                                    <li class="account-manager-field"><a href="{{ url_for('events.list_events') }}">List Events</a></li>
-                                    <li class="account-manager-field"><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
-                                </ul>
-                            </li>
+                            {{ render_dropdown('Account Manager', [
+                                ('events.create_event', 'Create Event'),
+                                ('events.list_events', 'List Events'),
+                                ('admin.add_location', 'Add/Edit Location')
+                            ], 'account-manager-field', 'account-manager-dropdown') }}
                         {% endif %}
                     {% endif %}
                     <li><a href="{{ url_for('profile.update_profile', worker_id=current_user.id) }}">Update Profile</a></li>
@@ -97,8 +90,6 @@
 </nav>
 {% endblock %}
 
-
-
 {% block content %}
 <div class="container">
     {% block page_content %}
@@ -123,3 +114,14 @@
     </div>
   {% endif %}
 {% endwith %}
+
+{% macro render_dropdown(title, items, item_class, dropdown_class) %}
+<li class="dropdown {{ dropdown_class }}">
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ title }} <span class="caret"></span></a>
+    <ul class="dropdown-menu">
+        {% for url, label in items %}
+            <li class="{{ item_class }}"><a href="{{ url_for(url) }}">{{ label }}</a></li>
+        {% endfor %}
+    </ul>
+</li>
+{% endmacro %}

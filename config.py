@@ -1,20 +1,22 @@
 import os
+from dotenv import load_dotenv
+from flask import Flask
+
+load_dotenv()  # Load environment variables from .env file
 
 def fix_postgres_dialect(url):
     if url and url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql://", 1)
     return url
 
-SQLALCHEMY_DATABASE_URI = fix_postgres_dialect(os.getenv("SQLALCHEMY_DATABASE_URI"))
-
-if not SQLALCHEMY_DATABASE_URI:
-    raise ValueError("SQLALCHEMY_DATABASE_URI environment variable is not set or is invalid")
-
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')  # Provide a default for SECRET_KEY
     
     # Use the fixed SQLALCHEMY_DATABASE_URI
-    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
+    SQLALCHEMY_DATABASE_URI = fix_postgres_dialect(os.getenv("DATABASE_URL"))
+    
+    if not SQLALCHEMY_DATABASE_URI:
+        raise ValueError("SQLALCHEMY_DATABASE_URI environment variable is not set or is invalid")
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'uploads/receipts'
@@ -27,3 +29,13 @@ class Config:
     MAIL_USERNAME = os.getenv('EMAIL_USER')
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
     MAIL_DEFAULT_SENDER = os.getenv('EMAIL_USER')
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    # Initialize extensions and blueprints here
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
+    app.run()
