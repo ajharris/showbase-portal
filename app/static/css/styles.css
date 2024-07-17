@@ -427,3 +427,8 @@ body.dark-mode .shift-item:hover {
 .admin-account-manager-group .form-group:last-child {
     margin-right: 0;
 }
+
+.urgent-unfulfilled {
+    background-color: #f44336 !important; /* Red background */
+    color: #ffffff !important; /* White text */
+}

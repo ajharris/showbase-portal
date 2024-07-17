@@ -6,6 +6,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>Start Time</th>
             <th>Show Name</th>
             <th>Role</th>
             <th>Description</th>
@@ -18,12 +19,14 @@
             {% for role, required_count in crew.get_roles().items() %}
                 {% set assigned_count = crew.get_assigned_role_count(role) %}
                 {% for _ in range(required_count) %}
-                    <tr>
+                    {% set assignment = crew.get_assignment_for_role(role) %}
+                    {% set urgent_class = 'urgent-unfulfilled' if crew.event.is_within_48_hours() and crew.event.has_unfulfilled_requests() else '' %}
+                    <tr class="{{ urgent_class }}">
+                        <td>{{ crew.event.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>{{ crew.event.show_name }}</td>
                         <td>{{ role }}</td>
                         <td>{{ crew.description }}</td>
                         <td>
-                            {% set assignment = crew.get_assignment_for_role(role) %}
                             {% if assignment %}
                                 {{ assignment.worker.first_name }} {{ assignment.worker.last_name }} ({{ assignment.status }})
                             {% endif %}
