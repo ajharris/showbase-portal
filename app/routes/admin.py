@@ -172,34 +172,6 @@ csrf = CSRFProtect()
 
 # app/routes/admin.py
 
-@admin_bp.route('/delete_event/<int:event_id>', methods=['GET', 'POST'])
-@login_required
-def delete_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    form = CSRFForm()
-
-    if request.method == 'POST':
-        current_app.logger.debug(f'CSRF Token: {form.csrf_token.data}')
-        current_app.logger.debug(f'Form Data: {request.form}')
-    
-    if form.validate_on_submit():
-        db.session.delete(event)
-        db.session.commit()
-        flash('Event deleted successfully.', 'success')
-        return redirect(url_for('admin.list_events'))
-
-    return render_template('admin/delete_event.html', form=form, event=event)
-
-
-
-
-
-@admin_bp.route('/list_events')
-@login_required
-def list_events():
-    events = Event.query.all()
-    return render_template('admin/list_events.html', events=events)
-
 @admin_bp.route('/assign_worker', methods=['POST'])
 @login_required
 def assign_worker():

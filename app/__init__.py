@@ -1,4 +1,3 @@
-# app/__init__.py
 import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy

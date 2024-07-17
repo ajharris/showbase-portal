@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from ..models import Event, Crew, CrewAssignment, Note, Document
-from ..forms import EventForm, CrewRequestForm, NoteForm, DocumentForm, SharePointForm
+from ..forms import CSRFForm, EventForm, CrewRequestForm, NoteForm, DocumentForm, SharePointForm
 from .. import db
 from .. utils import ROLES
 
@@ -28,12 +28,13 @@ def create_event():
     events = Event.query.all()
     return render_template('events/create_event.html', form=form, events=events)
 
-
 @events_bp.route('/list_events')
 @login_required
 def list_events():
     events = Event.query.all()
-    return render_template('events/events.html', events=events)
+    form = CSRFForm()
+    return render_template('events/events.html', events=events, form=form)
+
 
 @events_bp.route('/activate_event/<int:event_id>')
 @login_required
@@ -128,16 +129,28 @@ def view_event(event_id):
         ROLES=ROLES
     )
 
-
-@events_bp.route('/events/delete_event/<int:event_id>', methods=['POST'])
+@events_bp.route('/delete_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def delete_event(event_id):
-    # Logic to delete event
     event = Event.query.get_or_404(event_id)
-    db.session.delete(event)
-    db.session.commit()
-    flash('Event deleted successfully.', 'success')
-    return redirect(url_for('events.list_events'))
+    form = CSRFForm()
+
+    if form.validate_on_submit():
+        # First, delete all related crew assignments
+        crews = Crew.query.filter_by(event_id=event_id).all()
+        for crew in crews:
+            CrewAssignment.query.filter_by(crew_id=crew.id).delete()
+
+        # Then, delete all related crews
+        Crew.query.filter_by(event_id=event_id).delete()
+
+        # Finally, delete the event
+        db.session.delete(event)
+        db.session.commit()
+        flash('Event deleted successfully.', 'success')
+        return redirect(url_for('events.list_events'))
+
+    return render_template('admin/delete_event.html', form=form, event=event)
 
 
 @events_bp.route('/delete_crew/<int:crew_id>', methods=['POST'])
