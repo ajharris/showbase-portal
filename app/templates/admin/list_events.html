@@ -1,12 +1,14 @@
+<!-- app/templates/admin/list_events.html -->
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block page_content %}
-<h1>Events</h1>
+<h1>List of Events</h1>
 <table class="table">
     <thead>
         <tr>
             <th>Event Name</th>
+            <th>Event Number</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -14,8 +16,11 @@
         {% for event in events %}
         <tr>
             <td>{{ event.show_name }}</td>
+            <td>{{ event.show_number }}</td>
             <td>
-                <form method="POST" action="{{ url_for('admin.delete_event', event_id=event.id) }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('admin.delete_event', event_id=event.id) }}">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             </td>

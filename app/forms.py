@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import (
     StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, 
     PasswordField, DateTimeField, BooleanField, SelectMultipleField, TextAreaField, 
-    HiddenField
+    HiddenField, FieldList, FormField
 )
 from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo, URL
 from flask_wtf.file import FileAllowed
@@ -20,6 +20,29 @@ logger = logging.getLogger(__name__)
 class CSRFForm(FlaskForm):
     pass
 
+class RoleCheckboxForm(FlaskForm):
+    pass
+
+for role in ROLES:
+    setattr(RoleCheckboxForm, role, BooleanField(role))
+
+class WorkerFormBase(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number')
+    is_admin = BooleanField('Is Admin')
+    is_account_manager = BooleanField('Is Account Manager')
+    role_capabilities = FormField(RoleCheckboxForm)
+
+class AdminCreateWorkerForm(WorkerFormBase):
+    temp_password = PasswordField('Temporary Password', validators=[DataRequired(), EqualTo('confirm_temp_password', message='Passwords must match')])
+    confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired()])
+    submit = SubmitField('Create Worker')
+
+class EditWorkerForm(WorkerFormBase):
+    submit = SubmitField('Update Worker')
+
 class DynamicChoicesForm(FlaskForm):
     def update_choices(self, field_name, choices):
         getattr(self, field_name).choices = choices
@@ -32,7 +55,6 @@ class CrewRequestForm(FlaskForm):
     roles_json = HiddenField('Roles JSON', validators=[DataRequired()])
     shift_type = SelectMultipleField('Shift Type', choices=[('Setup', 'Setup'), ('Show', 'Show'), ('Strike', 'Strike')], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
     submit = SubmitField('Add Crew Request')
-
 
 class EventForm(DynamicChoicesForm):
     show_name = StringField('Show Name:', validators=[InputRequired(), DataRequired()])
@@ -47,8 +69,6 @@ class EventForm(DynamicChoicesForm):
         self.update_choices('account_manager', [(am.id, f'{am.first_name} {am.last_name}') for am in get_account_managers()])
         self.update_choices('location', [(loc.id, loc.name) for loc in get_locations()])
 
-
-
 class LocationForm(FlaskForm):
     name = StringField('Location Name', validators=[DataRequired()])
     address = TextAreaField('Address', validators=[DataRequired()])
@@ -57,36 +77,15 @@ class LocationForm(FlaskForm):
     other_info = TextAreaField('Other Information')
     submit = SubmitField('Save')
 
-class EditWorkerForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
-    is_admin = BooleanField('Admin')
-    is_account_manager = BooleanField('Account Manager')
-    submit = SubmitField('Update Worker')
+class PasswordFormBase(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
 
-
-class AdminCreateWorkerForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
-    temp_password = PasswordField('Temporary Password', validators=[DataRequired(), EqualTo('confirm_temp_password', message='Passwords must match')])
-    confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired()])
-    is_admin = BooleanField('Admin')
-    is_account_manager = BooleanField('Account Manager')
-    submit = SubmitField('Create Worker')
-
-class ChangePasswordForm(FlaskForm):
-    new_password = PasswordField('New Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password')])
+class ChangePasswordForm(PasswordFormBase):
     submit = SubmitField('Change Password')
 
-class UpdatePasswordForm(FlaskForm):
+class UpdatePasswordForm(PasswordFormBase):
     email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('New Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Update Password')
 
 class UpdateProfileForm(DynamicChoicesForm):
@@ -112,25 +111,9 @@ class AdminUpdateProfileForm(UpdateProfileForm):
     is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
     is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
 
-class AdminUpdateWorkerForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
-    is_admin = BooleanField('Admin')
-    is_account_manager = BooleanField('Account Manager')
+class AdminUpdateWorkerForm(WorkerFormBase):
     active = BooleanField('Active')
     submit = SubmitField('Update')
-
-def update_worker(worker_id):
-    worker = Worker.query.get_or_404(worker_id)
-    form = AdminUpdateWorkerForm(obj=worker)
-    if form.validate_on_submit():
-        form.populate_obj(worker)
-        db.session.commit()
-        flash('Worker updated successfully.', 'success')
-        return redirect(url_for('admin.manage_workers'))
-    return render_template('admin/update_worker.html', form=form)
 
 class ShiftForm(DynamicChoicesForm):
     start = StringField('Shift Start:', id='shift_start', validators=[InputRequired(), DataRequired()])
@@ -180,7 +163,6 @@ class LoginForm(FlaskForm):
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
 
-
 class RegistrationForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
@@ -194,9 +176,7 @@ class RequestResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Request Password Reset')
 
-class ResetPasswordForm(FlaskForm):
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+class ResetPasswordForm(PasswordFormBase):
     submit = SubmitField('Reset Password')
 
 class AssignWorkerForm(FlaskForm):
@@ -208,4 +188,3 @@ class AssignWorkerForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
-

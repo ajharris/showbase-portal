@@ -1,13 +1,23 @@
 # app/routes/admin.py
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request
+from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request, current_app
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from ..models import Crew, Location, Worker, CrewAssignment, Event
-from ..forms import AssignWorkerForm, AdminCreateWorkerForm, EditWorkerForm, LocationForm
+from ..forms import AssignWorkerForm, AdminCreateWorkerForm, EditWorkerForm, LocationForm, CSRFForm
 from .. import db
+from ..utils import ROLES
+import json
+import logging
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
 
 def handle_view_modes(view_as_employee=None, view_as_manager=None):
     if view_as_employee is not None:
@@ -23,10 +33,12 @@ def edit_worker(worker_id):
     worker = Worker.query.get_or_404(worker_id)
     form = EditWorkerForm(obj=worker)
     if form.validate_on_submit():
+        role_capabilities = {role: getattr(form.role_capabilities, role).data for role in ROLES}
         form.populate_obj(worker)
+        worker.role_capabilities = json.dumps(role_capabilities)
         db.session.commit()
         flash('Worker updated successfully!', 'success')
-        return redirect(url_for('admin.create_worker'))
+        return redirect(url_for('admin.edit_worker', worker_id=worker.id))
     return render_template('admin/edit_worker.html', form=form, worker=worker)
 
 @admin_bp.route('/view_all_shifts')
@@ -42,7 +54,6 @@ def view_all_shifts():
     workers = Worker.query.all()
     form = AssignWorkerForm()
     return render_template('admin/view_all_shifts.html', crew_assignments=crew_assignments, workers=workers, form=form)
-
 
 @admin_bp.route('/save_view_mode', methods=['POST'])
 @login_required
@@ -86,19 +97,20 @@ def unfulfilled_crew_requests():
     workers = Worker.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
 
-
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
 @login_required
 def create_worker():
     form = AdminCreateWorkerForm()
     if form.validate_on_submit():
+        role_capabilities = {role: getattr(form.role_capabilities, role).data for role in ROLES}
         worker = Worker(
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=form.email.data,
             phone_number=form.phone_number.data,
             is_admin=form.is_admin.data,
-            is_account_manager=form.is_account_manager.data
+            is_account_manager=form.is_account_manager.data,
+            role_capabilities=json.dumps(role_capabilities)
         )
         worker.set_password(form.temp_password.data)
         try:
@@ -108,22 +120,10 @@ def create_worker():
             return redirect(url_for('admin.create_worker'))
         except IntegrityError as e:
             db.session.rollback()
-            # Check for unique constraint violation
-            if "unique constraint" in str(e.orig):
-                flash('Email already registered. Please use a different email.', 'danger')
-            else:
-                flash(f'IntegrityError: {str(e.orig)}', 'danger')
+            flash('Email already registered. Please use a different email.', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'An unexpected error occurred: {str(e)}', 'danger')
-            logger.error(f"Error creating worker: {str(e)}")
-    else:
-        flash(f"Form errors: {form.errors}", 'danger')
-
-    workers = Worker.query.all()
-    return render_template('admin/admin_create_worker.html', form=form, workers=workers)
-
-
     workers = Worker.query.all()
     return render_template('admin/admin_create_worker.html', form=form, workers=workers)
 
@@ -162,28 +162,43 @@ def view_event(event_id):
     event = Event.query.get_or_404(event_id)
     return render_template('admin/view_event.html', event=event)
 
-@admin_bp.route('/delete_event/<int:event_id>', methods=['POST'])
+# app/routes/admin.py
+
+from flask_wtf.csrf import CSRFProtect
+
+csrf = CSRFProtect()
+
+# app/routes/admin.py
+
+# app/routes/admin.py
+
+@admin_bp.route('/delete_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def delete_event(event_id):
     event = Event.query.get_or_404(event_id)
-    db.session.delete(event)
-    db.session.commit()
-    flash('Event deleted successfully.', 'success')
-    return redirect(url_for('admin.list_events'))
+    form = CSRFForm()
+
+    if request.method == 'POST':
+        current_app.logger.debug(f'CSRF Token: {form.csrf_token.data}')
+        current_app.logger.debug(f'Form Data: {request.form}')
+    
+    if form.validate_on_submit():
+        db.session.delete(event)
+        db.session.commit()
+        flash('Event deleted successfully.', 'success')
+        return redirect(url_for('admin.list_events'))
+
+    return render_template('admin/delete_event.html', form=form, event=event)
+
+
+
+
 
 @admin_bp.route('/list_events')
 @login_required
 def list_events():
     events = Event.query.all()
     return render_template('admin/list_events.html', events=events)
-
-import logging
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-logger.addHandler(handler)
 
 @admin_bp.route('/assign_worker', methods=['POST'])
 @login_required
@@ -224,19 +239,21 @@ def assign_worker():
     workers = Worker.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
 
-@admin_bp.route('/remind_worker/<int:assignment_id>', methods=['POST'])
+@admin_bp.route('/remind_worker', methods=['POST'])
 @login_required
-def remind_worker(assignment_id):
+def remind_worker():
+    assignment_id = request.form.get('assignment_id')
     assignment = CrewAssignment.query.get_or_404(assignment_id)
-    # Logic to send a reminder to the worker (e.g., sending an email or notification)
+    # Implement your reminder logic here
     flash(f'Reminder sent to {assignment.worker.first_name} {assignment.worker.last_name}.', 'success')
-    return redirect(url_for('admin.view_all_shifts'))
+    return redirect(url_for('admin.unfulfilled_crew_requests'))
 
-@admin_bp.route('/revoke_offer/<int:assignment_id>', methods=['POST'])
+@admin_bp.route('/revoke_offer', methods=['POST'])
 @login_required
-def revoke_offer(assignment_id):
+def revoke_offer():
+    assignment_id = request.form.get('assignment_id')
     assignment = CrewAssignment.query.get_or_404(assignment_id)
-    assignment.status = 'revoked'
+    db.session.delete(assignment)
     db.session.commit()
-    flash(f'Offer revoked for role {assignment.role} at {assignment.assigned_crew.event.show_name}.', 'success')
-    return redirect(url_for('admin.view_all_shifts'))
+    flash(f'Offer revoked for {assignment.worker.first_name} {assignment.worker.last_name}.', 'success')
+    return redirect(url_for('admin.unfulfilled_crew_requests'))

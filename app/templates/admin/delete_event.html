@@ -1,0 +1,17 @@
+<!-- app/templates/admin/delete_event.html -->
+{% extends "base.html" %}
+{% from "bootstrap/wtf.html" import form_field %}
+
+{% block page_content %}
+<div class="container">
+    <h2>Delete Event</h2>
+    <p>Are you sure you want to delete the event "{{ event.show_name }}"?</p>
+    <form method="POST" action="{{ url_for('admin.delete_event', event_id=event.id) }}">
+        {{ form.hidden_tag() }} <!-- Ensure this line is present to include the CSRF token -->
+        <div class="form-group">
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a href="{{ url_for('admin.list_events') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

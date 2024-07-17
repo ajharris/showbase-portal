@@ -6,51 +6,57 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Start Time</th>
             <th>Show Name</th>
             <th>Role</th>
             <th>Description</th>
-            <th>Assigned Worker</th>
             <th>Assign Worker</th>
         </tr>
     </thead>
     <tbody>
         {% for crew in unfulfilled_crews %}
-            {% for role, required_count in crew.get_roles().items() %}
-                {% set assigned_count = crew.get_assigned_role_count(role) %}
-                {% for _ in range(required_count) %}
-                    {% set assignment = crew.get_assignment_for_role(role) %}
-                    {% set urgent_class = 'urgent-unfulfilled' if crew.event.is_within_48_hours() and crew.event.has_unfulfilled_requests() else '' %}
-                    <tr class="{{ urgent_class }}">
-                        <td>{{ crew.event.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>{{ crew.event.show_name }}</td>
-                        <td>{{ role }}</td>
-                        <td>{{ crew.description }}</td>
-                        <td>
-                            {% if assignment %}
-                                {{ assignment.worker.first_name }} {{ assignment.worker.last_name }} ({{ assignment.status }})
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if not assignment %}
-                                <form method="POST" action="{{ url_for('admin.assign_worker') }}">
-                                    {{ form.csrf_token }}
-                                    <input type="hidden" name="crew_id" value="{{ crew.id }}">
-                                    <input type="hidden" name="role" value="{{ role }}">
-                                    <select name="worker" class="form-control" required>
-                                        {% for worker in workers %}
-                                            {% if worker.is_available(crew.start_time, crew.end_time) %}
-                                                <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                    <button type="submit" class="btn btn-primary">Assign</button>
-                                </form>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            {% endfor %}
+        {% set urgent_class = 'urgent-unfulfilled' if crew.event.is_within_48_hours() and crew.event.has_unfulfilled_requests() else '' %}
+        {% for role, required_count in crew.get_roles().items() %}
+        {% set assigned_count = crew.get_assigned_role_count(role) %}
+        {% for _ in range(required_count - assigned_count) %}
+        <tr class="{{ urgent_class }}">
+            <td>{{ crew.event.show_name }}</td>
+            <td>{{ role }}</td>
+            <td>{{ crew.description }}</td>
+            <td>
+                {% set assignment = crew.get_assignment_for_role(role) %}
+                {% if assignment %}
+                    {% if assignment.status == 'offered' %}
+                        <p>Assigned to: {{ assignment.worker.first_name }} {{ assignment.worker.last_name }} (Offered)</p>
+                        <form method="POST" action="{{ url_for('admin.remind_worker') }}">
+                            <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-warning">Remind Worker</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin.revoke_offer') }}">
+                            <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-danger">Revoke Offer</button>
+                        </form>
+                    {% elif assignment.status == 'accepted' %}
+                        <p>Assigned to: {{ assignment.worker.first_name }} {{ assignment.worker.last_name }} (Accepted)</p>
+                    {% endif %}
+                {% else %}
+                    <form method="POST" action="{{ url_for('admin.assign_worker') }}">
+                        {{ form.csrf_token }}
+                        <input type="hidden" name="crew_id" value="{{ crew.id }}">
+                        <input type="hidden" name="role" value="{{ role }}">
+                        <select name="worker" class="form-control" required>
+                            {% for worker in workers if worker.get_role_capabilities()[role] %}
+                            <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
         {% endfor %}
     </tbody>
 </table>

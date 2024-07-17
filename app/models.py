@@ -1,9 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from flask import current_app
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from sqlalchemy.ext.hybrid import hybrid_property
+from . import db
+import json
+
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta
 from . import db
 import json
 
@@ -19,6 +25,7 @@ class Worker(UserMixin, db.Model):
     theme = db.Column(db.String(10), default='light')
     active = db.Column(db.Boolean, default=True)
     password_is_temp = db.Column(db.Boolean, default=True)
+    role_capabilities = db.Column(db.Text, default=json.dumps({}))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -31,6 +38,11 @@ class Worker(UserMixin, db.Model):
             if assignment.status in ['offered', 'accepted'] and not (assignment.assigned_crew.end_time <= start_time or assignment.assigned_crew.start_time >= end_time):
                 return False
         return True
+
+    def get_role_capabilities(self):
+        if not self.role_capabilities:
+            return {}
+        return json.loads(self.role_capabilities)
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,6 +76,11 @@ class Event(db.Model):
     def account_manager_name(self):
         return f"{self.account_manager.first_name} {self.account_manager.last_name}"
 
+    def is_within_48_hours(self):
+        return any(crew.start_time <= datetime.utcnow() <= crew.start_time + timedelta(hours=48) for crew in self.crews)
+
+    def has_unfulfilled_requests(self):
+        return any(not crew.is_fulfilled for crew in self.crews)
 
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
