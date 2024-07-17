@@ -66,30 +66,30 @@ Sync with Smart Sheet for project management and Salesforce for CRM, providing a
 ## Development Checklist
 
 ### Backend Setup
-- [ ] Configure PostgreSQL Database
-- [ ] Define Database Models
-- [ ] Set Up Flask
+- [x] Configure PostgreSQL Database - hosted on Heroku/AWS
+- [x] Define Database Models - needs work some overlap should be removed
+- [x] Set Up Flask
 
 ### User Authentication
-- [ ] Implement Secure Login
-- [ ] Role-Based Access
+- [x] Implement Secure Login
+- [x] Role-Based Access - Employee access needs work
 
 ### Event Management
-- [ ] Event Creation
-- [ ] View Event Details
-- [ ] Role-Based Document Access
+- [x] Event Creation
+- [x] View Event Details
+- [x] Role-Based Document Access - needs listed documents below upload field
 
 ### Scheduling
-- [ ] Display Worker Schedules
-- [ ] Integrated Details Page
+- [x] Display Worker Schedules 
+- [x] Integrated Details Page
 
 ### Expense Reporting
 - [ ] Submit Expenses
 - [ ] Manage Expenses
 
 ### Crew Management
-- [ ] Crew Requests
-- [ ] Manage Crew Requests
+- [x] Crew Requests
+- [x] Manage Crew Requests - deleted crew requests need to alert workers, Admin shouldn't see events until they are marked Active
 
 ### Notes and Document Management
 - [ ] Add and View Notes
