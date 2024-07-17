@@ -1,3 +1,9 @@
+<style>
+.red-text {
+    color: red;
+}
+</style>
+
 # showbase-portal 
 # Show Crew Scheduling Application
 
@@ -67,17 +73,17 @@ Sync with Smart Sheet for project management and Salesforce for CRM, providing a
 
 ### Backend Setup
 - [x] Configure PostgreSQL Database - hosted on Heroku/AWS
-- [x] Define Database Models - needs work some overlap should be removed
+- [x] Define Database Models - <span class="red-text">needs work some overlap should be removed</span>
 - [x] Set Up Flask
 
 ### User Authentication
 - [x] Implement Secure Login
-- [x] Role-Based Access - Employee access needs work
+- [x] Role-Based Access - <span class="red-text">Employee access needs work</span>
 
 ### Event Management
 - [x] Event Creation
 - [x] View Event Details
-- [x] Role-Based Document Access - needs listed documents below upload field
+- [x] Role-Based Document Access - <span class="red-text">needs listed documents below upload field</span>
 
 ### Scheduling
 - [x] Display Worker Schedules 
@@ -89,7 +95,7 @@ Sync with Smart Sheet for project management and Salesforce for CRM, providing a
 
 ### Crew Management
 - [x] Crew Requests
-- [x] Manage Crew Requests - deleted crew requests need to alert workers, Admin shouldn't see events until they are marked Active
+- [x] Manage Crew Requests - <span class="red-text">deleted crew requests need to alert workers, Admin shouldn't see events until they are marked Active</span>
 
 ### Notes and Document Management
 - [ ] Add and View Notes
