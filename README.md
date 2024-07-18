@@ -86,6 +86,7 @@ Sync with Smart Sheet for project management and Salesforce for CRM, providing a
 ### Expense Reporting
 - [ ] Submit Expenses
 - [ ] Manage Expenses
+- [ ] Prior knowledge expense approval
 
 ### Crew Management
 - [x] Crew Requests
