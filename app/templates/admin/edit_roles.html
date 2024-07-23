@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block page_content %}
+<div class="container">
+    <h2>Edit Roles</h2>
+    
+    <!-- Form to add a new role -->
+    <form method="POST" action="{{ url_for('admin.add_role') }}">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.description.label }}
+            {{ form.description(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.submit_add(class="btn btn-primary") }}
+        </div>
+    </form>
+    
+    <!-- List of existing roles with delete buttons -->
+    <h3>Existing Roles</h3>
+    <ul class="list-group">
+        {% for role in roles %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ role.name }}</strong>
+                    <p>{{ role.description }}</p>
+                </div>
+                <form method="POST" action="{{ url_for('admin.delete_role', role_id=role.id) }}" class="form-inline">
+                    {{ form.hidden_tag() }}
+                    {{ form.submit_delete(class="btn btn-danger") }}
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
