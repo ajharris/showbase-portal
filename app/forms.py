@@ -16,6 +16,12 @@ from .utils import get_account_managers, get_locations
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+class RoleForm(FlaskForm):
+    name = StringField('Role Name', validators=[DataRequired(), Length(max=64)])
+    description = TextAreaField('Description', validators=[Length(max=256)])
+    submit_add = SubmitField('Add Role')
+    submit_delete = SubmitField('Delete Role')
+
 class CSRFForm(FlaskForm):
     pass
 

@@ -1,13 +1,15 @@
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, session, jsonify, request
 from flask_login import login_required, current_user
-from sqlalchemy.exc import IntegrityError
 from ..models import Crew, Location, Worker, CrewAssignment, Event, Role
 from ..forms import AssignWorkerForm, AdminCreateWorkerForm, EditWorkerForm, LocationForm, RoleForm
 from .. import db
-from ..utils import ROLES
-import json
+from ..utils import get_account_managers, get_locations
 import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -18,39 +20,33 @@ def list_roles():
     roles = Role.query.all()
     return render_template('admin/list_roles.html', roles=roles)
 
-@admin_bp.route('/create_role', methods=['GET', 'POST'])
+@admin_bp.route('/edit_roles', methods=['GET', 'POST'])
 @login_required
-def create_role():
+def edit_roles():
     form = RoleForm()
     if form.validate_on_submit():
-        role = Role(name=form.name.data, description=form.description.data)
-        db.session.add(role)
-        db.session.commit()
-        flash('Role created successfully', 'success')
-        return redirect(url_for('admin.list_roles'))
-    return render_template('admin/create_role.html', form=form)
+        if form.submit_add.data:
+            new_role = Role(name=form.name.data, description=form.description.data)
+            db.session.add(new_role)
+            db.session.commit()
+            flash('Role added successfully', 'success')
+        return redirect(url_for('admin.edit_roles'))
 
-@admin_bp.route('/edit_role/<int:role_id>', methods=['GET', 'POST'])
-@login_required
-def edit_role(role_id):
-    role = Role.query.get_or_404(role_id)
-    form = RoleForm(obj=role)
-    if form.validate_on_submit():
-        role.name = form.name.data
-        role.description = form.description.data
-        db.session.commit()
-        flash('Role updated successfully', 'success')
-        return redirect(url_for('admin.list_roles'))
-    return render_template('admin/edit_role.html', form=form)
+    roles = Role.query.all()
+    return render_template('admin/edit_roles.html', form=form, roles=roles)
 
 @admin_bp.route('/delete_role/<int:role_id>', methods=['POST'])
 @login_required
 def delete_role(role_id):
+    if not current_user.is_admin:
+        flash('Access denied', 'danger')
+        return redirect(url_for('home'))
+
     role = Role.query.get_or_404(role_id)
     db.session.delete(role)
     db.session.commit()
     flash('Role deleted successfully', 'success')
-    return redirect(url_for('admin.list_roles'))
+    return redirect(url_for('admin.edit_roles'))
 
 # Worker management routes
 @admin_bp.route('/create_worker', methods=['GET', 'POST'])
