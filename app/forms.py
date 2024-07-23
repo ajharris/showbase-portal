@@ -1,5 +1,3 @@
-# app/forms.py
-
 import logging
 from flask_wtf import FlaskForm
 from wtforms import (
@@ -92,9 +90,11 @@ class LocationForm(FlaskForm):
     other_info = TextAreaField('Other Information')
     submit = SubmitField('Save')
 
-class ChangePasswordForm(FlaskForm):
-    new_password = PasswordField('New Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password')])
+class PasswordFormBase(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+
+class ChangePasswordForm(PasswordFormBase):
     submit = SubmitField('Change Password')
 
 class UpdatePasswordForm(PasswordFormBase):
@@ -189,4 +189,4 @@ class AssignWorkerForm(FlaskForm):
     worker = SelectField('Select Worker', coerce=int, validators=[DataRequired()])
     role = HiddenField('Role', validators=[DataRequired()])
     crew_id = HiddenField('Crew ID', validators=[DataRequired()])
-    submit = SubmitField
+    submit = SubmitField('Assign Worker')
