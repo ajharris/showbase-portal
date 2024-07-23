@@ -30,7 +30,7 @@
                 </div>
                 <form method="POST" action="{{ url_for('admin.delete_role', role_id=role.id) }}" class="form-inline">
                     {{ form.hidden_tag() }}
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-danger">Delete Role</button>
                 </form>
             </li>
         {% endfor %}
