@@ -103,3 +103,4 @@ tests/example_app/example/exampledb
 
 /uploads/
 /documents 
+create_admin.py

@@ -7,25 +7,38 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from . import db
 import json
 
-from flask_login import UserMixin
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.types import JSON
+
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from flask_login import UserMixin
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.types import JSON
 from . import db
-import json
+
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True, nullable=False)
+    description = db.Column(db.String(256))
+
+    def __repr__(self):
+        return f'<Role {self.name}>'
 
 class Worker(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    phone_number = db.Column(db.String(30))  # Increase the length to 30
+    phone_number = db.Column(db.String(30))
     is_admin = db.Column(db.Boolean, default=False)
     is_account_manager = db.Column(db.Boolean, default=False)
     password_hash = db.Column(db.String(256))
     theme = db.Column(db.String(10), default='light')
     active = db.Column(db.Boolean, default=True)
     password_is_temp = db.Column(db.Boolean, default=True)
-    role_capabilities = db.Column(db.Text, default=json.dumps({}))
+    role_capabilities = db.Column(MutableDict.as_mutable(JSON), default=lambda: {})
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -39,10 +52,6 @@ class Worker(UserMixin, db.Model):
                 return False
         return True
 
-    def get_role_capabilities(self):
-        if not self.role_capabilities:
-            return {}
-        return json.loads(self.role_capabilities)
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)

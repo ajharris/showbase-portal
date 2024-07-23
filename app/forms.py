@@ -1,17 +1,18 @@
+# app/forms.py
+
 import logging
-from flask import redirect, url_for, render_template, flash
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField, SubmitField, IntegerField, FloatField, SelectField, FileField, 
+    StringField, SubmitField, IntegerField, FloatField, SelectField, 
     PasswordField, DateTimeField, BooleanField, SelectMultipleField, TextAreaField, 
-    HiddenField, FieldList, FormField
+    HiddenField, FieldList, FormField, FileField
 )
-from wtforms.validators import DataRequired, InputRequired, Optional, Email, EqualTo, URL
+from wtforms.validators import DataRequired, InputRequired, Email, EqualTo, URL, Optional, Length
 from flask_wtf.file import FileAllowed
 from wtforms.widgets import ListWidget, CheckboxInput
-from .models import Worker
-from .utils import ROLES, get_account_managers, get_locations
+from .models import Worker, Role
 from app import db
+from .utils import get_account_managers, get_locations
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -23,25 +24,39 @@ class CSRFForm(FlaskForm):
 class RoleCheckboxForm(FlaskForm):
     pass
 
-for role in ROLES:
-    setattr(RoleCheckboxForm, role, BooleanField(role))
+class RoleForm(FlaskForm):
+    name = StringField('Role Name', validators=[DataRequired(), Length(max=64)])
+    description = TextAreaField('Description', validators=[Length(max=256)])
+    submit = SubmitField('Save')
 
-class WorkerFormBase(FlaskForm):
+class RoleCapabilityField(FlaskForm):
+    capability = BooleanField('')
+
+class EditWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     phone_number = StringField('Phone Number')
     is_admin = BooleanField('Is Admin')
     is_account_manager = BooleanField('Is Account Manager')
-    role_capabilities = FormField(RoleCheckboxForm)
-
-class AdminCreateWorkerForm(WorkerFormBase):
-    temp_password = PasswordField('Temporary Password', validators=[DataRequired(), EqualTo('confirm_temp_password', message='Passwords must match')])
-    confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired()])
-    submit = SubmitField('Create Worker')
-
-class EditWorkerForm(WorkerFormBase):
+    role_capabilities = FieldList(FormField(RoleCapabilityField), min_entries=0)
     submit = SubmitField('Update Worker')
+
+    def __init__(self, *args, **kwargs):
+        super(EditWorkerForm, self).__init__(*args, **kwargs)
+        roles = Role.query.all()
+        self.role_capabilities.min_entries = len(roles)
+        self.role_capabilities.entries = [FormField(RoleCapabilityField, label=role.name) for role in roles]
+
+    def populate_role_capabilities(self, role_capabilities):
+        roles = Role.query.all()
+        for i, role in enumerate(roles):
+            self.role_capabilities[i].form.capability.data = role_capabilities.get(role.name, False)
+
+class AdminCreateWorkerForm(EditWorkerForm):
+    temp_password = PasswordField('Temporary Password', validators=[DataRequired()])
+    confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired(), EqualTo('temp_password')])
+    submit = SubmitField('Create Worker')
 
 class DynamicChoicesForm(FlaskForm):
     def update_choices(self, field_name, choices):
@@ -77,11 +92,9 @@ class LocationForm(FlaskForm):
     other_info = TextAreaField('Other Information')
     submit = SubmitField('Save')
 
-class PasswordFormBase(FlaskForm):
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-
-class ChangePasswordForm(PasswordFormBase):
+class ChangePasswordForm(FlaskForm):
+    new_password = PasswordField('New Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password')])
     submit = SubmitField('Change Password')
 
 class UpdatePasswordForm(PasswordFormBase):
@@ -107,26 +120,19 @@ class UpdateProfileForm(DynamicChoicesForm):
         else:
             self.update_choices('worker_select', [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()])
 
-class AdminUpdateProfileForm(UpdateProfileForm):
-    is_admin = SelectField('Admin', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
-    is_account_manager = SelectField('Account Manager', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Optional()])
-
-class AdminUpdateWorkerForm(WorkerFormBase):
-    active = BooleanField('Active')
-    submit = SubmitField('Update')
-
 class ShiftForm(DynamicChoicesForm):
     start = StringField('Shift Start:', id='shift_start', validators=[InputRequired(), DataRequired()])
     end = StringField('Shift End:', id='shift_end', validators=[InputRequired(), DataRequired()])
     show_number = IntegerField('Show Number:', validators=[InputRequired(), DataRequired()])
     worker = SelectField('Worker:', coerce=int, validators=[InputRequired(), DataRequired()])
-    roles = SelectMultipleField('Roles:', choices=[(role, role) for role in ROLES], validators=[InputRequired(), DataRequired()])
+    roles = SelectMultipleField('Roles:', choices=[], validators=[InputRequired(), DataRequired()])
     location = SelectField('Location:', choices=[], validators=[InputRequired(), DataRequired()])
     submit = SubmitField('Submit')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.update_choices('location', [(loc.id, loc.name) for loc in get_locations()])
+        self.update_choices('roles', [(role.id, role.name) for role in Role.query.all()])
 
 class ExpenseForm(DynamicChoicesForm):
     receipt_number = IntegerField('Receipt Number:', validators=[InputRequired(), DataRequired()])
@@ -183,8 +189,4 @@ class AssignWorkerForm(FlaskForm):
     worker = SelectField('Select Worker', coerce=int, validators=[DataRequired()])
     role = HiddenField('Role', validators=[DataRequired()])
     crew_id = HiddenField('Crew ID', validators=[DataRequired()])
-    submit = SubmitField('Assign Worker')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.worker.choices = [(worker.id, f'{worker.first_name} {worker.last_name}') for worker in Worker.query.all()]
+    submit = SubmitField
