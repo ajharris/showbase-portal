@@ -33,8 +33,7 @@ def test_db_connection():
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
         print("Database connection successful:", cursor.fetchone())
-        print("SQLALCHEMY_DATABASE_URI:", os.getenv('SQLALCHEMY_DATABASE_URI'))
-
+        print("SQLALCHEMY_DATABASE_URI:", DATABASE_URL)
         conn.close()
     except OperationalError as e:
         print("Database connection failed:", e)
