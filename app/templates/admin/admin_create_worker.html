@@ -3,8 +3,8 @@
 
 {% block page_content %}
 <div class="container">
-    <h2>Create Worker</h2>
-    <form method="POST" action="{{ url_for('admin.create_worker') }}">
+    <h2>{{ form.temp_password ? "Create Worker" : "Edit Worker" }}</h2>
+    <form method="POST" action="">
         {{ form.hidden_tag() }}
         <div class="form-group">
             {{ form_field(form.first_name, class="form-control") }}
@@ -18,12 +18,14 @@
         <div class="form-group">
             {{ form_field(form.phone_number, class="form-control") }}
         </div>
+        {% if form.temp_password %}
         <div class="form-group">
             {{ form_field(form.temp_password, class="form-control") }}
         </div>
         <div class="form-group">
             {{ form_field(form.confirm_temp_password, class="form-control") }}
         </div>
+        {% endif %}
         <div class="form-group">
             {{ form_field(form.is_admin) }}
         </div>
@@ -32,13 +34,21 @@
         </div>
         <div class="form-group">
             <label>Role Capabilities</label>
-            {{ form_field(form.role_capabilities) }}
+            <div class="horizontal-role-group">
+                {% for field in form.role_capabilities %}
+                    <div class="role-entry">
+                        {{ field }} {{ field.label }}
+                    </div>
+                {% endfor %}
+            </div>
         </div>
         <div class="form-group">
             {{ form_field(form.submit, class="btn btn-primary") }}
         </div>
     </form>
+</div>
 
+<div class="container">
     <h3>Existing Workers</h3>
     <table class="table table-bordered">
         <thead>

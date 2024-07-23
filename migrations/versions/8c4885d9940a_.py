@@ -1,8 +1,8 @@
-"""Adjust backref names in models
+"""empty message
 
-Revision ID: ba1fc3115566
+Revision ID: 8c4885d9940a
 Revises: 
-Create Date: 2024-07-16 06:52:31.205781
+Create Date: 2024-07-22 19:26:06.342583
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ba1fc3115566'
+revision = '8c4885d9940a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,6 +27,13 @@ def upgrade():
     sa.Column('other_info', sa.String(length=1024), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('role',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=64), nullable=False),
+    sa.Column('description', sa.String(length=256), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
     op.create_table('worker',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.String(length=64), nullable=False),
@@ -39,6 +46,7 @@ def upgrade():
     sa.Column('theme', sa.String(length=10), nullable=True),
     sa.Column('active', sa.Boolean(), nullable=True),
     sa.Column('password_is_temp', sa.Boolean(), nullable=True),
+    sa.Column('role_capabilities', sa.JSON(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
@@ -142,5 +150,6 @@ def downgrade():
     op.drop_table('crew')
     op.drop_table('event')
     op.drop_table('worker')
+    op.drop_table('role')
     op.drop_table('location')
     # ### end Alembic commands ###
