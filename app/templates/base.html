@@ -34,16 +34,20 @@
                 {% if current_user.is_authenticated %}
                     {% if not session.get('view_as_employee', False) %}
                         {% if current_user.is_admin %}
-                            {{ render_dropdown('Admin', [
-                                ('admin.create_worker', 'Create Worker'),
-                                ('events.create_event', 'Create Event'),
-                                ('admin.view_all_shifts', 'View All Shifts'),
-                                ('misc.timesheet', 'Timesheet'),
-                                ('misc.expenses', 'Expenses'),
-                                ('admin.unfulfilled_crew_requests', 'Crew Requests'),
-                                ('backup.show_backup_restore', 'Backup/Restore Database'),
-                                ('admin.add_location', 'Add/Edit Location')
-                            ], 'admin-field', 'admin-dropdown') }}
+                            <li class="dropdown admin-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li class="admin-field"><a href="{{ url_for('admin.create_worker') }}">Create Worker</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.view_all_shifts') }}">View All Shifts</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('misc.timesheet') }}">Timesheet</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('misc.expenses') }}">Expenses</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.unfulfilled_crew_requests') }}">Crew Requests</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('backup.show_backup_restore') }}">Backup/Restore Database</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.add_location') }}">Add/Edit Location</a></li>
+                                    <li class="admin-field"><a href="{{ url_for('admin.edit_roles') }}">Edit Roles</a></li> <!-- New item added here -->
+                                </ul>
+                            </li>
                         {% endif %}
                         {% if current_user.is_admin or current_user.is_account_manager %}
                             {{ render_dropdown('Account Manager', [

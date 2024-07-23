@@ -3,7 +3,7 @@
 
 {% block page_content %}
 <div class="container">
-    <h2>{{ form.temp_password ? "Create Worker" : "Edit Worker" }}</h2>
+    <h2>{{ "Create Worker" if form.temp_password else "Edit Worker" }}</h2>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <div class="form-group">
