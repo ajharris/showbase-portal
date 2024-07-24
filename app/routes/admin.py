@@ -53,8 +53,11 @@ def delete_role(role_id):
 @login_required
 def create_worker():
     form = AdminCreateWorkerForm()
+    workers = Worker.query.all()
+
+    form.populate_roles()  # Ensure roles are populated
+
     if form.validate_on_submit():
-        role_capabilities = {role.name: form.role_capabilities[i].capability.data for i, role in enumerate(Role.query.all())}
         worker = Worker(
             first_name=form.first_name.data,
             last_name=form.last_name.data,
@@ -62,15 +65,25 @@ def create_worker():
             phone_number=form.phone_number.data,
             is_admin=form.is_admin.data,
             is_account_manager=form.is_account_manager.data,
-            role_capabilities=role_capabilities
+            active=True,
         )
         worker.set_password(form.temp_password.data)
+        
+        # Process role capabilities
+        selected_roles = form.role_capabilities.data
+        worker_roles = {role.name: (str(role.id) in selected_roles) for role in Role.query.all()}
+        worker.role_capabilities = worker_roles
+        
         db.session.add(worker)
         db.session.commit()
-        flash('Worker created successfully', 'success')
+        flash('Worker created successfully!', 'success')
         return redirect(url_for('admin.create_worker'))
-    workers = Worker.query.all()
+
+    if form.role_capabilities.data is None:
+        form.role_capabilities.data = []
+
     return render_template('admin/admin_create_worker.html', form=form, workers=workers)
+
 
 @admin_bp.route('/edit_worker/<int:worker_id>', methods=['GET', 'POST'])
 @login_required

@@ -357,8 +357,29 @@ body.dark-mode .shift-item:hover {
     color: #ffffff !important; /* White text */
 }
 
-/* Other styles... */
+/* Styles for the roles list */
+.list-group-item {
+    background-color: inherit; /* Use the current background color of the body */
+    color: inherit; /* Use the current text color of the body */
+}
 
+body.light-mode .list-group-item {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+body.dark-mode .list-group-item {
+    background-color: #555555;
+    color: #ffffff;
+}
+
+body.light-mode .list-group-item:hover {
+    background-color: #eeeeee;
+}
+
+body.dark-mode .list-group-item:hover {
+    background-color: #777777;
+}
 
 /* Styles for the upcoming shifts list */
 .shift-details {

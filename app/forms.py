@@ -28,13 +28,8 @@ class CSRFForm(FlaskForm):
 class RoleCheckboxForm(FlaskForm):
     pass
 
-class RoleForm(FlaskForm):
-    name = StringField('Role Name', validators=[DataRequired(), Length(max=64)])
-    description = TextAreaField('Description', validators=[Length(max=256)])
-    submit = SubmitField('Save')
-
 class RoleCapabilityField(FlaskForm):
-    capability = BooleanField('')
+    capability = BooleanField()
 
 class EditWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -43,24 +38,24 @@ class EditWorkerForm(FlaskForm):
     phone_number = StringField('Phone Number')
     is_admin = BooleanField('Is Admin')
     is_account_manager = BooleanField('Is Account Manager')
-    role_capabilities = FieldList(FormField(RoleCapabilityField), min_entries=0)
+    role_capabilities = SelectMultipleField('Role Capabilities', choices=[])
     submit = SubmitField('Update Worker')
 
     def __init__(self, *args, **kwargs):
         super(EditWorkerForm, self).__init__(*args, **kwargs)
-        roles = Role.query.all()
-        self.role_capabilities.min_entries = len(roles)
-        self.role_capabilities.entries = [FormField(RoleCapabilityField, label=role.name) for role in roles]
+        self.populate_roles()
 
-    def populate_role_capabilities(self, role_capabilities):
+    def populate_roles(self):
         roles = Role.query.all()
-        for i, role in enumerate(roles):
-            self.role_capabilities[i].form.capability.data = role_capabilities.get(role.name, False)
+        self.role_capabilities.choices = [(role.id, role.name) for role in roles]
+        if self.role_capabilities.data is None:
+            self.role_capabilities.data = []
 
 class AdminCreateWorkerForm(EditWorkerForm):
     temp_password = PasswordField('Temporary Password', validators=[DataRequired()])
     confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired(), EqualTo('temp_password')])
     submit = SubmitField('Create Worker')
+
 
 class DynamicChoicesForm(FlaskForm):
     def update_choices(self, field_name, choices):
