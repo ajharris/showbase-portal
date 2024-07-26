@@ -30,7 +30,7 @@ class Worker(UserMixin, db.Model):
     theme = db.Column(db.String(10), default='light')
     active = db.Column(db.Boolean, default=True)
     password_is_temp = db.Column(db.Boolean, default=True)
-    role_capabilities = db.Column(MutableDict.as_mutable(JSON), default=dict)
+    role_capabilities = db.Column(MutableDict.as_mutable(JSON), default=lambda: {})
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -43,6 +43,10 @@ class Worker(UserMixin, db.Model):
             if assignment.status in ['offered', 'accepted'] and not (assignment.assigned_crew.end_time <= start_time or assignment.assigned_crew.start_time >= end_time):
                 return False
         return True
+    
+    def get_role_capabilities(self):
+        return self.role_capabilities
+
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)

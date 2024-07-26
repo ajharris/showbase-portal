@@ -46,7 +46,7 @@
                         <input type="hidden" name="crew_id" value="{{ crew.id }}">
                         <input type="hidden" name="role" value="{{ role }}">
                         <select name="worker" class="form-control" required>
-                            {% for worker in workers if worker.get_role_capabilities()[role] %}
+                            {% for worker in workers if worker.get_role_capabilities().get(role) %}
                             <option value="{{ worker.id }}">{{ worker.first_name }} {{ worker.last_name }}</option>
                             {% endfor %}
                         </select>

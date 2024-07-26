@@ -93,14 +93,9 @@ def edit_worker(worker_id):
     
     if request.method == 'GET':
         form.populate_roles()
-        # Populate the form with current role capabilities
-        form.role_capabilities.data = [str(role_id) for role_id in worker.role_capabilities.keys()]
-        print(f"Initial role capabilities for worker {worker_id}: {worker.role_capabilities}")
+        form.role_capabilities.data = [str(role.id) for role in Role.query.all() if role.name in worker.role_capabilities]
     
     if form.validate_on_submit():
-        print("Form submitted.")
-        print(f"Form data: {form.data}")
-        
         worker.first_name = form.first_name.data
         worker.last_name = form.last_name.data
         worker.email = form.email.data
@@ -108,16 +103,13 @@ def edit_worker(worker_id):
         worker.is_admin = form.is_admin.data
         worker.is_account_manager = form.is_account_manager.data
 
-        # Update worker's role capabilities as a dictionary
+        # Update worker's role capabilities as a dictionary with role names
         selected_role_ids = form.role_capabilities.data
-        worker.role_capabilities = {role_id: True for role_id in selected_role_ids}
-        print(f"Updated role capabilities before commit for worker {worker_id}: {worker.role_capabilities}")
-
+        worker_roles = {Role.query.get(int(role_id)).name: True for role_id in selected_role_ids}
+        worker.role_capabilities = worker_roles
         try:
             db.session.commit()
-            print(f"Updated role capabilities after commit for worker {worker_id}: {worker.role_capabilities}")
         except Exception as e:
-            print(f"Error during commit: {e}")
             db.session.rollback()
             raise
 

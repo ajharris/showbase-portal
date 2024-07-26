@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
-from ..models import Event, Crew, CrewAssignment, Note, Document
+from ..models import Event, Crew, CrewAssignment, Note, Document, Role
 from ..forms import CSRFForm, EventForm, CrewRequestForm, NoteForm, DocumentForm, SharePointForm
 from .. import db
-from .. utils import ROLES
+from .. utils import ROLES, get_crew_assignments
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
@@ -61,72 +61,33 @@ logger = logging.getLogger(__name__)
 @login_required
 def view_event(event_id):
     event = Event.query.get_or_404(event_id)
+    crew_assignments = get_crew_assignments(event_id)
+    
+    # Query roles from the database
+    roles = Role.query.all()
+    
+    # Convert roles to a list of names
+    role_names = [role.name for role in roles]
+    
+    # Initialize forms
     crew_request_form = CrewRequestForm()
     note_form = NoteForm()
     document_form = DocumentForm()
     sharepoint_form = SharePointForm()
-
+    
     if request.method == 'POST':
-        if crew_request_form.submit.data and crew_request_form.validate():
-            roles_json = crew_request_form.roles_json.data
-            try:
-                crew = Crew(
-                    event_id=event_id,
-                    start_time=crew_request_form.start_time.data,
-                    end_time=crew_request_form.end_time.data,
-                    description=crew_request_form.description.data,
-                    roles=roles_json,
-                    shift_type=','.join(crew_request_form.shift_type.data)
-                )
-                db.session.add(crew)
-                db.session.commit()
-                flash('Crew request added successfully!', 'success')
-                return redirect(url_for('events.view_event', event_id=event_id))
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Error: {str(e)}', 'danger')
-                logger.error('Error while adding crew request: %s', e)
-        elif note_form.submit.data and note_form.validate():
-            note = Note(
-                event_id=event_id,
-                content=note_form.notes.data,
-                account_manager_only=note_form.account_manager_only.data,
-                account_manager_and_td_only=note_form.account_manager_and_td_only.data,
-                worker_id=current_user.id
-            )
-            db.session.add(note)
-            db.session.commit()
-            flash('Note added successfully!', 'success')
-            return redirect(url_for('events.view_event', event_id=event_id))
-        elif document_form.submit.data and document_form.validate():
-            # Handle document form submission
-            pass
-        elif sharepoint_form.submit.data and sharepoint_form.validate():
-            event.sharepoint = sharepoint_form.sharepoint_link.data
-            db.session.commit()
-            flash('SharePoint link updated.', 'success')
-            return redirect(url_for('events.view_event', event_id=event_id))
-
-    crews = Crew.query.filter_by(event_id=event_id).all()
-    logger.debug('Crews: %s', crews)
-    crew_assignments = []
-    for crew in crews:
-        assignments = CrewAssignment.query.filter_by(crew_id=crew.id).all()
-        logger.debug('Assignments for Crew %d: %s', crew.id, assignments)
-        crew_assignments.append({
-            'crew': crew,
-            'assignments': assignments
-        })
-
+        # Handle form submissions here
+        pass
+    
     return render_template(
         'events/view_event.html',
         event=event,
+        crew_assignments=crew_assignments,
         crew_request_form=crew_request_form,
         note_form=note_form,
         document_form=document_form,
         sharepoint_form=sharepoint_form,
-        crew_assignments=crew_assignments,
-        ROLES=ROLES
+        roles=role_names
     )
 
 @events_bp.route('/delete_event/<int:event_id>', methods=['GET', 'POST'])

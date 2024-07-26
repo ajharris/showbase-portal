@@ -12,6 +12,27 @@ ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif']
 
 from sqlalchemy.orm import class_mapper
 
+def get_crew_assignments(event_id):
+    crew_assignments = (
+        db.session.query(Crew, Worker, CrewAssignment)
+        .join(CrewAssignment, CrewAssignment.crew_id == Crew.id)
+        .join(Worker, Worker.id == CrewAssignment.worker_id)
+        .filter(Crew.event_id == event_id)
+        .all()
+    )
+
+    assignments = {}
+    for crew, worker, crew_assignment in crew_assignments:
+        if crew.id not in assignments:
+            assignments[crew.id] = {
+                'crew': crew,
+                'assignments': [None] * crew.get_total_roles(),
+            }
+        role_index = crew.get_role_index(crew_assignment.role)
+        assignments[crew.id]['assignments'][role_index] = crew_assignment
+
+    return assignments.values()
+
 def backup_database_to_json(file_path):
     try:
         data = {}
