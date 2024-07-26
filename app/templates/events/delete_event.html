@@ -3,14 +3,10 @@
 
 {% block page_content %}
 <div class="container">
-    <h2>Delete Event</h2>
-    <p>Are you sure you want to delete the event "{{ event.show_name }}"?</p>
+    <h2>Delete Event: {{ event.show_number }}, {{ event.show_name }}</h2>
     <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}">
-        {{ form.hidden_tag() }} <!-- This includes the CSRF token -->
-        <div class="form-group">
-            <button type="submit" class="btn btn-danger">Delete</button>
-            <a href="{{ url_for('events.list_events') }}" class="btn btn-secondary">Cancel</a>
-        </div>
+        {{ form.hidden_tag() }}
+        <button type="submit" class="btn btn-danger">Delete</button>
     </form>
 </div>
 {% endblock %}

@@ -90,6 +90,7 @@ def view_event(event_id):
         roles=role_names
     )
 
+
 @events_bp.route('/delete_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def delete_event(event_id):
@@ -112,6 +113,7 @@ def delete_event(event_id):
         return redirect(url_for('events.list_events'))
 
     return render_template('admin/delete_event.html', form=form, event=event)
+
 
 
 @events_bp.route('/delete_crew/<int:crew_id>', methods=['POST'])

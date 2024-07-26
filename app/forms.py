@@ -22,8 +22,10 @@ class RoleForm(FlaskForm):
     submit_add = SubmitField('Add Role')
     submit_delete = SubmitField('Delete Role')
 
+
 class CSRFForm(FlaskForm):
-    pass
+    submit = SubmitField('Delete')
+
 
 class RoleCheckboxForm(FlaskForm):
     pass
