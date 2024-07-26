@@ -3,7 +3,7 @@
 
 {% block page_content %}
 <div class="container">
-    <h2>{{ form.temp_password ? "Create Worker" : "Edit Worker" }}</h2>
+    <h2>{% if form.temp_password %}Create Worker{% else %}Edit Worker{% endif %}</h2>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <div class="form-group">
@@ -35,9 +35,10 @@
         <div class="form-group">
             <label>Role Capabilities</label>
             <div class="horizontal-role-group">
-                {% for field in form.role_capabilities %}
+                {% for role_id, role_name in form.role_capabilities.choices %}
                     <div class="role-entry">
-                        {{ field }} {{ field.label }}
+                        <input type="checkbox" name="{{ form.role_capabilities.name }}" id="role_capabilities-{{ loop.index }}" value="{{ role_id }}" {% if role_id in form.role_capabilities.data %}checked{% endif %}>
+                        <label for="role_capabilities-{{ loop.index }}">{{ role_name }}</label>
                     </div>
                 {% endfor %}
             </div>

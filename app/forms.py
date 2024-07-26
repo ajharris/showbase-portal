@@ -30,6 +30,8 @@ class RoleCheckboxForm(FlaskForm):
 
 class RoleCapabilityField(FlaskForm):
     capability = BooleanField()
+    
+from wtforms.widgets import ListWidget, CheckboxInput
 
 class EditWorkerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -38,7 +40,7 @@ class EditWorkerForm(FlaskForm):
     phone_number = StringField('Phone Number')
     is_admin = BooleanField('Is Admin')
     is_account_manager = BooleanField('Is Account Manager')
-    role_capabilities = SelectMultipleField('Role Capabilities', choices=[])
+    role_capabilities = SelectMultipleField('Role Capabilities', choices=[], option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False))
     submit = SubmitField('Update Worker')
 
     def __init__(self, *args, **kwargs):
@@ -47,10 +49,8 @@ class EditWorkerForm(FlaskForm):
 
     def populate_roles(self):
         roles = Role.query.all()
-        self.role_capabilities.choices = [(role.id, role.name) for role in roles]
-        if self.role_capabilities.data is None:
-            self.role_capabilities.data = []
-
+        self.role_capabilities.choices = [(str(role.id), role.name) for role in roles]
+        
 class AdminCreateWorkerForm(EditWorkerForm):
     temp_password = PasswordField('Temporary Password', validators=[DataRequired()])
     confirm_temp_password = PasswordField('Confirm Temporary Password', validators=[DataRequired(), EqualTo('temp_password')])

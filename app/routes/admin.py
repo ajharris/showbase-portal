@@ -90,19 +90,40 @@ def create_worker():
 def edit_worker(worker_id):
     worker = Worker.query.get_or_404(worker_id)
     form = EditWorkerForm(obj=worker)
+    
     if request.method == 'GET':
-        form.populate_role_capabilities(worker.role_capabilities)
+        form.populate_roles()
+        # Populate the form with current role capabilities
+        form.role_capabilities.data = [str(role_id) for role_id in worker.role_capabilities.keys()]
+        print(f"Initial role capabilities for worker {worker_id}: {worker.role_capabilities}")
+    
     if form.validate_on_submit():
+        print("Form submitted.")
+        print(f"Form data: {form.data}")
+        
         worker.first_name = form.first_name.data
         worker.last_name = form.last_name.data
         worker.email = form.email.data
         worker.phone_number = form.phone_number.data
         worker.is_admin = form.is_admin.data
         worker.is_account_manager = form.is_account_manager.data
-        worker.role_capabilities = {role.name: form.role_capabilities[i].capability.data for i, role in enumerate(Role.query.all())}
-        db.session.commit()
+
+        # Update worker's role capabilities as a dictionary
+        selected_role_ids = form.role_capabilities.data
+        worker.role_capabilities = {role_id: True for role_id in selected_role_ids}
+        print(f"Updated role capabilities before commit for worker {worker_id}: {worker.role_capabilities}")
+
+        try:
+            db.session.commit()
+            print(f"Updated role capabilities after commit for worker {worker_id}: {worker.role_capabilities}")
+        except Exception as e:
+            print(f"Error during commit: {e}")
+            db.session.rollback()
+            raise
+
         flash('Worker updated successfully', 'success')
         return redirect(url_for('admin.edit_worker', worker_id=worker.id))
+    
     return render_template('admin/edit_worker.html', form=form, worker=worker)
 
 # Existing routes for shifts, events, etc. remain unchanged

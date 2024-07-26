@@ -24,10 +24,10 @@ def create_app(config_class='config.Config'):
     app = Flask(__name__, static_folder='static')
     app.config.from_object(config_class)
 
-    print(f"SQLALCHEMY_DATABASE_URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
-    print(f"MAIL_USERNAME: {app.config['MAIL_USERNAME']}")
-    print(f"MAIL_PASSWORD: {app.config['MAIL_PASSWORD']}")
-    print(f"SECRET_KEY: {app.config['SECRET_KEY']}")
+    # print(f"SQLALCHEMY_DATABASE_URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    # print(f"MAIL_USERNAME: {app.config['MAIL_USERNAME']}")
+    # print(f"MAIL_PASSWORD: {app.config['MAIL_PASSWORD']}")
+    # print(f"SECRET_KEY: {app.config['SECRET_KEY']}")
 
     # Initialize extensions with the app
     db.init_app(app)
