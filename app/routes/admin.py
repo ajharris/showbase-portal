@@ -175,40 +175,35 @@ def unfulfilled_crew_requests():
         return redirect(url_for('admin.unfulfilled_crew_requests'))
 
     unfulfilled_crews = Crew.query.filter(Crew.end_time >= datetime.utcnow()).all()
-    workers = Worker.query.all()
-
     unfulfilled_roles = []
-    for crew in unfulfilled_crews:
-        logging.debug(f'Crew ID: {crew.id}, Roles: {crew.get_roles()}')
-        for assignment in crew.crew_assignments:
-            logging.debug(f'Assignment - Role: {assignment.role}, Status: {assignment.status}, Worker: {assignment.worker.first_name} {assignment.worker.last_name}')
 
-        roles = crew.get_roles()
-        for role, required_count in roles.items():
+    for crew in unfulfilled_crews:
+        required_roles = crew.get_roles()
+        for role, required_count in required_roles.items():
             assigned_count = crew.get_assigned_role_count(role)
             assignments = [
                 {
-                    'worker_name': assignment.worker.first_name + ' ' + assignment.worker.last_name,
-                    'status': assignment.status,
-                    'id': assignment.id
-                } for assignment in crew.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted', 'rejected']
+                    "id": assignment.id,
+                    "status": assignment.status,
+                    "worker_name": f"{assignment.worker.first_name} {assignment.worker.last_name}"
+                }
+                for assignment in crew.crew_assignments
+                if assignment.role == role
             ]
-            if required_count > assigned_count or any(a['status'] == 'offered' for a in assignments):
-                logging.debug(f"Unfulfilled Role: {role} - Required: {required_count}, Assigned: {assigned_count}, Assignments: {assignments}")
+            if assigned_count < required_count or any(assignment['status'] == 'offered' for assignment in assignments):
                 unfulfilled_roles.append({
-                    'crew_id': crew.id,
-                    'event_name': crew.event.show_name,
-                    'description': crew.description,
-                    'role': role,
-                    'required_count': required_count,
-                    'assigned_count': assigned_count,
-                    'start_time': crew.start_time,
-                    'end_time': crew.end_time,
-                    'assignments': assignments
+                    "crew_id": crew.id,
+                    "event_name": crew.event.show_name,
+                    "description": crew.description,
+                    "role": role,
+                    "required_count": required_count,
+                    "assigned_count": assigned_count,
+                    "start_time": crew.start_time,
+                    "end_time": crew.end_time,
+                    "assignments": assignments
                 })
 
-    logging.debug(f'Unfulfilled Roles: {unfulfilled_roles}')
-
+    workers = Worker.query.all()
     return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_roles=unfulfilled_roles, workers=workers)
 
 @admin_bp.route('/add_location', methods=['GET', 'POST'])
@@ -308,7 +303,7 @@ def remind_worker():
 def revoke_offer():
     assignment_id = request.form.get('assignment_id')
     assignment = CrewAssignment.query.get_or_404(assignment_id)
-    db.session.delete(assignment)
-    db.session.commit()
+    assignment.unassign()  # This will delete the assignment
     flash(f'Offer revoked for {assignment.worker.first_name} {assignment.worker.last_name}.', 'success')
     return redirect(url_for('admin.unfulfilled_crew_requests'))
+

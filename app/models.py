@@ -171,6 +171,10 @@ class CrewAssignment(db.Model):
                 assigned_roles[assignment.role] += 1
         return assigned_roles[role] >= required_roles[role]
 
+    def unassign(self):
+        db.session.delete(self)
+        db.session.commit()
+
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     receipt_number = db.Column(db.String(50))
