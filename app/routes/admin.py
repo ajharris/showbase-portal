@@ -174,9 +174,42 @@ def unfulfilled_crew_requests():
 
         return redirect(url_for('admin.unfulfilled_crew_requests'))
 
-    unfulfilled_crews = [crew for crew in Crew.query.all() if not crew.is_fulfilled]
+    unfulfilled_crews = Crew.query.filter(Crew.end_time >= datetime.utcnow()).all()
     workers = Worker.query.all()
-    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_crews=unfulfilled_crews, workers=workers)
+
+    unfulfilled_roles = []
+    for crew in unfulfilled_crews:
+        logging.debug(f'Crew ID: {crew.id}, Roles: {crew.get_roles()}')
+        for assignment in crew.crew_assignments:
+            logging.debug(f'Assignment - Role: {assignment.role}, Status: {assignment.status}, Worker: {assignment.worker.first_name} {assignment.worker.last_name}')
+
+        roles = crew.get_roles()
+        for role, required_count in roles.items():
+            assigned_count = crew.get_assigned_role_count(role)
+            assignments = [
+                {
+                    'worker_name': assignment.worker.first_name + ' ' + assignment.worker.last_name,
+                    'status': assignment.status,
+                    'id': assignment.id
+                } for assignment in crew.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted', 'rejected']
+            ]
+            if required_count > assigned_count or any(a['status'] == 'offered' for a in assignments):
+                logging.debug(f"Unfulfilled Role: {role} - Required: {required_count}, Assigned: {assigned_count}, Assignments: {assignments}")
+                unfulfilled_roles.append({
+                    'crew_id': crew.id,
+                    'event_name': crew.event.show_name,
+                    'description': crew.description,
+                    'role': role,
+                    'required_count': required_count,
+                    'assigned_count': assigned_count,
+                    'start_time': crew.start_time,
+                    'end_time': crew.end_time,
+                    'assignments': assignments
+                })
+
+    logging.debug(f'Unfulfilled Roles: {unfulfilled_roles}')
+
+    return render_template('admin/admin_unfulfilled_crew_requests.html', form=form, unfulfilled_roles=unfulfilled_roles, workers=workers)
 
 @admin_bp.route('/add_location', methods=['GET', 'POST'])
 @login_required

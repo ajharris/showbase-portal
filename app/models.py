@@ -1,22 +1,16 @@
 from datetime import datetime, timedelta
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
 from flask import current_app
+from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer as Serializer
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.types import JSON
 from . import db
 import json
+import logging
 
-from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.types import JSON
-
-from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.types import JSON
-from . import db
+logger = logging.getLogger(__name__)
 
 class Worker(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,12 +35,13 @@ class Worker(UserMixin, db.Model):
     def is_available(self, start_time, end_time):
         for assignment in self.crew_assignments:
             if assignment.status in ['offered', 'accepted'] and not (assignment.assigned_crew.end_time <= start_time or assignment.assigned_crew.start_time >= end_time):
+                logging.debug(f'Worker {self.first_name} {self.last_name} is not available between {start_time} and {end_time}')
                 return False
+        logging.debug(f'Worker {self.first_name} {self.last_name} is available between {start_time} and {end_time}')
         return True
-    
+
     def get_role_capabilities(self):
         return self.role_capabilities
-
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,18 +51,15 @@ class Role(db.Model):
     def __repr__(self):
         return f'<Role {self.name}>'
 
-
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     address = db.Column(db.String(256), nullable=False)
-    loading_notes = db.Column(db.String(1024))  # Increase the length to 1024
-    dress_code = db.Column(db.String(256))  # Increase the length to 256
-    other_info = db.Column(db.String(1024))  # Increase the length to 1024
+    loading_notes = db.Column(db.String(1024))
+    dress_code = db.Column(db.String(256))
+    other_info = db.Column(db.String(1024))
 
     events = db.relationship('Event', backref='location', lazy=True)
-
-
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,14 +95,13 @@ class Document(db.Model):
 
     event = db.relationship('Event', back_populates='documents')
 
-
 class Crew(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     roles = db.Column(db.String, nullable=False)
-    shift_type = db.Column(db.String, nullable=False) 
+    shift_type = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
 
     crew_assignments = db.relationship('CrewAssignment', backref='assigned_crew', lazy=True)
@@ -119,22 +110,22 @@ class Crew(db.Model):
         return json.loads(self.roles)
 
     def get_assigned_role_count(self, role):
-        return sum(1 for assignment in self.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted'])
+        count = sum(1 for assignment in self.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted'])
+        logging.debug(f'Role: {role}, Assigned Count: {count}')
+        return count
 
     def get_assigned_roles(self):
         assigned_roles = {}
         for assignment in self.crew_assignments:
             if assignment.status in ['offered', 'accepted']:
-                if assignment.role in assigned_roles:
-                    assigned_roles[assignment.role] += 1
-                else:
-                    assigned_roles[assignment.role] = 1
+                assigned_roles[assignment.role] = assigned_roles.get(assignment.role, 0) + 1
         return assigned_roles
 
     def get_unassigned_roles(self):
         required_roles = self.get_roles()
         assigned_roles = self.get_assigned_roles()
         unassigned_roles = {role: required_roles[role] - assigned_roles.get(role, 0) for role in required_roles}
+        logging.debug(f'Unassigned Roles: {unassigned_roles}')
         return {role: count for role, count in unassigned_roles.items() if count > 0}
 
     @property
@@ -157,8 +148,9 @@ class Crew(db.Model):
             db.session.commit()
 
     def get_assignment_for_role(self, role):
-        return next((assignment for assignment in self.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted']), None)
-
+        assignment = [assignment for assignment in self.crew_assignments if assignment.role == role and assignment.status in ['offered', 'accepted']]
+        logging.debug(f'Role: {role}, Assignment: {assignment}')
+        return assignment
 
 class CrewAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -179,10 +171,6 @@ class CrewAssignment(db.Model):
                 assigned_roles[assignment.role] += 1
         return assigned_roles[role] >= required_roles[role]
 
-
-
-
-
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     receipt_number = db.Column(db.String(50))
@@ -197,7 +185,6 @@ class Expense(db.Model):
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
 
     worker = db.relationship('Worker', foreign_keys=[worker_id], backref='expenses')
-
 
 class Shift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -218,7 +205,6 @@ class Shift(db.Model):
             crew_assignment.status = 'offered'
             db.session.delete(self)
             db.session.commit()
-
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
