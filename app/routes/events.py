@@ -80,10 +80,14 @@ def view_event(event_id):
             for i in range(count):
                 worker = assigned_roles.get(role, None)
                 if worker:
+                    assignment_status = next(
+                        (assignment.status for assignment in crew.crew_assignments if assignment.role == role and assignment.worker == worker),
+                        'Not yet assigned'
+                    )
                     assignments.append({
                         'role': role,
                         'worker': worker,
-                        'status': 'assigned'
+                        'status': assignment_status
                     })
                 else:
                     assignments.append({
@@ -91,6 +95,7 @@ def view_event(event_id):
                         'worker': None,
                         'status': 'Not yet assigned'
                     })
+
         crew_assignments.append({'crew': crew, 'assignments': assignments})
 
     if form.validate_on_submit():
@@ -98,7 +103,7 @@ def view_event(event_id):
             event_id=event.id,
             start_time=form.start_time.data,
             end_time=form.end_time.data,
-            roles=json.dumps(form.roles.data),
+            roles=json.dumps(json.loads(request.form['roles_json'])),
             shift_type=form.shift_type.data,
             description=form.description.data
         )
@@ -106,6 +111,7 @@ def view_event(event_id):
         db.session.commit()
         flash('New crew request has been added!', 'success')
         return redirect(url_for('events.view_event', event_id=event.id))
+
     return render_template('events/view_event.html', event=event, crew_request_form=form,
                            note_form=note_form, document_form=document_form,
                            sharepoint_form=sharepoint_form, crew_assignments=crew_assignments, roles=roles)
@@ -142,3 +148,4 @@ def delete_crew(crew_id):
     db.session.commit()
     flash('Crew deleted successfully.', 'success')
     return redirect(url_for('events.view_event', event_id=event_id))
+

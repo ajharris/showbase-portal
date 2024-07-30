@@ -110,7 +110,7 @@ class Crew(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     roles = db.Column(db.String, nullable=False)
-    shift_type = db.Column(db.String, nullable=False)
+    shift_type = db.Column(db.String, nullable=False) 
     description = db.Column(db.String, nullable=False)
 
     crew_assignments = db.relationship('CrewAssignment', backref='assigned_crew', lazy=True)

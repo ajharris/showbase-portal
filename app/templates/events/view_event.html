@@ -65,7 +65,7 @@
                     <p><strong>End Time:</strong> {{ crew_info['crew'].end_time }}</p>
                 </div>
                 <div class="form-group col-md-4">
-                    <p><strong>Shift Type:</strong> {{ crew_info['crew'].shift_type | capitalize }}</p>
+                    <p><strong>Shift Type:</strong> {{ crew_info['crew'].shift_type }}</p>
                 </div>
             </div>
             <table class="table">
@@ -75,6 +75,7 @@
                         <th>Name</th>
                         <th>Phone</th>
                         <th>Email</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -90,6 +91,7 @@
                         </td>
                         <td>{{ assignment['worker'].phone_number if assignment['worker'] else 'N/A' }}</td>
                         <td>{{ assignment['worker'].email if assignment['worker'] else 'N/A' }}</td>
+                        <td>{{ assignment['status'] }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
