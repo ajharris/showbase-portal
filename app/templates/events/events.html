@@ -15,6 +15,7 @@
         <tr>
             <td>{{ event.show_name }}</td>
             <td>
+                <a href="{{ url_for('events.view_event', event_id=event.id) }}" class="btn btn-primary">View</a>
                 <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}" style="display:inline;">
                     {{ form.hidden_tag() }}
                     <button type="submit" class="btn btn-danger">Delete</button>

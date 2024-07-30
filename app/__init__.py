@@ -79,3 +79,5 @@ def create_app(config_class='config.Config'):
 # Set up logging
 import logging
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARN)
+

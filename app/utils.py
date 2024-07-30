@@ -5,33 +5,43 @@ import pandas as pd
 from flask import current_app, url_for
 from .models import Expense, Event, Location, Shift, Worker, Crew, CrewAssignment
 from app import db
+import logging
 
 ROLES = ['TD', 'Video', 'Audio', 'Lighting', 'Staging', 'Stagehand', 'Lift Op', 'Driver']
 
 ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif']
 
 from sqlalchemy.orm import class_mapper
+logger = logging.getLogger(__name__)
 
 def get_crew_assignments(event_id):
-    crew_assignments = (
-        db.session.query(Crew, Worker, CrewAssignment)
-        .join(CrewAssignment, CrewAssignment.crew_id == Crew.id)
-        .join(Worker, Worker.id == CrewAssignment.worker_id)
-        .filter(Crew.event_id == event_id)
-        .all()
-    )
+    logger.debug(f"Retrieving crew assignments for event: {event_id}")
+    assignments = db.session.query(Crew, CrewAssignment, Worker).join(
+        CrewAssignment, Crew.id == CrewAssignment.crew_id
+    ).join(
+        Worker, CrewAssignment.worker_id == Worker.id
+    ).filter(
+        Crew.event_id == event_id
+    ).all()
 
-    assignments = {}
-    for crew, worker, crew_assignment in crew_assignments:
-        if crew.id not in assignments:
-            assignments[crew.id] = {
-                'crew': crew,
-                'assignments': [None] * crew.get_total_roles(),
+    logger.debug(f"Raw Assignments: {assignments}")
+    
+    crew_dict = {}
+    for crew, crew_assignment, worker in assignments:
+        if crew.id not in crew_dict:
+            crew_dict[crew.id] = {
+                "crew": crew,
+                "assignments": []
             }
-        role_index = crew.get_role_index(crew_assignment.role)
-        assignments[crew.id]['assignments'][role_index] = crew_assignment
+        crew_dict[crew.id]["assignments"].append({
+            "role": crew_assignment.role,
+            "status": crew_assignment.status,
+            "worker": worker
+        })
 
-    return assignments.values()
+    crew_assignments = list(crew_dict.values())
+    logger.debug(f"Crew assignments retrieved: {crew_assignments}")
+    return crew_assignments
 
 def backup_database_to_json(file_path):
     try:

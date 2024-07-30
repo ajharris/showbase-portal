@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
-from ..models import Event, Crew, CrewAssignment, Note, Document, Role
+from ..models import Event, Crew, CrewAssignment, Note, Document, Role, Worker
 from ..forms import CSRFForm, EventForm, CrewRequestForm, NoteForm, DocumentForm, SharePointForm
 from .. import db
-from .. utils import ROLES, get_crew_assignments
+from ..utils import ROLES, get_crew_assignments
+import json
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
@@ -35,7 +36,6 @@ def list_events():
     form = CSRFForm()
     return render_template('events/events.html', events=events, form=form)
 
-
 @events_bp.route('/activate_event/<int:event_id>')
 @login_required
 def activate_event(event_id):
@@ -61,35 +61,54 @@ logger = logging.getLogger(__name__)
 @login_required
 def view_event(event_id):
     event = Event.query.get_or_404(event_id)
-    crew_assignments = get_crew_assignments(event_id)
-    
-    # Query roles from the database
-    roles = Role.query.all()
-    
-    # Convert roles to a list of names
-    role_names = [role.name for role in roles]
-    
-    # Initialize forms
-    crew_request_form = CrewRequestForm()
+    form = CrewRequestForm()
     note_form = NoteForm()
     document_form = DocumentForm()
     sharepoint_form = SharePointForm()
-    
-    if request.method == 'POST':
-        # Handle form submissions here
-        pass
-    
-    return render_template(
-        'events/view_event.html',
-        event=event,
-        crew_assignments=crew_assignments,
-        crew_request_form=crew_request_form,
-        note_form=note_form,
-        document_form=document_form,
-        sharepoint_form=sharepoint_form,
-        roles=role_names
-    )
 
+    # Retrieve all roles from the database
+    roles = Role.query.all()
+
+    # Initialize an empty list for crew assignments
+    crew_assignments = []
+
+    # Retrieve crew assignments
+    for crew in event.crews:
+        assignments = []
+        assigned_roles = {assignment.role: assignment.worker for assignment in crew.crew_assignments}
+        for role, count in json.loads(crew.roles).items():
+            for i in range(count):
+                worker = assigned_roles.get(role, None)
+                if worker:
+                    assignments.append({
+                        'role': role,
+                        'worker': worker,
+                        'status': 'assigned'
+                    })
+                else:
+                    assignments.append({
+                        'role': role,
+                        'worker': None,
+                        'status': 'Not yet assigned'
+                    })
+        crew_assignments.append({'crew': crew, 'assignments': assignments})
+
+    if form.validate_on_submit():
+        new_crew = Crew(
+            event_id=event.id,
+            start_time=form.start_time.data,
+            end_time=form.end_time.data,
+            roles=json.dumps(form.roles.data),
+            shift_type=form.shift_type.data,
+            description=form.description.data
+        )
+        db.session.add(new_crew)
+        db.session.commit()
+        flash('New crew request has been added!', 'success')
+        return redirect(url_for('events.view_event', event_id=event.id))
+    return render_template('events/view_event.html', event=event, crew_request_form=form,
+                           note_form=note_form, document_form=document_form,
+                           sharepoint_form=sharepoint_form, crew_assignments=crew_assignments, roles=roles)
 
 @events_bp.route('/delete_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
@@ -113,8 +132,6 @@ def delete_event(event_id):
         return redirect(url_for('events.list_events'))
 
     return render_template('admin/delete_event.html', form=form, event=event)
-
-
 
 @events_bp.route('/delete_crew/<int:crew_id>', methods=['POST'])
 @login_required

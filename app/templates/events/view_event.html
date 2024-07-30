@@ -11,7 +11,6 @@
         <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}" id="crewRequestForm">
             {{ crew_request_form.hidden_tag() }}
             <input type="hidden" name="crew_id" value="{{ crew_request_form.crew_id.data }}">
-            <!-- Other fields here -->
             <div class="form-group">
                 {{ form_field(crew_request_form.description, class="form-control") }}
             </div>
@@ -39,8 +38,8 @@
                 <div class="row">
                     {% for role in roles %}
                         <div class="form-group col-md-3">
-                            <label>{{ role }}</label>
-                            <input type="number" name="{{ role }}" value="0" class="form-control role-count">
+                            <label>{{ role.name }}</label>
+                            <input type="number" name="{{ role.name }}" value="0" class="form-control role-count">
                         </div>
                     {% endfor %}
                 </div>
@@ -50,7 +49,6 @@
                 {{ form_field(crew_request_form.submit, class="btn btn-primary") }}
             </div>
         </form>
-        
     </div>
     {% endif %}
 
@@ -58,16 +56,16 @@
         <h3>Crew Assignments</h3>
         {% for crew_info in crew_assignments %}
         <div class="crew-report">
-            <h4>{{ crew_info.crew.description }}</h4>
+            <h4>{{ crew_info['crew'].description }}</h4>
             <div class="form-row">
                 <div class="form-group col-md-4">
-                    <p><strong>Start Time:</strong> {{ crew_info.crew.start_time }}</p>
+                    <p><strong>Start Time:</strong> {{ crew_info['crew'].start_time }}</p>
                 </div>
                 <div class="form-group col-md-4">
-                    <p><strong>End Time:</strong> {{ crew_info.crew.end_time }}</p>
+                    <p><strong>End Time:</strong> {{ crew_info['crew'].end_time }}</p>
                 </div>
                 <div class="form-group col-md-4">
-                    <p><strong>Shift Type:</strong> {{ crew_info.crew.shift_type | capitalize }}</p>
+                    <p><strong>Shift Type:</strong> {{ crew_info['crew'].shift_type | capitalize }}</p>
                 </div>
             </div>
             <table class="table">
@@ -80,24 +78,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for role, count in crew_info.crew.get_roles().items() %}
-                        {% for i in range(count) %}
-                        <tr>
-                            <td>{{ role }}</td>
-                            {% if crew_info.assignments[i] %}
-                                <td>{{ crew_info.assignments[i].worker.first_name }} {{ crew_info.assignments[i].worker.last_name }}</td>
-                                <td>{{ crew_info.assignments[i].worker.phone_number }}</td>
-                                <td>{{ crew_info.assignments[i].worker.email }}</td>
+                    {% for assignment in crew_info['assignments'] %}
+                    <tr>
+                        <td>{{ assignment['role'] }}</td>
+                        <td>
+                            {% if assignment['worker'] %}
+                                {{ assignment['worker'].first_name }} {{ assignment['worker'].last_name }}
                             {% else %}
-                                <td colspan="3">Not Yet Assigned</td>
+                                Not yet assigned
                             {% endif %}
-                        </tr>
-                        {% endfor %}
+                        </td>
+                        <td>{{ assignment['worker'].phone_number if assignment['worker'] else 'N/A' }}</td>
+                        <td>{{ assignment['worker'].email if assignment['worker'] else 'N/A' }}</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% if (current_user.is_admin or current_user.is_account_manager) and not session.get('view_as_employee', False) %}
-            <form method="POST" action="{{ url_for('events.delete_crew', crew_id=crew_info.crew.id) }}">
+            <form method="POST" action="{{ url_for('events.delete_crew', crew_id=crew_info['crew'].id) }}">
                 {{ crew_request_form.hidden_tag() }}
                 <button type="submit" class="btn btn-danger">Delete</button>
             </form>
@@ -105,8 +103,7 @@
         </div>
         {% endfor %}
     </div>
-    
-    
+
     <h3>Notes</h3>
     <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
         {{ note_form.hidden_tag() }}
