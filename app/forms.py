@@ -156,7 +156,7 @@ class NoteForm(FlaskForm):
     notes = TextAreaField('Note Content', validators=[DataRequired()])
     account_manager_only = BooleanField('Visible to Account Managers Only')
     account_manager_and_td_only = BooleanField('Visible to Account Managers and TDs Only')
-    submit = SubmitField('Add Note')
+    submit_note = SubmitField('Add Note')
 
 class DocumentForm(FlaskForm):
     document = FileField('Upload Document', validators=[FileAllowed(['pdf', 'jpeg', 'jpg', 'png', 'docx', 'xlsx'], 'Documents only!')])

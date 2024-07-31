@@ -1,11 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from ..models import Event, Crew, CrewAssignment, Note, Document, Role, Worker
 from ..forms import CSRFForm, EventForm, CrewRequestForm, NoteForm, DocumentForm, SharePointForm
 from .. import db
 from ..utils import ROLES, get_crew_assignments
 import json
+import os
+from datetime import datetime
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
@@ -112,6 +115,24 @@ def view_event(event_id):
         flash('New crew request has been added!', 'success')
         return redirect(url_for('events.view_event', event_id=event.id))
 
+    if note_form.validate_on_submit():
+        note_content = note_form.notes.data
+        account_manager_only = note_form.account_manager_only.data
+        account_manager_and_td_only = note_form.account_manager_and_td_only.data
+
+        note = Note(
+            content=note_content,
+            event_id=event_id,
+            worker_id=current_user.id,
+            account_manager_only=account_manager_only,
+            account_manager_and_td_only=account_manager_and_td_only,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(note)
+        db.session.commit()
+        flash('Note added successfully!', 'success')
+        return redirect(url_for('events.view_event', event_id=event_id))
+
     return render_template('events/view_event.html', event=event, crew_request_form=form,
                            note_form=note_form, document_form=document_form,
                            sharepoint_form=sharepoint_form, crew_assignments=crew_assignments, roles=roles)
@@ -149,3 +170,74 @@ def delete_crew(crew_id):
     flash('Crew deleted successfully.', 'success')
     return redirect(url_for('events.view_event', event_id=event_id))
 
+@events_bp.route('/add_note/<int:event_id>', methods=['POST'])
+@login_required
+def add_note(event_id):
+    event = Event.query.get_or_404(event_id)
+    note_content = request.form['notes']
+    account_manager_only = 'account_manager_only' in request.form
+    account_manager_and_td_only = 'account_manager_and_td_only' in request.form
+
+    note = Note(
+        content=note_content,
+        event_id=event_id,
+        worker_id=current_user.id,
+        account_manager_only=account_manager_only,
+        account_manager_and_td_only=account_manager_and_td_only,
+        created_at=datetime.utcnow()
+    )
+    db.session.add(note)
+    db.session.commit()
+    flash('Note added successfully!', 'success')
+    return redirect(url_for('events.view_event', event_id=event_id))
+
+@events_bp.route('/upload_document/<int:event_id>', methods=['POST'])
+@login_required
+def upload_document(event_id):
+    event = Event.query.get_or_404(event_id)
+    document_form = DocumentForm()
+    if document_form.validate_on_submit():
+        file = document_form.document.data
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(current_app.root_path, 'static', 'uploads', filename)
+        file.save(file_path)
+        document = Document(name=filename, path=filename, event_id=event_id)
+        db.session.add(document)
+        db.session.commit()
+        flash('Document uploaded successfully.', 'success')
+    else:
+        flash('Failed to upload document.', 'danger')
+    return redirect(url_for('events.view_event', event_id=event_id))
+
+@events_bp.route('/add_sharepoint/<int:event_id>', methods=['POST'])
+@login_required
+def add_sharepoint(event_id):
+    event = Event.query.get_or_404(event_id)
+    sharepoint_form = SharePointForm()
+    if sharepoint_form.validate_on_submit():
+        event.sharepoint_link = sharepoint_form.sharepoint_link.data
+        db.session.commit()
+        flash('SharePoint link added successfully!', 'success')
+    else:
+        flash('Failed to add SharePoint link.', 'danger')
+    return redirect(url_for('events.view_event', event_id=event_id))
+
+@events_bp.route('/delete_document/<int:document_id>', methods=['POST'])
+@login_required
+def delete_document(document_id):
+    document = Document.query.get_or_404(document_id)
+    file_path = os.path.join(current_app.root_path, 'static', 'uploads', document.path)
+    
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            flash('Document file and link deleted successfully.', 'success')
+        except Exception as e:
+            flash('Error deleting document file.', 'danger')
+    else:
+        flash('Document file not found, only link deleted.', 'warning')
+
+    db.session.delete(document)
+    db.session.commit()
+    
+    return jsonify(success=True)

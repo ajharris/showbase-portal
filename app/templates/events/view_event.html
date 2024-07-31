@@ -107,24 +107,93 @@
     </div>
 
     <h3>Notes</h3>
-    <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
+    <ul>
+        {% for note in event.notes %}
+            {% if not note.account_manager_only and not note.account_manager_and_td_only %}
+                <li>
+                    <strong>{{ note.worker.first_name }} {{ note.worker.last_name }}:</strong> {{ note.content }}
+                    <br>
+                    <small>Created at: {{ note.created_at }}</small>
+                </li>
+            {% elif not session.get('view_as_employee', False) %}
+                {% if (current_user.is_admin or current_user.is_account_manager) or (current_user.id in td_worker_ids) %}
+                <li>
+                    <strong>{{ note.worker.first_name }} {{ note.worker.last_name }}:</strong> {{ note.content }}
+                    <br>
+                    <small>Created at: {{ note.created_at }}</small>
+                    {% if note.account_manager_only %}
+                    <br>
+                    <small>Visible to Account Managers Only</small>
+                    {% elif note.account_manager_and_td_only %}
+                    <br>
+                    <small>Visible to Account Managers and TDs Only</small>
+                    {% endif %}
+                </li>
+                {% endif %}
+            {% elif (current_user.id in td_worker_ids) %}
+                {% if not note.account_manager_only %}
+                <li>
+                    <strong>{{ note.worker.first_name }} {{ note.worker.last_name }}:</strong> {{ note.content }}
+                    <br>
+                    <small>Created at: {{ note.created_at }}</small>
+                    {% if note.account_manager_and_td_only %}
+                    <br>
+                    <small>Visible to Account Managers and TDs Only</small>
+                    {% endif %}
+                </li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    {% if current_user.is_authenticated %}
+    <form method="POST" action="{{ url_for('events.add_note', event_id=event.id) }}">
         {{ note_form.hidden_tag() }}
         <div class="form-group">
             {{ form_field(note_form.notes, class="form-control") }}
         </div>
         <div class="form-group">
-            {{ form_field(note_form.account_manager_only) }}
+            <div class="checkbox">
+                <label>
+                    {{ note_form.account_manager_only }} Visible to Account Managers Only
+                </label>
+            </div>
         </div>
         <div class="form-group">
-            {{ form_field(note_form.account_manager_and_td_only) }}
+            <div class="checkbox">
+                <label>
+                    {{ note_form.account_manager_and_td_only }} Visible to Account Managers and TDs Only
+                </label>
+            </div>
         </div>
         <div class="form-group">
-            {{ form_field(note_form.submit, class="btn btn-primary") }}
+            {{ form_field(note_form.submit_note, class="btn btn-primary") }}
         </div>
     </form>
+    {% endif %}
 
     <h3>Documents</h3>
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('events.view_event', event_id=event.id) }}">
+    <ul>
+        {% for document in event.documents %}
+        <li>
+            {% set document_path = 'uploads/' + document.path %}
+            {% set document_url = url_for('static', filename=document_path) %}
+            {% if document.path.endswith('.pdf') or document.path.endswith('.jpg') or document.path.endswith('.png') %}
+                <a href="#" onclick="openDocument('{{ document_url }}', '{{ document.name }}')" class="document-link">{{ document.name }}</a>
+            {% else %}
+                <a href="#" onclick="openExternalDocument('{{ document_url }}', '{{ document.name }}')" class="document-link">{{ document.name }}</a>
+            {% endif %}
+            {% if current_user.is_admin or current_user.is_account_manager %}
+            <button onclick="deleteDocument('{{ document.id }}')" class="btn btn-danger btn-sm">Delete</button>
+            {% endif %}
+            <br>
+            <!-- Print the constructed URL for verification -->
+            <small>{{ document_url }}</small>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('events.upload_document', event_id=event.id) }}">
         {{ document_form.hidden_tag() }}
         <div class="form-group">
             {{ form_field(document_form.document, class="form-control") }}
@@ -135,7 +204,7 @@
     </form>
 
     <h3>SharePoint</h3>
-    <form method="POST" action="{{ url_for('events.view_event', event_id=event.id) }}">
+    <form method="POST" action="{{ url_for('events.add_sharepoint', event_id=event.id) }}">
         {{ sharepoint_form.hidden_tag() }}
         <div class="form-group">
             {{ form_field(sharepoint_form.sharepoint_link, class="form-control") }}
@@ -144,19 +213,62 @@
             {{ form_field(sharepoint_form.submit, class="btn btn-primary") }}
         </div>
     </form>
+
+    <!-- Document Preview Modal -->
+    <div class="modal fade" id="documentModal" tabindex="-1" role="dialog" aria-labelledby="documentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentModalLabel">Document Preview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe id="documentFrame" src="" width="100%" height="500px"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-  document.getElementById('crewRequestForm').addEventListener('submit', function(e) {
-    var roles = {};
-    document.querySelectorAll('.role-count').forEach(function(entry) {
-      var roleTitle = entry.name;
-      var roleCount = entry.value;
-      roles[roleTitle.trim()] = parseInt(roleCount.trim());
-    });
+function deleteDocument(documentId) {
+    if (confirm('Are you sure you want to delete this document?')) {
+        fetch(`/events/delete_document/${documentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'  // ensure CSRF token is included
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();  // reload the page to reflect changes
+            } else {
+                alert('Failed to delete document');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the document');
+        });
+    }
+}
 
-    document.getElementById('roles_json').value = JSON.stringify(roles);
-  });
+function openDocument(url, name) {
+    document.getElementById('documentFrame').src = url;
+    document.getElementById('documentModalLabel').innerText = name;
+    $('#documentModal').modal('show');
+}
+
+function openExternalDocument(url, name) {
+    const externalViewer = `https://docs.google.com/gview?url=${url}&embedded=true`;
+    document.getElementById('documentFrame').src = externalViewer;
+    document.getElementById('documentModalLabel').innerText = name;
+    $('#documentModal').modal('show');
+}
 </script>
 
 {% endblock %}
