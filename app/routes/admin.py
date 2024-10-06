@@ -307,3 +307,19 @@ def revoke_offer():
     flash(f'Offer revoked for {assignment.worker.first_name} {assignment.worker.last_name}.', 'success')
     return redirect(url_for('admin.unfulfilled_crew_requests'))
 
+@admin_bp.route('/help', methods=['GET', 'POST'])
+def help_page():
+    if request.method == 'POST':
+        # Save the updated help content from the WYSIWYG editor
+        help_content = request.form['content']
+        with open(os.path.join('templates', 'help_content.html'), 'w') as file:
+            file.write(help_content)
+        return redirect(url_for('help_page'))
+
+    # Load existing help content to display in the editor
+    help_content = ""
+    if os.path.exists(os.path.join('templates', 'help_content.html')):
+        with open(os.path.join('templates', 'help_content.html'), 'r') as file:
+            help_content = file.read()
+
+    return render_template('help.html', content=help_content)
