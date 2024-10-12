@@ -29,6 +29,7 @@
                 {% if current_user.is_authenticated %}
                     <li><a href="/">Home</a></li>
                 {% endif %}
+                <li><a href="{{ url_for('admin.help') }}">Help</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
@@ -86,7 +87,7 @@
                     <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                     <li><a href="{{ url_for('auth.register') }}">Register</a></li>
                 {% endif %}
-                <strong><li><a href="{{ url_for('admin.help') }}">Help</a></li></strong>
+               
                 
             </ul>
         </div>
