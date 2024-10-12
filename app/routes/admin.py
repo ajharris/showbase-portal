@@ -307,10 +307,4 @@ def revoke_offer():
     flash(f'Offer revoked for {assignment.worker.first_name} {assignment.worker.last_name}.', 'success')
     return redirect(url_for('admin.unfulfilled_crew_requests'))
 
-@admin_bp.route('/wiki')
-def wiki():
-    return render_template('base/wiki.html')
 
-@admin_bp.route('/help')
-def help():
-    return render_template('admin/help.html')

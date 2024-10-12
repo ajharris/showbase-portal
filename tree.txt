@@ -70,6 +70,7 @@
 │   │   │   ├── edit_role.html
 │   │   │   ├── edit_roles.html
 │   │   │   ├── edit_worker.html
+│   │   │   ├── help.html
 │   │   │   ├── list_events.html
 │   │   │   ├── list_roles.html
 │   │   │   └── view_all_shifts.html
@@ -42370,6 +42371,9 @@
 │       ├── App.css
 │       ├── App.js
 │       ├── App.test.js
+│       ├── components
+│       │   ├── Help.js
+│       │   └── Navbar.js
 │       ├── index.css
 │       ├── index.js
 │       ├── logo.svg
@@ -52941,4 +52945,4 @@
 │   └── pyvenv.cfg
 └── wsgi.py
 
-5681 directories, 47261 files
+5682 directories, 47264 files

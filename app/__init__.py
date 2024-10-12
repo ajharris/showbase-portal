@@ -24,11 +24,6 @@ def create_app(config_class='config.Config'):
     app = Flask(__name__, static_folder='static')
     app.config.from_object(config_class)
 
-    # print(f"SQLALCHEMY_DATABASE_URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
-    # print(f"MAIL_USERNAME: {app.config['MAIL_USERNAME']}")
-    # print(f"MAIL_PASSWORD: {app.config['MAIL_PASSWORD']}")
-    # print(f"SECRET_KEY: {app.config['SECRET_KEY']}")
-
     # Initialize extensions with the app
     db.init_app(app)
     migrate.init_app(app, db)
@@ -51,6 +46,7 @@ def create_app(config_class='config.Config'):
 
         # Import routes and register blueprints
         from .routes.admin import admin_bp
+        from .routes.help import help_bp
         from .routes.auth import auth_bp
         from .routes.misc import misc_bp
         from .routes.events import events_bp
@@ -60,6 +56,7 @@ def create_app(config_class='config.Config'):
         from .routes.base import base_bp  # Import the base blueprint
 
         app.register_blueprint(admin_bp)
+        app.register_blueprint(help_bp)
         app.register_blueprint(auth_bp)
         app.register_blueprint(misc_bp)
         app.register_blueprint(events_bp)

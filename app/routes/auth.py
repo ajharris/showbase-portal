@@ -88,6 +88,7 @@ def reset_request():
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_request.html', form=form)
 
+
 def send_reset_email(user):
     token = user.get_reset_token()
     msg = Message('Password Reset Request',

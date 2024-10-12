@@ -25,6 +25,7 @@ class Config:
     MAIL_USERNAME = os.getenv('EMAIL_USER')
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
     MAIL_DEFAULT_SENDER = os.getenv('EMAIL_USER')
+    DEBUG = True
 
 # Test the database connection
 import psycopg2
