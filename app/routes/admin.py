@@ -310,3 +310,7 @@ def revoke_offer():
 @admin_bp.route('/wiki')
 def wiki():
     return render_template('base/wiki.html')
+
+@admin_bp.route('/help')
+def help():
+    return render_template('admin/help.html')

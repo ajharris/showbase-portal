@@ -79,13 +79,15 @@
                                 </label>
                                 <label for="view-checkbox-manager" class="toggle-label">View as Account Manager</label>
                             </li>
-                            <li><a href="https://github.com/ajharris/showbase-portal/wiki" target="_blank">Wiki & Admin Help</a></li>
+                            <li><a href="https://github.com/ajharris/showbase-portal/wiki" target="_blank">Wiki</a></li>
                         {% endif %}
                     {% endif %}
                 {% else %}
                     <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                     <li><a href="{{ url_for('auth.register') }}">Register</a></li>
                 {% endif %}
+                <strong><li><a href="{{ url_for('admin.help') }}">Help</a></li></strong>
+                
             </ul>
         </div>
     </div>
