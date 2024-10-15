@@ -143,6 +143,13 @@ input:checked + .slider:before, input:checked + .view-slider:before {
     background-color: #777777;
 }
 
+textarea {
+    width: 100%;
+    height: 100px; /* Adjust the height as needed */
+    color: white;
+    background-color: #444444;
+}
+
 /* General link styles */
 a {
     color: #007bff; /* Default link color */
@@ -188,6 +195,7 @@ body.dark-mode .dropdown-menu {
 /* Adjust button styles for better contrast */
 button {
     color: #fff;
+    background-color: #444444;
 }
 
 button.btn-success {

@@ -6,6 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
@@ -19,6 +20,7 @@ csrf = CSRFProtect()
 bootstrap = Bootstrap()
 login_manager = LoginManager()
 mail = Mail()
+cors = CORS()
 
 def create_app(config_class='config.Config'):
     app = Flask(__name__, static_folder='static')
@@ -31,6 +33,7 @@ def create_app(config_class='config.Config'):
     bootstrap.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
+    cors.init_app(app)
 
     # Configure Flask-Login
     login_manager.login_view = 'auth.login'

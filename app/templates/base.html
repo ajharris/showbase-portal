@@ -113,6 +113,9 @@
 
 <!-- React Components JavaScript -->
 <script src="{{ url_for('static', filename='js/bundle.js') }}"></script> <!-- Adjust this path as necessary -->
+<script type="text/javascript">
+    window.csrf_token = "{{ csrf_token() }}";
+</script>
 {% endblock %}
 
 {% with messages = get_flashed_messages(with_categories=true) %}
