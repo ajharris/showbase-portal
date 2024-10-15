@@ -42,4 +42,4 @@ def test_db_connection():
     except OperationalError as e:
         print("Database connection failed:", e)
 
-# test_db_connection()
+test_db_connection()

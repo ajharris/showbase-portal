@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown'; // You'll need this package to render markdown
+import ReactMarkdown from 'react-markdown';
 
 const MarkdownBoard = () => {
   const [markdown, setMarkdown] = useState('');
@@ -10,16 +10,16 @@ const MarkdownBoard = () => {
 
   return (
     <div>
-      <h3>Markdown Editor</h3>
+      <h2>Markdown Board</h2>
       <textarea
         rows="10"
         cols="50"
         value={markdown}
         onChange={handleInputChange}
-        placeholder="Type your markdown here..."
+        placeholder="Enter Markdown here"
       />
-      <h3>Preview</h3>
-      <div className="markdown-preview">
+      <div>
+        <h3>Rendered Markdown:</h3>
         <ReactMarkdown>{markdown}</ReactMarkdown>
       </div>
     </div>
