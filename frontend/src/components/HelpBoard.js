@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MarkdownBoard = () => {
+const HelpBoard = () => {
   const [markdown, setMarkdown] = useState('');
 
   const handleInputChange = (event) => {
@@ -43,4 +43,4 @@ const MarkdownBoard = () => {
   );
 };
 
-export default MarkdownBoard;
+export default HelpBoard;

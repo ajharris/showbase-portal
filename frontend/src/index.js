@@ -1,5 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import MarkdownBoard from './components/MarkdownBoard';
+import HelpBoard from './components/HelpBoard';
 
-ReactDOM.render(<MarkdownBoard />, document.getElementById('markdown-board'));
+ReactDOM.render(<HelpBoard />, document.getElementById('help-board'));
