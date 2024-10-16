@@ -8,6 +8,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_cors import CORS
 from dotenv import load_dotenv
+from update_db import register_commands
 import os
 
 # Load environment variables from .env file
@@ -73,11 +74,12 @@ def create_app(config_class='config.Config'):
     from .populate_db import register_commands as populate_db_commands
     update_db_commands(app)
     populate_db_commands(app)
+    register_commands(app)
 
     return app
 
 # Set up logging
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARN)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.WARN)
 
