@@ -5,6 +5,10 @@
 # Environment files
 .env
 
+# Stash environment file for keeping bits of code I don't want to lose to git resets
+.stash 
+
+
 # Python virtual environments
 /venv
 .venv*/

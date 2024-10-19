@@ -11,10 +11,11 @@ def help():
 @help_bp.route('/submit-ticket', methods=['POST'])
 def submit_ticket():
     data = request.get_json()
+    subject = data.get('subject', '')
     markdown_content = data.get('markdown', '')
 
     if markdown_content:
-        new_ticket = HelpTicket(content=markdown_content)
+        new_ticket = HelpTicket(content=markdown_content, subject=subject)
         db.session.add(new_ticket)
         db.session.commit()
         return jsonify({'status': 'Ticket submitted successfully!'}), 200

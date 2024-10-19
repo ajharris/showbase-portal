@@ -224,4 +224,8 @@ class Note(db.Model):
 class HelpTicket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='open')
+    worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
 
+    worker = db.relationship('Worker', backref='help_tickets', lazy=True)

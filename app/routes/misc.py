@@ -16,7 +16,7 @@ from app.utils import (
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
 
 misc_bp = Blueprint('misc', __name__)
@@ -49,7 +49,7 @@ def save_view_mode():
     return jsonify(success=True)
 
 # Enable SQLAlchemy query logging
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 @misc_bp.route('/timesheet', methods=['GET', 'POST'])
 @login_required
