@@ -10,22 +10,24 @@ def help():
     """Render the help page."""
     return render_template('help/help.html')
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 @help_bp.route('/submit-ticket', methods=['POST'])
-@login_required  # Ensure only logged-in users can submit tickets
+@login_required
 def submit_ticket():
     data = request.get_json()
     subject = data.get('subject', '')
     markdown_content = data.get('markdown', '')
 
-    # Ensure both subject and markdown content are provided
     if not subject or not markdown_content:
         return jsonify({'status': 'Subject and content are required!'}), 400
 
-    # Create the help ticket associated with the logged-in worker
     new_ticket = HelpTicket(
         content=markdown_content,
         subject=subject,
-        worker_id=current_user.id  # Using the logged-in user's ID
+        worker_id=current_user.id
     )
 
     try:
@@ -33,5 +35,6 @@ def submit_ticket():
         db.session.commit()
         return jsonify({'status': 'Ticket submitted successfully!'}), 200
     except Exception as e:
-        db.session.rollback()  # Roll back in case of any errors
+        db.session.rollback()
+        logger.error(f"Error submitting ticket: {str(e)}")
         return jsonify({'status': 'Error submitting ticket', 'error': str(e)}), 500

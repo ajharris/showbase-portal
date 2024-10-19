@@ -103,20 +103,21 @@
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-<!-- Flask Template JavaScript -->
-<script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <!-- Flask Template JavaScript -->
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
 
-<!-- React Components JavaScript -->
-<script src="{{ url_for('static', filename='js/bundle.js') }}"></script> <!-- Adjust this path as necessary -->
-<script type="text/javascript">
-    window.csrf_token = "{{ csrf_token() }}";
-</script>
+    <!-- React Components JavaScript -->
+    <script src="{{ url_for('static', filename='js/bundle.js') }}"></script> <!-- Adjust this path as necessary -->
+    <script type="text/javascript">
+        window.csrf_token = "{{ csrf_token() }}";
+    </script>
 {% endblock %}
+
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}

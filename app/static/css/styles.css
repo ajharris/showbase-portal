@@ -150,6 +150,12 @@ textarea {
     background-color: #444444;
 }
 
+input {
+    width: 100%;
+    color: white;
+    background-color: #444444;
+}
+
 /* General link styles */
 a {
     color: #007bff; /* Default link color */

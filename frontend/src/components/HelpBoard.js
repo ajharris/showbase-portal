@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 const HelpBoard = () => {
   const [subject, setSubject] = useState('');
   const [markdown, setMarkdown] = useState('');
+  const [loading, setLoading] = useState(false); // Track loading state
+  const [error, setError] = useState(''); // Track errors
 
   const handleSubjectChange = (event) => {
     setSubject(event.target.value);
@@ -13,21 +15,37 @@ const HelpBoard = () => {
   };
 
   const handleSubmit = async () => {
-    const response = await fetch('/help/submit-ticket', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': window.csrf_token,
-      },
-      body: JSON.stringify({ subject, markdown }),
-    });
+    if (!subject || !markdown) {
+      alert('Please provide both a subject and content.');
+      return;
+    }
 
-    if (response.ok) {
-      alert('Help ticket submitted successfully!');
-      setSubject(''); // Clear the subject field
-      setMarkdown(''); // Clear the markdown field
-    } else {
-      alert('Failed to submit the help ticket.');
+    setLoading(true); // Start loading
+    setError(''); // Clear previous error
+
+    try {
+      const response = await fetch('/help/submit-ticket', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': window.csrf_token, // Ensure CSRF token is included
+        },
+        body: JSON.stringify({ subject, markdown }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.status || 'Help ticket submitted successfully!');
+        setSubject('');
+        setMarkdown('');
+      } else {
+        throw new Error(data.error || 'Failed to submit the help ticket.');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -54,10 +72,16 @@ const HelpBoard = () => {
       />
 
       <div>
-        <button className="button" onClick={handleSubmit}>
-          Submit Help Ticket
+        <button
+          className="button"
+          onClick={handleSubmit}
+          disabled={loading} // Disable button while loading
+        >
+          {loading ? 'Submitting...' : 'Submit Help Ticket'}
         </button>
       </div>
+
+      {error && <p style={{ color: 'red' }}>{error}</p>} {/* Display error message */}
     </div>
   );
 };
